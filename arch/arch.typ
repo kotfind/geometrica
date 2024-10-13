@@ -2,7 +2,23 @@
 
 ```rust
 // Represents unevaluated object
-trait Object {
+struct Object {
+    // Unique identifier of this object
+    ident: String,
+
+    // User-defined name. Object may be anonymous
+    name: Option<String>,
+
+    // Note: Object may not change it's type after creation
+    type: VarType,
+
+    // TODO: better way to track this
+    required_by: Vec<Rc<Object>>,
+
+    kind: ObjectKind,
+}
+
+impl Object {
     // Returns unique identifier of this object
     fn ident(&self) -> String;
 
@@ -21,18 +37,35 @@ trait Object {
     fn required_by(&self) -> Vec<Rc<Object>>;
 }
 
+enum ObjectKind {
+    FreeObject(FreeObject),
+    PinnedObject(PinnedObject),
+    FixedObject(FixedObject)
+}
+
+// Is it required?
+trait ObjectKindTrait {
+    fn type(&self) -> VarType;
+
+    fn eval(&self) -> Var;
+
+    fn move(&mut self, dir: Point) -> bool /* ???: or ()*/ ;
+
+    fn set(&mut self, value: Var) -> bool /* ???: or ()*/ ;
+}
+
 struct FreeObject {
     var: Var,
 }
 
-impl Object for FreeObject {...}
+impl ObjectKindTrait for FreeObject {...}
 
 struct PinnedObject {
     pinned_on: Rc<Object>,
     rel_pos: f64,
 }
 
-impl Object for PinnedObject {
+impl ObjectKindTrait for PinnedObject {
     fn type() -> VarType {
         Point
     }
@@ -46,7 +79,7 @@ struct FixedObject {
     ret_num: usize,
 }
 
-impl Object for FixedObject {...}
+impl ObjectKindTrait for FixedObject {...}
 
 struct FunctionSignature {
     name: String,
@@ -102,7 +135,7 @@ struct Circle {
 }
 
 struct Workspace {
-    objects: LinkedList<Rc<Object>>,
+    objects: HashMap<String/* ident */, Rc<Object>>,
     functions: HashMap<FunctionSignature, Rc<Function>>, // Or not rc
 }
 ```
@@ -125,22 +158,14 @@ impl Drawable for Point {...}
 
 = Notes (N) and Ideas (I)
 
-- (I) `trait Object -> struct Object`
-    ```rust
-    struct Object {
-        ident: String,
-        ...,
-        kind: ObjectKind
-    }
-    
-    enum ObjectKind {
-        Free(FreeObject),
-        Pinned(PinnedObject),
-        Fixed(FixedObject)
-    }
-    ```
-
 - (N) Should Type System and Functions of core be separated from those of Built-In
   Language?
 
     - (I) Language provide both Type System and Executor and Core is just using it
+
+- (N) Should variable names in code and object names be the same?
+- (N) Should temporary (r-value-like) objects be displayed in 
+- (N) Ident (thing that can be an argument to a function in lang) vs Var (basic
+  type that holds a value (like number or line))
+
+    - What types can be passed to a function? Function, ident?
