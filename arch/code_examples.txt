@@ -29,3 +29,11 @@ sqdist p1:pt p2:pt -> real = let
         (x p)^2 + (y p)^2
 
 // TODO: add arrays
+
+// pinning
+// last argument represents point's position on specified line
+a = point_on_line (line (point 1 2) (point 3 4)) 1.3
+
+// dot notation?
+// Note: l.p1.x is same as x (p1 l)
+first_point_x = let l = line (point 1 2) (point 3 4) in l.p1.x

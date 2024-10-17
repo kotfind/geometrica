@@ -39,3 +39,9 @@
 - (I) Command can do one of two things:
     - Define something (function/ constant)
     - Run special operation (delete, pin, move, etc)
+
+- (I) Inverse function definition
+
+- (I) Dynamic vs static typing?
+
+- (I) Internal Rc in Expr
