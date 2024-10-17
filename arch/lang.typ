@@ -73,4 +73,23 @@ struct FuncCallExpr {
     name: Ident,
     arguments: Vec<Expr>,
 }
+
+struct Scope {
+    // Things that don't have arguments
+    // TODO?: rename
+    values: HashMap<Ident, Expr>,
+
+    // Things that have arguments
+    functions: HashMap<FunctionSignature, Function>,
+}
+
+struct FunctionSignature {
+    name: Ident,
+    arguments: Vec<ValueType>,
+}
+
+enum Function {
+    BuiltIn(Box<dyn Fn(Vec<Value>, &Scope) -> Value>),
+    Expr(Expr),
+}
 ```
