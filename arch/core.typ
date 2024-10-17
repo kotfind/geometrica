@@ -10,7 +10,7 @@ struct Object {
     name: Option<String>,
 
     // Note: Object may not change it's type after creation
-    type: VarType,
+    type: ValueType,
 
     // TODO: better way to track this
     required_by: Vec<Rc<Object>>,
@@ -26,13 +26,13 @@ impl Object {
     fn name(&self) -> Option<String>;
 
     // Note: Object may not change it's type
-    fn type(&self) -> VarType;
+    fn type(&self) -> ValueType;
 
-    fn eval(&self) -> Var;
+    fn eval(&self) -> Value;
 
     fn move(&mut self, dir: Point) -> bool /* ???: or ()*/ ;
 
-    fn set(&mut self, value: Var) -> bool /* ???: or ()*/ ;
+    fn set(&mut self, value: Value) -> bool /* ???: or ()*/ ;
 
     fn required_by(&self) -> Vec<Rc<Object>>;
 }
@@ -45,17 +45,17 @@ enum ObjectKind {
 
 // Is it required?
 trait ObjectKindTrait {
-    fn type(&self) -> VarType;
+    fn type(&self) -> ValueType;
 
-    fn eval(&self) -> Var;
+    fn eval(&self) -> Value;
 
     fn move(&mut self, dir: Point) -> bool /* ???: or ()*/ ;
 
-    fn set(&mut self, value: Var) -> bool /* ???: or ()*/ ;
+    fn set(&mut self, value: Value) -> bool /* ???: or ()*/ ;
 }
 
 struct FreeObject {
-    var: Var,
+    val: Value,
 }
 
 impl ObjectKindTrait for FreeObject {...}
@@ -66,7 +66,7 @@ struct PinnedObject {
 }
 
 impl ObjectKindTrait for PinnedObject {
-    fn type() -> VarType {
+    fn type() -> ValueType {
         Point
     }
     ...
@@ -75,7 +75,7 @@ impl ObjectKindTrait for PinnedObject {
 struct FixedObject {
     func: FunctionSignature, // Or Rc<Function>
     args: Vec<Rc<Object>>,
-    #[cfg(debug_assertions)] arg_types: Vec<VarType>,
+    #[cfg(debug_assertions)] arg_types: Vec<ValueType>,
     ret_num: usize,
 }
 
@@ -83,12 +83,12 @@ impl ObjectKindTrait for FixedObject {...}
 
 struct FunctionSignature {
     signature: FunctionSignature,
-    returns: Vec<VarType>,
+    returns: Vec<ValueType>,
 }
 
 struct FunctionSignature {
     name: String,
-    args: Vec<VarType>,
+    args: Vec<ValueType>,
 }
 
 struct Function { /* ??? */ }
@@ -100,7 +100,7 @@ impl Function {
     fn signature(&self) -> FunctionSignature;
 }
 
-enum Var {
+enum Value {
     Number(f64),
     Point(Point),
     Line(Line),
@@ -109,11 +109,11 @@ enum Var {
     // TODO?: option
 }
 
-impl Var {
+impl Value {
     fn get_type(&self) -> Type;
 }
 
-enum VarType {
+enum ValueType {
     Number,
     Point,
     Line,

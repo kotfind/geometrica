@@ -1,12 +1,31 @@
 = Lang Crate
 
 ```rust
+struct Ident(String);
+
+enum Command {
+    FuncDef(Ident, FuncExpr),
+    ConstDef(Ident, Expr /* TODO: not all exprs work here */),
+    CreateCommand(/* ... */),
+    // ...
+}
+
 enum Expr {
-    Var(Var),
+    Value(Value),
     Math(MathExpr),
-    If(Vec<CaseIfItem>),
+    If(Vec<IfExprItem>),
     For(ForExpr),
-    // TODO: clone expr
+    Let(LetExpr),
+    Assign(AssignExpr),
+    Block(Vec<Expr>),
+    // TODO?: clone expr
+    // TODO: func defenition
+    // TODO: func execution
+}
+
+impl Expr {
+    // Returns Error when, for instance, if's cases have different types
+    fn type() -> Result<ValueType, Error /* TODO: actual type */>;
 }
 
 enum MathExpr {
@@ -23,8 +42,15 @@ struct IfExprItem {
 }
 
 struct ForExpr {
-    var_name: String, // TODO: ident
+    var_ident: Ident,
     from: f64, // TODO?: integer type
     to: f64,
+    body: Expr,
 }
+
+struct AssignExpr(Ident /* TODO: Expr as lhs */, Box<Expr>);
+
+struct LetExpr(Ident, Option<Box<Expr>>);
+
+struct FuncExpr(/* TODO */)
 ```

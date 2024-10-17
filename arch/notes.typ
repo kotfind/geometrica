@@ -23,8 +23,19 @@
     - Use `local` to make top-level scoped object *invisible*.
     - Use `global` to make nested-level object *visible*.
 
-- (T) Create Ident type
-
-- (I) Unite lang and core.
+- (I) Unite lang and core?
 
 - (T) Queries
+
+- (T) Assignment with expr at left
+    ```
+    l1.a = 1
+    ```
+
+- (I)
+    - Invasive function: `Fn(&mut Vec<Object>)`
+    - Noninvasive function: `Fn(Vec<Var>) -> Vec<Var>`
+
+- (I) Command can do one of two things:
+    - Define something (function/ constant)
+    - Run special operation (delete, pin, move, etc)
