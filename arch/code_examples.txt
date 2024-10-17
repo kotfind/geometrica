@@ -1,2 +1,31 @@
-a = line (point 1 2) (point 3 4)
-b = a
+// constant defenition
+PI:real const = 3.1415926
+
+// variable defenition with literal
+num:real = 3.1415926
+
+// function defenition
+sum x:int y:int -> int = x + y
+
+// if construction
+fact x:int -> int = if
+    x == 0 ( 1 )
+    x > 0  ( fact (x - 1) )
+    ( unreachable "" )
+end
+
+// variable defenition with function
+a = line (pt 1 2) (pt 2 3)
+
+// move & moved
+a = moved a 1 2 // same as: a = moved (line (pt 1 2) (pt 3 4)) 1 2
+
+move a 1 2 // same as: a = moved a 1 2 
+
+// let construction
+sqdist p1:pt p2:pt -> real = let
+        p = p1 - p2
+    in
+        (x p)^2 + (y p)^2
+
+// TODO: add arrays
