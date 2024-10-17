@@ -45,3 +45,5 @@
 - (I) Dynamic vs static typing?
 
 - (I) Internal Rc in Expr
+
+- (T) Type casts (it's just a bunch of functions)

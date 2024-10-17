@@ -1,6 +1,8 @@
 = Lang Crate
 
 ```rust
+struct Ident(String);
+
 // Top-level object in language
 // Any script is represented as Vec<Stmt>
 enum Statement {
@@ -14,25 +16,61 @@ enum Definition {
 }
 
 struct ValueDefinition {
-    ident: Ident,
+    name: Ident,
     type: ValueType,
     is_const: bool,
-    value: Rc<Expr>,
+    value: Expr,
 }
 
 struct FunctionDefinition {
-    ident: Ident,
+    name: Ident,
     arguments: Vec<FunctionDefinitionArgument>,
     return_type: ValueType,
-    value: Rc<Expr>,
+    value: Expr,
 }
 
 struct FunctionDefinitionArgument {
-    ident: Ident,
+    name: Ident,
     type: ValueType,
 }
 
+// Non-declarative commands like move, pin, delete
 struct Command { /* TODO */ }
 
-struct Ident(String);
+type Expr = Rc<ExprInner>;
+
+// Note: operator calls are represented as function calls.
+// E.g. `1 + 2` and `add 1 2` are the same
+enum ExprInner {
+    Value(Value),
+    FuncCall(FuncCallExpr),
+    If(IfExpr),
+    Let(LetExpr),
+}
+
+// Note: fails if none of the cases matched and default_case_value is not provided
+struct IfExpr {
+    cases: Vec<IfExprCase>,
+    default_case_value: Option<Expr>,
+}
+
+struct IfExprCase {
+    condition: Expr,
+    value: Expr,
+}
+
+struct LetExpr {
+    definitions: Vec<LetExprDefinition>,
+    value: Expr,
+}
+
+struct LetExprDefinition {
+    name: Ident,
+    value: Expr,
+}
+
+struct FuncCallExpr {
+    name: Ident,
+    arguments: Vec<Expr>,
+}
 ```

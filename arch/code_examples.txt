@@ -2,7 +2,7 @@
 PI:real const = 3.1415926
 
 // variable defenition with literal
-num:real = 3.1415926
+num:real = 42
 
 // function defenition
 sum x:int y:int -> int = x + y
@@ -12,7 +12,7 @@ fact x:int -> int = if
     x == 0 ( 1 )
     x > 0  ( fact (x - 1) )
     ( unreachable "" )
-end
+fi
 
 // variable defenition with function
 a = line (pt 1 2) (pt 2 3)
