@@ -27,3 +27,7 @@
 
     (I) Only non-constant literals hold references to objects that depend on
     them
+
+- (T) Transformation
+
+- (T) Error handling

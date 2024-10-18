@@ -128,11 +128,9 @@ struct Point {
     y: f64,
 }
 
-// ax + by + c = 0
 struct Line {
-    a: f64,
-    b: f64,
-    c: f64,
+    p1: Point,
+    p2: Point,
 }
 
 struct Circle {
