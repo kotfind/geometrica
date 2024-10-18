@@ -1,132 +1,126 @@
 = Core Crate
 
 ```rust
-// Represents unevaluated object
-struct Object {
-    // Unique identifier of this object
-    ident: String,
+struct Ident(String);
 
-    // User-defined name. Object may be anonymous
-    name: Option<String>,
+// Top-level object in language
+// Any script is represented as Vec<Stmt>
+enum Statement {
+    Definition(Definition),
+    Command(Command),
+}
 
-    // Note: Object may not change it's type after creation
+enum Definition {
+    ValueDefinition(ValueDefinition),
+    FunctionDefinition(FunctionDefinition),
+}
+
+struct ValueDefinition {
+    name: Ident,
     type: ValueType,
-
-    // TODO: better way to track this
-    required_by: Vec<Rc<Object>>,
-
-    kind: ObjectKind,
+    is_const: bool,
+    value: Expr,
 }
 
-impl Object {
-    // Returns unique identifier of this object
-    fn ident(&self) -> String;
-
-    // Returns user-defined name. Object may be anonymous
-    fn name(&self) -> Option<String>;
-
-    // Note: Object may not change it's type
-    fn type(&self) -> ValueType;
-
-    fn eval(&self) -> Value;
-
-    fn move(&mut self, dir: Point) -> bool /* ???: or ()*/ ;
-
-    fn set(&mut self, value: Value) -> bool /* ???: or ()*/ ;
-
-    fn required_by(&self) -> Vec<Rc<Object>>;
+struct FunctionDefinition {
+    name: Ident,
+    arguments: Vec<FunctionDefinitionArgument>,
+    return_type: ValueType,
+    value: Expr,
 }
 
-enum ObjectKind {
-    FreeObject(FreeObject),
-    PinnedObject(PinnedObject),
-    FixedObject(FixedObject)
+struct FunctionDefinitionArgument {
+    name: Ident,
+    type: ValueType,
 }
 
-// Is it required?
-trait ObjectKindTrait {
-    fn type(&self) -> ValueType;
+// Non-declarative commands like move, pin, delete
+struct Command { /* TODO */ }
 
-    fn eval(&self) -> Value;
+type Expr = Rc<ExprInner>;
 
-    fn move(&mut self, dir: Point) -> bool /* ???: or ()*/ ;
-
-    fn set(&mut self, value: Value) -> bool /* ???: or ()*/ ;
+// Note: operator calls are represented as function calls.
+// E.g. `1 + 2` and `add 1 2` are the same
+//
+// Note: type casts are represented as function calls
+enum ExprInner {
+    Value(Value),
+    FuncCall(FuncCallExpr),
+    If(IfExpr),
+    Let(LetExpr),
 }
 
-struct FreeObject {
-    val: Value,
+// Note: fails if none of the cases matched and default_case_value is not provided
+struct IfExpr {
+    cases: Vec<IfExprCase>,
+    default_case_value: Option<Expr>,
 }
 
-impl ObjectKindTrait for FreeObject {...}
-
-struct PinnedObject {
-    pinned_on: Rc<Object>,
-    rel_pos: f64,
+struct IfExprCase {
+    condition: Expr,
+    value: Expr,
 }
 
-impl ObjectKindTrait for PinnedObject {
-    fn type() -> ValueType {
-        Point
-    }
-    ...
+struct LetExpr {
+    definitions: Vec<LetExprDefinition>,
+    value: Expr,
 }
 
-struct FixedObject {
-    func: FunctionSignature, // Or Rc<Function>
-    args: Vec<Rc<Object>>,
-    #[cfg(debug_assertions)] arg_types: Vec<ValueType>,
-    ret_num: usize,
+struct LetExprDefinition {
+    name: Ident,
+    value: Expr,
 }
 
-impl ObjectKindTrait for FixedObject {...}
-
-struct FunctionSignature {
-    signature: FunctionSignature,
-    returns: Vec<ValueType>,
-}
-
-struct FunctionSignature {
-    name: String,
-    args: Vec<ValueType>,
-}
-
-struct Function { /* ??? */ }
-
-// Is pure
-impl Function {
-    fn call(&self, args: Vec<Val>) -> Vec<Val>;
-
-    fn signature(&self) -> FunctionSignature;
-}
-
-enum Value {
-    Number(f64),
-    Point(Point),
-    Line(Line),
-    Circle(Circle),
-    // TODO?: array
-    // TODO?: option
-}
-
-impl Value {
-    fn get_type(&self) -> Type;
-}
-
-enum ValueType {
-    Number,
-    Point,
-    Line,
-    Circle,
-}
-
-struct Workspace {
-    scope: Scope
+struct FuncCallExpr {
+    name: Ident,
+    arguments: Vec<Expr>,
 }
 
 struct Scope {
-    objects: HashMap<String/* ident */, Rc<Object>>,
-    functions: HashMap<FunctionSignature, Rc<Function>>, // Or without rc
+    // Things that don't have arguments
+    // TODO?: rename
+    named_values: HashMap<Ident, Expr>,
+
+    // Things that don't have arguments
+    values: HashSet<Expr>,
+
+    // Things that have arguments
+    functions: HashMap<FunctionSignature, Function>,
+}
+
+struct FunctionSignature {
+    name: Ident,
+    arguments: Vec<ValueType>,
+}
+
+enum Function {
+    BuiltIn(Box<dyn Fn(Vec<Value>, &Scope) -> Value>),
+    Expr(Expr),
+}
+
+type Value = Option<ValueInner>;
+
+enum ValueInner {
+    Int(i64),
+    Real(f64),
+    // A heterogeneous array
+    Array(Vec<Value>),
+    Point(Point),
+    Line(Line),
+    Circle(Circle),
+}
+
+impl Value {
+    fn type(&self) -> Type;
+}
+
+enum ValueType {
+    Int,
+    Real,
+    Array,
+    Point,
+    Line,
+    Circle,
 }
 
 struct Point {
