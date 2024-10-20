@@ -73,14 +73,13 @@ enum Definition {
 struct ValueDefinition {
     name: Ident,
     type: ValueType,
-    value: Expr,
+    body: Expr,
 }
 
 struct FunctionDefinition {
-    name: Ident,
-    arguments: Vec<FunctionDefinitionArgument>,
+    signature: FunctionSignature,
     return_type: ValueType,
-    value: Expr,
+    body: Expr,
 }
 
 struct FunctionDefinitionArgument {
@@ -149,7 +148,21 @@ struct FuncCallExpr {
 
 struct FunctionSignature {
     name: Ident,
-    arguments: Vec<ValueType>,
+    arguments: Vec<FunctionArgumentType>,
+}
+
+// Overrides will conflict if they differ only in `any` argument.
+// E.g. having ``, doing `` and `f x:int y:str = ...` is ok, but
+// doing or ``
+// `
+// f x:any y:int = ... // (1) Original function
+// f x:any y:str = ... // (2) OK: as `y` has different type
+// f x:int y:str = ... // (3) OK: as `y` has different type (but conflicts with (2))
+// f x:int y:int = ... // (4) Error: conflicts with (1)
+// `
+struct FunctionArgumentType {
+    Any,
+    Value(ValueType),
 }
 ```
 

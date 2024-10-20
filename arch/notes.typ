@@ -17,13 +17,7 @@
     - Use `local` to make top-level scoped object *invisible*.
     - Use `global` to make nested-level object *visible*.
 
-- (T) Queries
-
 - (I) Inverse function definition
-
-- (T) Allow Type Check
-
-- (I) Allow `any` in function argument types
 
 - (T) Error handling
 
