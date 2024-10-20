@@ -1,4 +1,5 @@
 #include "types.typ"
 #include "core.typ"
 #include "gui.typ"
+#include "cli.typ"
 #include "notes.typ"

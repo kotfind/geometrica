@@ -9,6 +9,7 @@ enum ValueInner {
     Bool(bool),
     Int(i64),
     Real(f64),
+    String(Box<String> /* Or w/o Box, or with Rc */),
     // A heterogeneous array
     Array(Vec<Value>),
     Point(Point),
@@ -24,6 +25,7 @@ enum ValueType {
     Bool,
     Int,
     Real,
+    String,
     Array,
     Point,
     Line,
@@ -86,8 +88,12 @@ struct FunctionDefinitionArgument {
     type: ValueType,
 }
 
-// Non-declarative commands like move, pin, delete, set_transform
-struct Command { /* TODO */ }
+// Non-declarative style commands like move, pin, delete, set_transform, load,
+// save
+struct Command {
+    name: Ident, // TODO?: Or enum CommandKind
+    arguments: Vec<Expr>,
+}
 
 type Expr = Rc<ExprInner> /* or Box<ExprInner> ??? */;
 
