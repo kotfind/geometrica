@@ -34,17 +34,27 @@ struct FunctionDefinitionArgument {
     type: ValueType,
 }
 
-// Non-declarative commands like move, pin, delete
+// Non-declarative commands like move, pin, delete, set_transform
 struct Command { /* TODO */ }
 
-type Expr = Rc<ExprInner>;
+type Expr = Rc<ExprInner> /* or Box<ExprInner> ??? */;
 
 // Note: operator calls are represented as function calls.
 // E.g. `1 + 2` and `add 1 2` are the same
 //
 // Note: type casts are represented as function calls
+//
+// Expr vs Node:
+// - `Expr`
+//     - represents a language structure
+//     - may contain a ident (a variable; yet unknown value)
+// - `Node`
+//     - represent an object (final (that is shown in gui) or intermediate)
+//     - no variables (yet unknown values allowed)
+//     - stores information about dependencies
 enum ExprInner {
     Value(Value),
+    Variable(Ident),
     FuncCall(FuncCallExpr),
     If(IfExpr),
     Let(LetExpr),
@@ -94,7 +104,7 @@ struct FunctionSignature {
 }
 
 enum Function {
-    BuiltIn(Box<dyn Fn(Vec<Value>, &Scope) -> Value>),
+    BuiltIn(Box<dyn Fn(Vec<Value>) -> Value>),
     Expr(Expr),
 }
 
@@ -136,5 +146,37 @@ struct Line {
 struct Circle {
     center: Point,
     radius: f64,
+}
+
+type Node = Rc<NodeInner>;
+
+struct NodeInner {
+    required_by: HashSet<Weak<Node>>,
+
+    // evaluated value
+    value: Value,
+
+    kind: NodeInnerKind,
+}
+
+enum NodeInnerKind {
+    Value(Value),
+    FuncCall(FuncCallNode),
+    If(IfNode)
+}
+
+struct FuncCallNode {
+    func: Function,
+    arguments: Vec<Node>,
+}
+
+struct IfNode {
+    cases: Vec<IfNodeCase>,
+    default_case_value: Option<Node>,
+}
+
+struct IfNodeCase {
+    condition: Node,
+    value: Node,
 }
 ```

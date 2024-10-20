@@ -21,7 +21,9 @@
 
 - (I) Inverse function definition
 
-- (I) Simple Generics?
+- (T) Allow Type Check
+
+- (I) Allow `any` in function argument types
 
 - (T) Track expr change
 
@@ -31,3 +33,19 @@
 - (T) Transformation
 
 - (T) Error handling
+
+- (I) Split `set` function in two:
+    - `set_exact`
+    - `set_approx`
+
+- (I) `const` as a function:
+
+    Note: Probably, requires simple generics
+
+    ```
+    x:int = const 10
+    ```
+
+- (T) Store scope in `Expr`
+
+- (T) Add `error` command
