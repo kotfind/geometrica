@@ -25,11 +25,6 @@
 
 - (I) Allow `any` in function argument types
 
-- (T) Track expr change
-
-    (I) Only non-constant literals hold references to objects that depend on
-    them
-
 - (T) Transformation
 
 - (T) Error handling
@@ -49,3 +44,5 @@
 - (T) Store scope in `Expr`
 
 - (T) Add `error` command
+
+- (T) Add builders for `Expr`s?
