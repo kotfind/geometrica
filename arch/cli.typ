@@ -8,6 +8,8 @@ geometrica-cli [OPTIONS] [filename]
 
 #figure(table(
     columns: 2,
+    align: left,
+
     table.header[*Flag*][*Description*],
 
     `-i, --no-input`,

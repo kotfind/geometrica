@@ -9,7 +9,7 @@ enum ValueInner {
     Bool(bool),
     Int(i64),
     Real(f64),
-    String(Box<String> /* Or w/o Box, or with Rc */),
+    Str(Box<String> /* Or w/o Box, or with Rc */),
     // A heterogeneous array
     Array(Vec<Value>),
     Point(Point),
@@ -25,7 +25,7 @@ enum ValueType {
     Bool,
     Int,
     Real,
-    String,
+    Str,
     Array,
     Point,
     Line,
@@ -98,9 +98,12 @@ struct Command {
 type Expr = Rc<ExprInner> /* or Box<ExprInner> ??? */;
 
 // Note: operator calls are represented as function calls.
-// E.g. `1 + 2` and `add 1 2` are the same
+// E.g. `1 + 2` and `#add 1 2` are the same
 //
 // Note: type casts are represented as function calls
+
+// Note: type checks (`is` operator) are represented as function calls.
+// E.g. `x is int` and `#is_int x` are the same
 //
 // Expr vs Node:
 // - `Expr`

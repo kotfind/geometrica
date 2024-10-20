@@ -25,8 +25,6 @@
 
 - (I) Allow `any` in function argument types
 
-- (T) Transformation
-
 - (T) Error handling
 
 - (I) Split `set` function in two:
@@ -46,3 +44,7 @@
 - (T) Add `error` command
 
 - (T) Add builders for `Expr`s?
+
+- (I) Special names for special built-in functions. E.g. `1 + 2` translates to
+  function call `#add 1 2`. It prevents collisions with user-defined functions.
+
