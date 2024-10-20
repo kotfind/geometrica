@@ -13,11 +13,6 @@ struct Scope {
     functions: HashMap<FunctionSignature, Function>,
 }
 
-struct FunctionSignature {
-    name: Ident,
-    arguments: Vec<ValueType>,
-}
-
 enum Function {
     BuiltIn(Box<dyn Fn(Vec<Value>) -> Value>),
     Expr(Expr),

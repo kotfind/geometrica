@@ -44,6 +44,11 @@ struct Circle {
     center: Point,
     radius: f64,
 }
+
+struct Transformation {
+    offset: (f64, f64),
+    zoom: f64,
+}
 ```
 
 == Lang
@@ -132,38 +137,47 @@ struct FuncCallExpr {
     name: Ident,
     arguments: Vec<Expr>,
 }
+
+struct FunctionSignature {
+    name: Ident,
+    arguments: Vec<ValueType>,
+}
 ```
 
 == Queries
 
-TODO: rewrite all here
-
 ```rust
 struct ClientMessage {
-    workspace: usize, //?
-    kind: ClientMessageKind
-}
-
-enum ClientMessageKind {
-    Run {
-        statements: Vec<Statement>,
-    },
-    Get {
-        values: Vec<Ident>,
-    },
-    GetAll,
-    Eval {
-        exprs: Vec<Expr>,
-    }
+    statements: Vec<Statement>,
 }
 
 struct ServerMessage {
-    kind: ServerMessageKind
-)
+    warnings: Vec<Warning>,
 
-enum ServerMessageKind {
-    RunResult(Result<(), Error /* TODO: actual error type */>),
-    GetResult(Vec<(Ident, Value)>),
-    EvalResult(Vec<Result<Value, Error /* TODO: actual error type */>>),
+    errors: Vec<Error>,
+
+    // XXX: Same names may refer to a same name. Add ident to objects?
+    values: HashMap<ServerMessageValue>, 
+
+    new_functions: Vec<FunctionSignature>
+}
+
+struct ServerMessageValue {
+    names: Vec<Ident>,
+
+    // Real (untransformed) value of object. Is used to print info about object.
+    original: Value,
+
+    // Transformed value (with transformation applied). Is used to display in
+    // GUI.
+    transformed: Value,
+}
+
+struct Warning {
+    // TODO
+}
+
+struct Error {
+    // TODO
 }
 ```
