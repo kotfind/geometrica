@@ -2,10 +2,10 @@ use std::rc::Rc;
 
 use crate::core::{Value, ValueType};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Ident(pub String);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 // Top-level object in language
 // Any script is represented as Vec<Stmt>
 pub enum Statement {
@@ -13,27 +13,27 @@ pub enum Statement {
     Command(Command),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Definition {
     ValueDefinition(ValueDefinition),
     FunctionDefinition(FunctionDefinition),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ValueDefinition {
     pub name: Ident,
     pub value_type: ValueType,
     pub body: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub signature: FunctionSignature,
     pub return_type: ValueType,
     pub body: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionDefinitionArgument {
     pub name: Ident,
     pub value_type: ValueType,
@@ -41,7 +41,7 @@ pub struct FunctionDefinitionArgument {
 
 // Non-declarative style commands like move, pin, delete, set_transform, load,
 // save
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Command {
     pub name: Ident, // TODO?: Or enum CommandKind
     pub arguments: Vec<Expr>,
@@ -65,7 +65,7 @@ pub type Expr = Rc<ExprInner>;
 //     - represent an object (final (that is shown in gui) or intermediate)
 //     - no variables (yet unknown values allowed)
 //     - stores information about dependencies
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprInner {
     Value(Value),
     Variable(Ident),
@@ -75,37 +75,37 @@ pub enum ExprInner {
 }
 
 // Note: fails if none of the cases matched and default_case_value is not provided
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfExpr {
     pub cases: Vec<IfExprCase>,
     pub default_case_value: Option<Expr>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfExprCase {
     pub condition: Expr,
     pub value: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LetExpr {
     pub definitions: Vec<LetExprDefinition>,
     pub value: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LetExprDefinition {
     pub name: Ident,
     pub value: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FuncCallExpr {
     pub name: Ident,
     pub arguments: Vec<Expr>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionSignature {
     pub name: Ident,
     pub arguments: Vec<FunctionArgumentType>,
@@ -120,7 +120,7 @@ pub struct FunctionSignature {
 // f x:int y:str = ... // (3) OK: as `y` has different type (but conflicts with (2))
 // f x:int y:int = ... // (4) Error: conflicts with (1)
 // `
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FunctionArgumentType {
     Any,
     Value(ValueType),
