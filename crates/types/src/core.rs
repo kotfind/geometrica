@@ -7,7 +7,7 @@ impl Value {
     }
 }
 
-macro_rules! value_from_into {
+macro_rules! value_from {
     ($variant:ident, $inner_type:ty) => {
         // T -> Value
         impl From<$inner_type> for Value {
@@ -28,14 +28,14 @@ macro_rules! value_from_into {
     };
 }
 
-value_from_into!(Bool, bool);
-value_from_into!(Int, i64);
-value_from_into!(Real, f64);
-value_from_into!(Str, String);
-value_from_into!(Array, Vec<Value>);
-value_from_into!(Point, Point);
-value_from_into!(Line, Line);
-value_from_into!(Circle, Circle);
+value_from!(Bool, bool);
+value_from!(Int, i64);
+value_from!(Real, f64);
+value_from!(Str, String);
+value_from!(Array, Vec<Value>);
+value_from!(Point, Point);
+value_from!(Line, Line);
+value_from!(Circle, Circle);
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ValueInner {

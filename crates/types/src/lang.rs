@@ -5,6 +5,16 @@ use crate::core::{Value, ValueType};
 #[derive(Debug, PartialEq, Clone)]
 pub struct Ident(pub String);
 
+macro_rules! enum_from_variant {
+    ($enum:ty, $variant:ident, $inner_type:ty) => {
+        impl From<$inner_type> for $enum {
+            fn from(v: $inner_type) -> $enum {
+                <$enum>::$variant(v)
+            }
+        }
+    };
+}
+
 #[derive(Debug, Clone)]
 // Top-level object in language
 // Any script is represented as Vec<Stmt>
@@ -13,11 +23,17 @@ pub enum Statement {
     Command(Command),
 }
 
+enum_from_variant!(Statement, Definition, Definition);
+enum_from_variant!(Statement, Command, Command);
+
 #[derive(Debug, Clone)]
 pub enum Definition {
     ValueDefinition(ValueDefinition),
     FunctionDefinition(FunctionDefinition),
 }
+
+enum_from_variant!(Definition, ValueDefinition, ValueDefinition);
+enum_from_variant!(Definition, FunctionDefinition, FunctionDefinition);
 
 #[derive(Debug, Clone)]
 pub struct ValueDefinition {
@@ -28,7 +44,8 @@ pub struct ValueDefinition {
 
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
-    pub signature: FunctionSignature,
+    pub name: Ident,
+    pub argugments: Vec<FunctionDefinitionArgument>,
     pub return_type: ValueType,
     pub body: Expr,
 }
@@ -36,7 +53,7 @@ pub struct FunctionDefinition {
 #[derive(Debug, Clone)]
 pub struct FunctionDefinitionArgument {
     pub name: Ident,
-    pub value_type: ValueType,
+    pub value_type: FunctionArgumentType,
 }
 
 // Non-declarative style commands like move, pin, delete, set_transform, load,
@@ -73,6 +90,12 @@ pub enum ExprInner {
     If(IfExpr),
     Let(LetExpr),
 }
+
+enum_from_variant!(ExprInner, Value, Value);
+enum_from_variant!(ExprInner, Variable, Ident);
+enum_from_variant!(ExprInner, FuncCall, FuncCallExpr);
+enum_from_variant!(ExprInner, If, IfExpr);
+enum_from_variant!(ExprInner, Let, LetExpr);
 
 // Note: fails if none of the cases matched and default_case_value is not provided
 #[derive(Debug, Clone)]
