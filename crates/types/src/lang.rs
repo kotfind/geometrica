@@ -5,6 +5,12 @@ use crate::core::{Value, ValueType};
 #[derive(Debug, PartialEq, Clone)]
 pub struct Ident(pub String);
 
+impl<T: ToString> From<T> for Ident {
+    fn from(v: T) -> Self {
+        Ident(v.to_string())
+    }
+}
+
 macro_rules! enum_from_variant {
     ($enum:ty, $variant:ident, $inner_type:ty) => {
         impl From<$inner_type> for $enum {
@@ -64,7 +70,14 @@ pub struct Command {
     pub arguments: Vec<Expr>,
 }
 
-pub type Expr = Rc<ExprInner>;
+#[derive(Debug, Clone, PartialEq)]
+pub struct Expr(pub Rc<ExprInner>);
+
+impl<T: Into<ExprInner>> From<T> for Expr {
+    fn from(v: T) -> Self {
+        Expr(Rc::new(v.into()))
+    }
+}
 
 // Note: operator calls are represented as function calls.
 // E.g. `1 + 2` and `#add 1 2` are the same
@@ -82,7 +95,7 @@ pub type Expr = Rc<ExprInner>;
 //     - represent an object (final (that is shown in gui) or intermediate)
 //     - no variables (yet unknown values allowed)
 //     - stores information about dependencies
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExprInner {
     Value(Value),
     Variable(Ident),
@@ -98,37 +111,38 @@ enum_from_variant!(ExprInner, If, IfExpr);
 enum_from_variant!(ExprInner, Let, LetExpr);
 
 // Note: fails if none of the cases matched and default_case_value is not provided
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IfExpr {
     pub cases: Vec<IfExprCase>,
     pub default_case_value: Option<Expr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IfExprCase {
     pub condition: Expr,
     pub value: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LetExpr {
     pub definitions: Vec<LetExprDefinition>,
     pub value: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LetExprDefinition {
     pub name: Ident,
+    pub value_type: Option<ValueType>,
     pub value: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FuncCallExpr {
     pub name: Ident,
     pub arguments: Vec<Expr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunctionSignature {
     pub name: Ident,
     pub arguments: Vec<FunctionArgumentType>,
@@ -143,7 +157,7 @@ pub struct FunctionSignature {
 // f x:int y:str = ... // (3) OK: as `y` has different type (but conflicts with (2))
 // f x:int y:int = ... // (4) Error: conflicts with (1)
 // `
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FunctionArgumentType {
     Any,
     Value(ValueType),
