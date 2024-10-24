@@ -8,16 +8,71 @@ use types::{
 #[cfg(test)]
 mod test;
 
+fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> Expr {
+    FuncCallExpr {
+        name: ident.into(),
+        arguments: vec![arg.into()],
+    }
+    .into()
+}
+
+fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -> Expr {
+    FuncCallExpr {
+        name: ident.into(),
+        arguments: vec![lhs.into(), rhs.into()],
+    }
+    .into()
+}
+
 peg::parser! {
     grammar lang() for str {
         // -------------------- Expr --------------------
         pub rule expr() -> Expr
-            = ("(" _ e:expr() _ ")" { e }) // braced
-            / (func_call:func_call_expr() { func_call.into() }) // function call
-            / (let_expr:let_expr() { let_expr.into() }) // let expr
-            / (if_expr:if_expr() { if_expr.into() }) // if expr
-            / (var:ident() { var.into() }) // variable
-            / (val:value() { val.into() }) // value
+            = precedence! {
+                lhs:(@) _ "|" _ rhs:@ { binary("#or", lhs, rhs) }
+
+                --
+
+                lhs:(@) _ "&" _ rhs:@ { binary("#and", lhs, rhs) }
+
+                --
+
+                lhs:(@) _ ">" _ rhs:@ { binary("#ge", lhs, rhs) }
+                lhs:(@) _ "<" _ rhs:@ { binary("#le", lhs, rhs) }
+                lhs:(@) _ ">=" _ rhs:@ { binary("#geq", lhs, rhs) }
+                lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs) }
+                lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs) }
+                lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs) }
+
+                --
+
+                lhs:(@) _ "+" _ rhs:@ { binary("#add", lhs, rhs) }
+                lhs:(@) _ "-" _ rhs:@ { binary("#sub", lhs, rhs) }
+
+                --
+
+                lhs:(@) _ "*" _ rhs:@ { binary("#mul", lhs, rhs) }
+                lhs:(@) _ "/" _ rhs:@ { binary("#div", lhs, rhs) }
+                lhs:(@) _ "%" _ rhs:@ { binary("#mod", lhs, rhs) }
+
+                --
+
+                lhs:@ _ "^" _ rhs:(@) { binary("#pow", lhs, rhs) }
+
+                --
+
+                "-" _ rhs:@ { unary("#minus", rhs) }
+                "!" _ rhs:@ { unary("#not", rhs) }
+
+                --
+
+                "(" _ e:expr() _ ")" { e } // braced
+                func_call:func_call_expr() { func_call.into() } // function call
+                let_expr:let_expr() { let_expr.into() } // let expr
+                if_expr:if_expr() { if_expr.into() } // if expr
+                var:ident() { var.into() } // variable
+                val:value() { val.into() } // value
+            }
 
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(func_call_arg() ++ _)

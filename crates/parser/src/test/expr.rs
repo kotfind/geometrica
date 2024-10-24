@@ -5,6 +5,49 @@ use crate::lang;
 use super::*;
 
 #[test]
+fn precedence() {
+    assert_eq!(
+        lang::expr("1 + 2 * 3"),
+        Ok(binary(
+            "#add",
+            Value::from(1),
+            binary("#mul", Value::from(2), Value::from(3))
+        ))
+    );
+
+    assert_eq!(
+        lang::expr("(1 + 2) * 3"),
+        Ok(binary(
+            "#mul",
+            binary("#add", Value::from(1), Value::from(2)),
+            Value::from(3)
+        ))
+    );
+
+    assert_eq!(
+        lang::expr("x + 1 < y * 2"),
+        Ok(binary(
+            "#le",
+            binary("#add", Ident::from("x"), Value::from(1)),
+            binary("#mul", Ident::from("y"), Value::from(2)),
+        ))
+    );
+
+    assert_eq!(
+        lang::expr("x + 1 < y * 2 | both flag1 flag2"),
+        Ok(binary(
+            "#or",
+            binary(
+                "#le",
+                binary("#add", Ident::from("x"), Value::from(1)),
+                binary("#mul", Ident::from("y"), Value::from(2)),
+            ),
+            binary("both", Ident::from("flag1"), Ident::from("flag2"))
+        ))
+    );
+}
+
+#[test]
 fn _if() {
     // Single case
     assert_eq!(
