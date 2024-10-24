@@ -12,7 +12,8 @@ fn precedence() {
             "#add",
             Value::from(1),
             binary("#mul", Value::from(2), Value::from(3))
-        ))
+        )
+        .into())
     );
 
     assert_eq!(
@@ -21,7 +22,8 @@ fn precedence() {
             "#mul",
             binary("#add", Value::from(1), Value::from(2)),
             Value::from(3)
-        ))
+        )
+        .into())
     );
 
     assert_eq!(
@@ -30,7 +32,8 @@ fn precedence() {
             "#le",
             binary("#add", Ident::from("x"), Value::from(1)),
             binary("#mul", Ident::from("y"), Value::from(2)),
-        ))
+        )
+        .into())
     );
 
     assert_eq!(
@@ -43,8 +46,16 @@ fn precedence() {
                 binary("#mul", Ident::from("y"), Value::from(2)),
             ),
             binary("both", Ident::from("flag1"), Ident::from("flag2"))
-        ))
+        )
+        .into())
     );
+}
+
+#[test]
+fn dot_notation() {
+    assert_eq!(lang::expr("l.p1.x"), lang::expr("x (p1 l)"));
+    assert_eq!(lang::expr("1 + l.p1.x"), lang::expr("1 + x (p1 l)"));
+    assert_eq!(lang::expr("1 + l.p1.x + 1"), lang::expr("1 + x (p1 l) + 1"));
 }
 
 #[test]

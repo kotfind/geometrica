@@ -8,7 +8,7 @@ use types::{
 #[cfg(test)]
 mod test;
 
-fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> Expr {
+fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> FuncCallExpr {
     FuncCallExpr {
         name: ident.into(),
         arguments: vec![arg.into()],
@@ -16,7 +16,7 @@ fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> Expr {
     .into()
 }
 
-fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -> Expr {
+fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -> FuncCallExpr {
     FuncCallExpr {
         name: ident.into(),
         arguments: vec![lhs.into(), rhs.into()],
@@ -29,40 +29,44 @@ peg::parser! {
         // -------------------- Expr --------------------
         pub rule expr() -> Expr
             = precedence! {
-                lhs:(@) _ "|" _ rhs:@ { binary("#or", lhs, rhs) }
+                lhs:(@) _ "|" _ rhs:@ { binary("#or", lhs, rhs).into() }
 
                 --
 
-                lhs:(@) _ "&" _ rhs:@ { binary("#and", lhs, rhs) }
+                lhs:(@) _ "&" _ rhs:@ { binary("#and", lhs, rhs).into() }
 
                 --
 
-                lhs:(@) _ ">" _ rhs:@ { binary("#ge", lhs, rhs) }
-                lhs:(@) _ "<" _ rhs:@ { binary("#le", lhs, rhs) }
-                lhs:(@) _ ">=" _ rhs:@ { binary("#geq", lhs, rhs) }
-                lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs) }
-                lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs) }
-                lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs) }
+                lhs:(@) _ ">" _ rhs:@ { binary("#ge", lhs, rhs).into() }
+                lhs:(@) _ "<" _ rhs:@ { binary("#le", lhs, rhs).into() }
+                lhs:(@) _ ">=" _ rhs:@ { binary("#geq", lhs, rhs).into() }
+                lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
+                lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
+                lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
 
                 --
 
-                lhs:(@) _ "+" _ rhs:@ { binary("#add", lhs, rhs) }
-                lhs:(@) _ "-" _ rhs:@ { binary("#sub", lhs, rhs) }
+                lhs:(@) _ "+" _ rhs:@ { binary("#add", lhs, rhs).into() }
+                lhs:(@) _ "-" _ rhs:@ { binary("#sub", lhs, rhs).into() }
 
                 --
 
-                lhs:(@) _ "*" _ rhs:@ { binary("#mul", lhs, rhs) }
-                lhs:(@) _ "/" _ rhs:@ { binary("#div", lhs, rhs) }
-                lhs:(@) _ "%" _ rhs:@ { binary("#mod", lhs, rhs) }
+                lhs:(@) _ "*" _ rhs:@ { binary("#mul", lhs, rhs).into() }
+                lhs:(@) _ "/" _ rhs:@ { binary("#div", lhs, rhs).into() }
+                lhs:(@) _ "%" _ rhs:@ { binary("#mod", lhs, rhs).into() }
 
                 --
 
-                lhs:@ _ "^" _ rhs:(@) { binary("#pow", lhs, rhs) }
+                lhs:@ _ "^" _ rhs:(@) { binary("#pow", lhs, rhs).into() }
 
                 --
 
-                "-" _ rhs:@ { unary("#minus", rhs) }
-                "!" _ rhs:@ { unary("#not", rhs) }
+                "-" _ rhs:@ { unary("#minus", rhs).into() }
+                "!" _ rhs:@ { unary("#not", rhs).into() }
+
+                --
+
+                lhs:@ _ "." _ ident:ident() { unary(ident, lhs).into() }
 
                 --
 
@@ -73,6 +77,17 @@ peg::parser! {
                 var:ident() { var.into() } // variable
                 val:value() { val.into() } // value
             }
+
+        // pub rule dot_expr() -> FuncCallExpr
+        //     = expr:(
+        //         ("(" _ e:expr() _ ")" { e }) // braced
+        //         / (var:ident() { var.into() }) // variable
+        //         / (val:value() { val.into() }) // value
+        //         / (dot:dot_expr() { dot.into() })
+        //     ) _ "." _ func:ident()
+        // {
+        //     unary(func, expr)
+        // }
 
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(func_call_arg() ++ _)
