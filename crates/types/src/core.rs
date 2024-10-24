@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Value(pub Option<ValueInner>);
 
@@ -75,6 +77,22 @@ pub enum ValueType {
     Point,
     Line,
     Circle,
+}
+
+impl Display for ValueType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ValueType::Bool => "bool",
+            ValueType::Int => "int",
+            ValueType::Real => "real",
+            ValueType::Str => "str",
+            ValueType::Array => "array",
+            ValueType::Point => "point",
+            ValueType::Line => "line",
+            ValueType::Circle => "circle",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]

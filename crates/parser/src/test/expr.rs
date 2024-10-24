@@ -52,6 +52,19 @@ fn precedence() {
 }
 
 #[test]
+fn type_check() {
+    assert_eq!(
+        lang::expr("x is bool"),
+        Ok(unary("#is_bool", Ident::from("x")).into())
+    );
+
+    assert_eq!(
+        lang::expr("x + 1 is int"),
+        Ok(unary("#is_int", binary("#add", Ident::from("x"), Value::from(1))).into())
+    );
+}
+
+#[test]
 fn dot_notation() {
     assert_eq!(lang::expr("l.p1.x"), lang::expr("x (p1 l)"));
     assert_eq!(lang::expr("1 + l.p1.x"), lang::expr("1 + x (p1 l)"));

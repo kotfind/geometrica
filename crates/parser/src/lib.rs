@@ -43,6 +43,7 @@ peg::parser! {
                 lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
                 lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
                 lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
+                lhs:@ _ "is" _ rhs:value_type() { unary(format!("#is_{}", rhs.to_string()), lhs).into() }
 
                 --
 
