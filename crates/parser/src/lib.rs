@@ -10,7 +10,6 @@ fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> FuncCallExpr {
         name: ident.into(),
         arguments: vec![arg.into()],
     }
-    .into()
 }
 
 fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -> FuncCallExpr {
@@ -18,7 +17,6 @@ fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -
         name: ident.into(),
         arguments: vec![lhs.into(), rhs.into()],
     }
-    .into()
 }
 
 peg::parser! {
@@ -38,7 +36,7 @@ peg::parser! {
             = name:ident()
             __ arguments:(simple_expr() ** __)
         {
-            Command { name, arguments: arguments }
+            Command { name, arguments }
         }
 
         rule definition() -> Definition
@@ -86,7 +84,7 @@ peg::parser! {
                 lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
                 lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
                 lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
-                lhs:@ _ "is" _ rhs:value_type() { unary(format!("#is_{}", rhs.to_string()), lhs).into() }
+                lhs:@ _ "is" _ rhs:value_type() { unary(format!("#is_{}", rhs), lhs).into() }
 
                 --
 
@@ -131,7 +129,7 @@ peg::parser! {
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)
         {
-            FuncCallExpr { name, arguments: args }.into()
+            FuncCallExpr { name, arguments: args }
         }
 
         pub rule if_expr() -> IfExpr
@@ -139,7 +137,7 @@ peg::parser! {
             _ cases:(if_expr_case() ++ _)
             _ default_case_value:("else" _ e:expr() { e })?
         {
-            IfExpr { cases, default_case_value }.into()
+            IfExpr { cases, default_case_value }
         }
 
         rule if_expr_case() -> IfExprCase
