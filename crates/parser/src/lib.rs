@@ -1,5 +1,7 @@
 // Note: this file is so big and ugly as peg won't allow splitting grammar in multiple files
 
+pub use lang::{expr, script, statement};
+
 use types::{core::*, lang::*};
 
 #[cfg(test)]
