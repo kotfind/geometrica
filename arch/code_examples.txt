@@ -9,10 +9,9 @@ sum x:int y:int -> int = x + y
 
 // if construction
 fact x:int -> int = if
-    x == 0 ( 1 )
-    x > 0  ( fact (x - 1) )
-    ( unreachable "" )
-fi
+    x == 0 then 1
+    x > 0  then fact (x - 1)
+    else unreachable ""
 
 // variable defenition with function
 a = line (pt 1 2) (pt 2 3)
@@ -40,9 +39,8 @@ first_point_x = let l = line (point 1 2) (point 3 4) in l.p1.x
 
 // Type check
 is_num x:any -> bool = if
-    x is real || x is int ( true )
-    ( false )
-fi
+    x is real || x is int then true
+    else false
 
 // Type cast
 real_to_str x:real -> str = str x
