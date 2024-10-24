@@ -1,12 +1,113 @@
-use types::core::Value;
+// Note: this file is so big and ugly as peg won't allow splitting grammar in multiple files
+
+use types::{
+    core::{Value, ValueType},
+    lang::{Expr, FuncCallExpr, Ident, IfExpr, IfExprCase, LetExpr, LetExprDefinition},
+};
+
+#[cfg(test)]
+mod test;
 
 peg::parser! {
     grammar lang() for str {
-        // rule script() ->
+        // -------------------- Expr --------------------
+        pub rule expr() -> Expr
+            = ("(" _ e:expr() _ ")" { e }) // braced
+            / (func_call:func_call_expr() { func_call.into() }) // function call
+            / (let_expr:let_expr() { let_expr.into() }) // let expr
+            / (if_expr:if_expr() { if_expr.into() }) // if expr
+            / (var:ident() { var.into() }) // variable
+            / (val:value() { val.into() }) // value
+
+        pub rule func_call_expr() -> FuncCallExpr
+            = name:ident() _ args:(func_call_arg() ++ _)
+        {
+            FuncCallExpr { name, arguments: args }.into()
+        }
+
+        rule func_call_arg() -> Expr
+            = ("(" _ e:expr() _ ")" { e }) // braced
+            / (var:ident() { var.into() }) // variable
+            / (val:value() { val.into() }) // value
+
+        pub rule if_expr() -> IfExpr
+            = "if"
+            _ cases:(if_expr_case() ++ _)
+            _ default_case_value:("else" _ e:expr() { e })?
+        {
+            IfExpr { cases, default_case_value }.into()
+        }
+
+        rule if_expr_case() -> IfExprCase
+            = cond:expr() _ "then" _ value:expr()
+        {
+            IfExprCase { condition: cond, value }
+        }
+
+        pub rule let_expr() -> LetExpr
+            = "let"
+            _ definitions:(let_expr_definition() ++ (_ "," _))
+            _ "in"
+            _ value:expr()
+        {
+            LetExpr { definitions, value }
+        }
+
+        rule let_expr_definition() -> LetExprDefinition
+            = name:ident() value_type:(":" t:value_type() {t})?
+            _ "="
+            _ value:expr()
+        {
+            LetExprDefinition { name, value_type, value }
+        }
+
+        // -------------------- Ident --------------------
+        pub rule ident() -> Ident
+            = !keyword()
+                v:$(ident_first_char() ident_char()*)
+        {
+            Ident(v.to_string())
+        }
+
+        rule keyword()
+            = ("if" / "let" / "in" / "is" / "then" / "else")
+                &(whitespace() / eof())
+
+        rule eof() = ![_]
+
+        rule ident_char() -> char
+            = c:['0'..='9'] { c } / ident_first_char()
+
+        rule ident_first_char() -> char
+            = c:['a'..='z' | 'A'..='Z' | '_'] { c }
 
         // -------------------- Value --------------------
         pub rule value() -> Value
             = none() / real() / int() / _bool() / _str()
+
+        pub rule value_type() -> ValueType
+            = value_type:$(
+              "bool"
+            / "int"
+            / "real"
+            / "str"
+            / "array"
+            / "point"
+            / "line"
+            / "circle")
+        {
+            match value_type {
+                "bool" => ValueType::Bool,
+                "int" => ValueType::Int,
+                "real" => ValueType::Real,
+                "str" => ValueType::Str,
+                "array" => ValueType::Array,
+                "point" => ValueType::Point,
+                "line" => ValueType::Line,
+                "circle" => ValueType::Circle,
+                _ => unreachable!()
+            }
+        }
 
         pub rule int() -> Value
             = n:$(['+'|'-']?['0'..='9']+)
@@ -20,7 +121,7 @@ peg::parser! {
             = n:$(
                 ['+'|'-']? // sign
                 ['0'..='9']+ // before dot
-                &("." / "e") // requires either . or e; otherwise it's int
+                &(("." ['0'..='9']) / "e") // requires either . with digit or e; otherwise it's int
                 ("." ['0'..='9']+)? // after dot
                 ("e" ['+'|'-']? ['0'..='9']+)? // exponent
             )
@@ -73,88 +174,5 @@ peg::parser! {
 
         pub rule whitespace()
             = "\n" / " " / "\t"
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn value() {
-        assert_eq!(lang::value("42"), Ok(42.into()));
-        assert_eq!(lang::value("3.14"), Ok((3.14).into()));
-        assert_eq!(lang::value("true"), Ok(true.into()));
-        assert_eq!(lang::value("none"), Ok(Value::none()));
-        assert_eq!(
-            lang::value(r#""Hello, world!""#),
-            Ok("Hello, world!".to_string().into())
-        );
-    }
-
-    #[test]
-    fn int() {
-        assert_eq!(lang::int("-123"), Ok((-123).into()));
-    }
-
-    #[test]
-    fn real() {
-        assert_eq!(lang::real("-12.13e-3"), Ok((-12.13e-3).into()));
-    }
-
-    #[test]
-    fn bool() {
-        assert_eq!(lang::_bool("true"), Ok(true.into()));
-        assert_eq!(lang::_bool("false"), Ok(false.into()));
-    }
-
-    #[test]
-    fn none() {
-        assert_eq!(lang::none("none"), Ok(Value::none()));
-    }
-
-    #[test]
-    fn char() {
-        assert_eq!(lang::_char(r#"a"#), Ok('a'));
-        assert_eq!(lang::_char(r#"\n"#), Ok('\n'));
-        assert_eq!(lang::_char(r#"\\"#), Ok('\\'));
-        assert_eq!(lang::_char(r#"\""#), Ok('"'));
-    }
-
-    #[test]
-    fn array() {
-        assert_eq!(lang::array("()"), Ok(vec![].into()));
-        assert_eq!(
-            lang::array("(1, 2, 3)"),
-            Ok(vec![1.into(), 2.into(), 3.into()].into())
-        );
-        assert_eq!(
-            lang::array(r#"(1, 3.14, "hello")"#),
-            Ok(vec![1.into(), (3.14).into(), "hello".to_string().into()].into())
-        );
-    }
-
-    #[test]
-    fn str() {
-        assert_eq!(lang::_str(r#""abc""#), Ok("abc".to_string().into()));
-
-        assert_eq!(
-            lang::_str(r#""abc\"def\"ghi""#),
-            Ok("abc\"def\"ghi".to_string().into())
-        );
-
-        assert_eq!(lang::_str(r#""\\ \\\n""#), Ok("\\ \\\n".to_string().into()));
-    }
-
-    #[test]
-    fn comment() {
-        assert_eq!(lang::comment("/* abc */"), Ok(()));
-        assert_eq!(lang::comment("// abc\n"), Ok(()));
-    }
-
-    #[test]
-    fn empty() {
-        assert_eq!(lang::empty("/* abc */   // xy\n "), Ok(()));
-        assert_eq!(lang::empty(""), Ok(()));
     }
 }
