@@ -21,7 +21,7 @@ macro_rules! enum_from_variant {
     };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 // Top-level object in language
 // Any script is represented as Vec<Stmt>
 pub enum Statement {
@@ -32,7 +32,7 @@ pub enum Statement {
 enum_from_variant!(Statement, Definition, Definition);
 enum_from_variant!(Statement, Command, Command);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Definition {
     ValueDefinition(ValueDefinition),
     FunctionDefinition(FunctionDefinition),
@@ -41,30 +41,30 @@ pub enum Definition {
 enum_from_variant!(Definition, ValueDefinition, ValueDefinition);
 enum_from_variant!(Definition, FunctionDefinition, FunctionDefinition);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ValueDefinition {
     pub name: Ident,
-    pub value_type: ValueType,
+    pub value_type: Option<ValueType>,
     pub body: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDefinition {
     pub name: Ident,
-    pub argugments: Vec<FunctionDefinitionArgument>,
+    pub arguments: Vec<FunctionDefinitionArgument>,
     pub return_type: ValueType,
     pub body: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDefinitionArgument {
     pub name: Ident,
-    pub value_type: FunctionArgumentType,
+    pub value_type: ValueTypeOrAny,
 }
 
 // Non-declarative style commands like move, pin, delete, set_transform, load,
 // save
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Command {
     pub name: Ident, // TODO?: Or enum CommandKind
     pub arguments: Vec<Expr>,
@@ -145,20 +145,22 @@ pub struct FuncCallExpr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionSignature {
     pub name: Ident,
-    pub arguments: Vec<FunctionArgumentType>,
+    pub arguments: Vec<ValueTypeOrAny>,
 }
 
 // Overrides will conflict if they differ only in `any` argument.
 // E.g. having ``, doing `` and `f x:int y:str = ...` is ok, but
 // doing or ``
-// `
+// ```
 // f x:any y:int = ... // (1) Original function
 // f x:any y:str = ... // (2) OK: as `y` has different type
 // f x:int y:str = ... // (3) OK: as `y` has different type (but conflicts with (2))
 // f x:int y:int = ... // (4) Error: conflicts with (1)
-// `
+// ```
 #[derive(Debug, Clone, PartialEq)]
-pub enum FunctionArgumentType {
+pub enum ValueTypeOrAny {
     Any,
-    Value(ValueType),
+    ValueType(ValueType),
 }
+
+enum_from_variant!(ValueTypeOrAny, ValueType, ValueType);
