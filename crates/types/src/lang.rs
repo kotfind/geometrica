@@ -59,7 +59,7 @@ pub struct FunctionDefinition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDefinitionArgument {
     pub name: Ident,
-    pub value_type: ValueTypeOrAny,
+    pub value_type: ValueType,
 }
 
 // Non-declarative style commands like move, pin, delete, set_transform, load,
@@ -145,22 +145,5 @@ pub struct FuncCallExpr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionSignature {
     pub name: Ident,
-    pub arguments: Vec<ValueTypeOrAny>,
+    pub arguments: Vec<ValueType>,
 }
-
-// Overrides will conflict if they differ only in `any` argument.
-// E.g. having ``, doing `` and `f x:int y:str = ...` is ok, but
-// doing or ``
-// ```
-// f x:any y:int = ... // (1) Original function
-// f x:any y:str = ... // (2) OK: as `y` has different type
-// f x:int y:str = ... // (3) OK: as `y` has different type (but conflicts with (2))
-// f x:int y:int = ... // (4) Error: conflicts with (1)
-// ```
-#[derive(Debug, Clone, PartialEq)]
-pub enum ValueTypeOrAny {
-    Any,
-    ValueType(ValueType),
-}
-
-enum_from_variant!(ValueTypeOrAny, ValueType, ValueType);

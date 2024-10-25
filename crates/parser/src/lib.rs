@@ -56,7 +56,7 @@ peg::parser! {
         }
 
         rule function_definition_argument() -> FunctionDefinitionArgument
-            = name:ident() ":" value_type:value_type_or_any()
+            = name:ident() ":" value_type:value_type()
         {
             FunctionDefinitionArgument { name, value_type }
         }
@@ -188,10 +188,6 @@ peg::parser! {
         // -------------------- Value --------------------
         pub rule value() -> Value
             = none() / real() / int() / _bool() / _str()
-
-        pub rule value_type_or_any() -> ValueTypeOrAny
-            = (value_type:value_type() { value_type.into() })
-            / ("any" { ValueTypeOrAny::Any })
 
         pub rule value_type() -> ValueType
             = value_type:$(
