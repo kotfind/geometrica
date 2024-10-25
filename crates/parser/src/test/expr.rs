@@ -79,8 +79,8 @@ fn _if() {
         Ok(IfExpr {
             cases: vec![IfExprCase {
                 condition: FuncCallExpr {
-                    name: "is_odd".to_string().into(),
-                    arguments: vec![Ident::from("x".to_string()).into()]
+                    name: "is_odd".into(),
+                    args: vec![Ident::from("x").into()]
                 }
                 .into(),
                 value: Value::from("odd".to_string()).into()
@@ -100,16 +100,16 @@ fn _if() {
             cases: vec![
                 IfExprCase {
                     condition: FuncCallExpr {
-                        name: "is_odd".to_string().into(),
-                        arguments: vec![Ident::from("x".to_string()).into()]
+                        name: "is_odd".into(),
+                        args: vec![Ident::from("x").into()]
                     }
                     .into(),
                     value: Value::from("odd".to_string()).into()
                 },
                 IfExprCase {
                     condition: FuncCallExpr {
-                        name: "is_even".to_string().into(),
-                        arguments: vec![Ident::from("x".to_string()).into()]
+                        name: "is_even".into(),
+                        args: vec![Ident::from("x").into()]
                     }
                     .into(),
                     value: Value::from("even".to_string()).into()
@@ -131,16 +131,16 @@ fn _if() {
             cases: vec![
                 IfExprCase {
                     condition: FuncCallExpr {
-                        name: "is_odd".to_string().into(),
-                        arguments: vec![Ident::from("x".to_string()).into()]
+                        name: "is_odd".into(),
+                        args: vec![Ident::from("x").into()]
                     }
                     .into(),
                     value: Value::from("odd".to_string()).into()
                 },
                 IfExprCase {
                     condition: FuncCallExpr {
-                        name: "is_even".to_string().into(),
-                        arguments: vec![Ident::from("x".to_string()).into()]
+                        name: "is_even".into(),
+                        args: vec![Ident::from("x").into()]
                     }
                     .into(),
                     value: Value::from("even".to_string()).into()
@@ -148,8 +148,8 @@ fn _if() {
             ],
             default_case_value: Some(
                 FuncCallExpr {
-                    name: "unreachable".to_string().into(),
-                    arguments: vec![Value::from("".to_string()).into()]
+                    name: "unreachable".into(),
+                    args: vec![Value::from("".to_string()).into()]
                 }
                 .into()
             )
@@ -164,7 +164,7 @@ fn func_call() {
         lang::func_call_expr("fact 5"),
         Ok(FuncCallExpr {
             name: "fact".into(),
-            arguments: vec![Value::from(5).into()]
+            args: vec![Value::from(5).into()]
         })
     );
 
@@ -173,7 +173,7 @@ fn func_call() {
         lang::func_call_expr("add 1 2"),
         Ok(FuncCallExpr {
             name: "add".into(),
-            arguments: vec![Value::from(1).into(), Value::from(2).into()]
+            args: vec![Value::from(1).into(), Value::from(2).into()]
         })
     );
 
@@ -182,10 +182,7 @@ fn func_call() {
         lang::func_call_expr("add x y"),
         Ok(FuncCallExpr {
             name: "add".into(),
-            arguments: vec![
-                Ident::from("x".to_string()).into(),
-                Ident::from("y".to_string()).into()
-            ]
+            args: vec![Ident::from("x").into(), Ident::from("y").into()]
         })
     );
 
@@ -194,11 +191,11 @@ fn func_call() {
         lang::func_call_expr("add 1 (sub 2 3)"),
         Ok(FuncCallExpr {
             name: "add".into(),
-            arguments: vec![
+            args: vec![
                 Value::from(1).into(),
                 FuncCallExpr {
                     name: "sub".into(),
-                    arguments: vec![Value::from(2).into(), Value::from(3).into()]
+                    args: vec![Value::from(2).into(), Value::from(3).into()]
                 }
                 .into()
             ]
@@ -213,13 +210,13 @@ fn _let() {
         lang::let_expr("let x = 10 in fact x"),
         Ok(LetExpr {
             definitions: vec![LetExprDefinition {
-                name: Ident::from("x".to_string()),
+                name: Ident::from("x"),
                 value_type: None,
-                value: Value::from(10).into()
+                body: Value::from(10).into()
             }],
-            value: FuncCallExpr {
+            body: FuncCallExpr {
                 name: Ident::from("fact"),
-                arguments: vec![Ident::from("x").into()]
+                args: vec![Ident::from("x").into()]
             }
             .into()
         })
@@ -231,19 +228,19 @@ fn _let() {
         Ok(LetExpr {
             definitions: vec![
                 LetExprDefinition {
-                    name: Ident::from("x".to_string()),
+                    name: Ident::from("x"),
                     value_type: None,
-                    value: Value::from(10).into()
+                    body: Value::from(10).into()
                 },
                 LetExprDefinition {
-                    name: Ident::from("y".to_string()),
+                    name: Ident::from("y"),
                     value_type: None,
-                    value: Value::from(42).into()
+                    body: Value::from(42).into()
                 }
             ],
-            value: FuncCallExpr {
+            body: FuncCallExpr {
                 name: Ident::from("add"),
-                arguments: vec![Ident::from("x").into(), Ident::from("y").into()]
+                args: vec![Ident::from("x").into(), Ident::from("y").into()]
             }
             .into()
         })
@@ -255,19 +252,19 @@ fn _let() {
         Ok(LetExpr {
             definitions: vec![
                 LetExprDefinition {
-                    name: Ident::from("x".to_string()),
+                    name: Ident::from("x"),
                     value_type: Some(ValueType::Int),
-                    value: Value::from(10).into()
+                    body: Value::from(10).into()
                 },
                 LetExprDefinition {
-                    name: Ident::from("y".to_string()),
+                    name: Ident::from("y"),
                     value_type: Some(ValueType::Int),
-                    value: Value::from(42).into()
+                    body: Value::from(42).into()
                 }
             ],
-            value: FuncCallExpr {
+            body: FuncCallExpr {
                 name: Ident::from("add"),
-                arguments: vec![Ident::from("x").into(), Ident::from("y").into()]
+                args: vec![Ident::from("x").into(), Ident::from("y").into()]
             }
             .into()
         })

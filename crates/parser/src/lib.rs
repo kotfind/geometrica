@@ -10,14 +10,14 @@ mod test;
 fn unary(ident: impl Into<Ident>, arg: impl Into<Expr>) -> FuncCallExpr {
     FuncCallExpr {
         name: ident.into(),
-        arguments: vec![arg.into()],
+        args: vec![arg.into()],
     }
 }
 
 fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -> FuncCallExpr {
     FuncCallExpr {
         name: ident.into(),
-        arguments: vec![lhs.into(), rhs.into()],
+        args: vec![lhs.into(), rhs.into()],
     }
 }
 
@@ -36,9 +36,9 @@ peg::parser! {
 
         pub rule command() -> Command
             = name:ident()
-            __ arguments:(simple_expr() ** __)
+            __ args:(simple_expr() ** __)
         {
-            Command { name, arguments }
+            Command { name, args }
         }
 
         rule definition() -> Definition
@@ -47,12 +47,12 @@ peg::parser! {
 
         pub rule function_definition() -> FunctionDefinition
             = name:ident()
-            __ arguments:(function_definition_argument() ** __)
+            __ args:(function_definition_argument() ** __)
             _ "->" _ return_type:value_type()
             _ "="
             _ body:expr()
         {
-            FunctionDefinition { name, arguments, return_type, body }
+            FunctionDefinition { name, args, return_type, body }
         }
 
         rule function_definition_argument() -> FunctionDefinitionArgument
@@ -86,7 +86,7 @@ peg::parser! {
                 lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
                 lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
                 lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
-                lhs:@ _ "is" _ rhs:value_type() { unary(format!("#is_{}", rhs), lhs).into() }
+                lhs:@ _ "is" _ rhs:value_type() { unary(&format!("#is_{}", rhs) as &str, lhs).into() }
 
                 --
 
@@ -131,7 +131,7 @@ peg::parser! {
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)
         {
-            FuncCallExpr { name, arguments: args }
+            FuncCallExpr { name, args: args }
         }
 
         pub rule if_expr() -> IfExpr
@@ -152,17 +152,17 @@ peg::parser! {
             = "let"
             _ definitions:(let_expr_definition() ++ (_ "," _))
             _ "in"
-            _ value:expr()
+            _ body:expr()
         {
-            LetExpr { definitions, value }
+            LetExpr { definitions, body }
         }
 
         rule let_expr_definition() -> LetExprDefinition
             = name:ident() value_type:(":" t:value_type() {t})?
             _ "="
-            _ value:expr()
+            _ body:expr()
         {
-            LetExprDefinition { name, value_type, value }
+            LetExprDefinition { name, value_type, body }
         }
 
         // -------------------- Ident --------------------

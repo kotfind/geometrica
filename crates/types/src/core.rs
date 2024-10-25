@@ -40,7 +40,7 @@ value_from!(Line, Line);
 value_from!(Circle, Circle);
 
 impl Value {
-    pub fn get_type(&self) -> ValueType {
+    pub fn value_type(&self) -> ValueType {
         match self {
             Value::Bool(_) => ValueType::Bool,
             Value::Int(_) => ValueType::Int,

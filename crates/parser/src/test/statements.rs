@@ -18,7 +18,7 @@ fn script() {
             .into(),
             Command {
                 name: Ident::from("move"),
-                arguments: vec![
+                args: vec![
                     Ident::from("p").into(),
                     Value::from(3).into(),
                     Value::from(4).into(),
@@ -45,7 +45,7 @@ fn statement() {
         lang::statement("move p 3 4"),
         Ok(Command {
             name: Ident::from("move"),
-            arguments: vec![
+            args: vec![
                 Ident::from("p").into(),
                 Value::from(3).into(),
                 Value::from(4).into()
@@ -61,7 +61,7 @@ fn command() {
         lang::command("move l 1 2"),
         Ok(Command {
             name: Ident::from("move"),
-            arguments: vec![
+            args: vec![
                 Ident::from("l").into(),
                 Value::from(1).into(),
                 Value::from(2).into()
@@ -76,7 +76,7 @@ fn function_definition() {
         lang::function_definition("hypot x:int y:int -> int = x^2 + y^2"),
         Ok(FunctionDefinition {
             name: Ident::from("hypot"),
-            arguments: vec![
+            args: vec![
                 FunctionDefinitionArgument {
                     name: Ident::from("x"),
                     value_type: ValueType::Int.into()

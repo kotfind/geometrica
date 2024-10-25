@@ -1,12 +1,18 @@
-use std::rc::Rc;
+use std::{fmt::Display, sync::Arc};
 
 use crate::core::{Value, ValueType};
 
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub struct Ident(pub String);
 
-impl<T: ToString> From<T> for Ident {
-    fn from(v: T) -> Self {
+impl Display for Ident {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<&str> for Ident {
+    fn from(v: &str) -> Self {
         Ident(v.to_string())
     }
 }
@@ -51,7 +57,7 @@ pub struct ValueDefinition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDefinition {
     pub name: Ident,
-    pub arguments: Vec<FunctionDefinitionArgument>,
+    pub args: Vec<FunctionDefinitionArgument>,
     pub return_type: ValueType,
     pub body: Expr,
 }
@@ -67,15 +73,15 @@ pub struct FunctionDefinitionArgument {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Command {
     pub name: Ident, // TODO?: Or enum CommandKind
-    pub arguments: Vec<Expr>,
+    pub args: Vec<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Expr(pub Rc<ExprInner>);
+pub struct Expr(pub Arc<ExprInner>);
 
 impl<T: Into<ExprInner>> From<T> for Expr {
     fn from(v: T) -> Self {
-        Expr(Rc::new(v.into()))
+        Expr(Arc::new(v.into()))
     }
 }
 
@@ -126,24 +132,24 @@ pub struct IfExprCase {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetExpr {
     pub definitions: Vec<LetExprDefinition>,
-    pub value: Expr,
+    pub body: Expr,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetExprDefinition {
     pub name: Ident,
     pub value_type: Option<ValueType>,
-    pub value: Expr,
+    pub body: Expr,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FuncCallExpr {
     pub name: Ident,
-    pub arguments: Vec<Expr>,
+    pub args: Vec<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct FunctionSignature {
     pub name: Ident,
-    pub arguments: Vec<ValueType>,
+    pub arg_types: Vec<ValueType>,
 }
