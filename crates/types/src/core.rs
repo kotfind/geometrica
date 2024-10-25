@@ -1,12 +1,15 @@
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Value(pub Option<ValueInner>);
-
-impl Value {
-    pub fn none() -> Self {
-        Self(None)
-    }
+pub enum Value {
+    Bool(Option<bool>),
+    Int(Option<i64>),
+    Real(Option<f64>),
+    Str(Option<String>),
+    Array(Option<Vec<Value>>),
+    Point(Option<Point>),
+    Line(Option<Line>),
+    Circle(Option<Circle>),
 }
 
 macro_rules! value_from {
@@ -14,17 +17,14 @@ macro_rules! value_from {
         // T -> Value
         impl From<$inner_type> for Value {
             fn from(v: $inner_type) -> Self {
-                Value(Some(ValueInner::$variant(v)))
+                Some(v).into()
             }
         }
 
         // Option<T> -> Value
         impl From<Option<$inner_type>> for Value {
             fn from(opt_v: Option<$inner_type>) -> Self {
-                match opt_v {
-                    Some(v) => v.into(),
-                    None => Value(None),
-                }
+                Value::$variant(opt_v)
             }
         }
     };
@@ -39,35 +39,35 @@ value_from!(Point, Point);
 value_from!(Line, Line);
 value_from!(Circle, Circle);
 
-#[derive(Debug, PartialEq, Clone)]
-pub enum ValueInner {
-    Bool(bool),
-    Int(i64),
-    Real(f64),
-    Str(String),
-    // A heterogeneous array
-    Array(Vec<Value>),
-    Point(Point),
-    Line(Line),
-    Circle(Circle),
-}
-
-impl ValueInner {
-    pub fn value_type(&self) -> ValueType {
+impl Value {
+    pub fn get_type(&self) -> ValueType {
         match self {
-            ValueInner::Bool(_) => ValueType::Bool,
-            ValueInner::Int(_) => ValueType::Int,
-            ValueInner::Real(_) => ValueType::Real,
-            ValueInner::Str(_) => ValueType::Str,
-            ValueInner::Array(_) => ValueType::Array,
-            ValueInner::Point(_) => ValueType::Point,
-            ValueInner::Line(_) => ValueType::Line,
-            ValueInner::Circle(_) => ValueType::Circle,
+            Value::Bool(_) => ValueType::Bool,
+            Value::Int(_) => ValueType::Int,
+            Value::Real(_) => ValueType::Real,
+            Value::Str(_) => ValueType::Str,
+            Value::Array(_) => ValueType::Array,
+            Value::Point(_) => ValueType::Point,
+            Value::Line(_) => ValueType::Line,
+            Value::Circle(_) => ValueType::Circle,
+        }
+    }
+
+    pub fn none(value_type: ValueType) -> Value {
+        match value_type {
+            ValueType::Bool => Value::Bool(None),
+            ValueType::Int => Value::Int(None),
+            ValueType::Real => Value::Real(None),
+            ValueType::Str => Value::Str(None),
+            ValueType::Array => Value::Array(None),
+            ValueType::Point => Value::Point(None),
+            ValueType::Line => Value::Line(None),
+            ValueType::Circle => Value::Circle(None),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum ValueType {
     Bool,
     Int,
@@ -124,29 +124,24 @@ mod text {
     use super::*;
 
     #[test]
-    fn none() {
-        assert_eq!(Value::none(), Value(None));
-    }
-
-    #[test]
     fn value_from_bool() {
-        assert_eq!(Value(Some(ValueInner::Bool(true))), true.into());
+        assert_eq!(Value::Bool(Some(true)), true.into());
     }
 
     #[test]
     fn value_from_int() {
-        assert_eq!(Value(Some(ValueInner::Int(42))), 42.into());
+        assert_eq!(Value::Int(Some(42)), 42.into());
     }
 
     #[test]
     fn value_from_real() {
-        assert_eq!(Value(Some(ValueInner::Real(3.14))), 3.14.into());
+        assert_eq!(Value::Real(Some(3.14)), 3.14.into());
     }
 
     #[test]
     fn value_from_str() {
         assert_eq!(
-            Value(Some(ValueInner::Str("hello".to_string()))),
+            Value::Str(Some("hello".to_string())),
             "hello".to_string().into()
         );
     }
@@ -154,11 +149,11 @@ mod text {
     #[test]
     fn value_from_array() {
         assert_eq!(
-            Value(Some(ValueInner::Array(vec![
+            Value::Array(Some(vec![
                 1.into(),
                 "hello".to_string().into(),
                 true.into()
-            ]))),
+            ])),
             vec![1.into(), "hello".to_string().into(), true.into()].into()
         );
     }
@@ -166,7 +161,7 @@ mod text {
     #[test]
     fn value_from_point() {
         let pt = Point { x: 1., y: 2. };
-        assert_eq!(Value(Some(ValueInner::Point(pt.clone()))), pt.into());
+        assert_eq!(Value::Point(Some(pt.clone())), pt.into());
     }
 
     #[test]
@@ -174,7 +169,7 @@ mod text {
         let p1 = Point { x: 1., y: 2. };
         let p2 = Point { x: 3., y: 4. };
         let l = Line { p1, p2 };
-        assert_eq!(Value(Some(ValueInner::Line(l.clone()))), l.into());
+        assert_eq!(Value::Line(Some(l.clone())), l.into());
     }
 
     #[test]
@@ -184,15 +179,12 @@ mod text {
             center: p,
             radius: 3.,
         };
-        assert_eq!(Value(Some(ValueInner::Circle(c.clone()))), c.into());
+        assert_eq!(Value::Circle(Some(c.clone())), c.into());
     }
 
     #[test]
     fn value_from_option() {
-        assert_eq!(Value(None), Option::<i64>::None.into());
-        assert_eq!(
-            Value(Some(ValueInner::Int(42))),
-            Option::<i64>::Some(42).into()
-        );
+        assert_eq!(Value::none(ValueType::Int), Option::<i64>::None.into());
+        assert_eq!(Value::Int(Some(42)), Option::<i64>::Some(42).into());
     }
 }

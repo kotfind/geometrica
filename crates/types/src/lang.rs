@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::core::{Value, ValueType};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub struct Ident(pub String);
 
 impl<T: ToString> From<T> for Ident {
@@ -142,7 +142,7 @@ pub struct FuncCallExpr {
     pub arguments: Vec<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct FunctionSignature {
     pub name: Ident,
     pub arguments: Vec<ValueType>,

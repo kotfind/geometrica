@@ -5,7 +5,7 @@ fn value() {
     assert_eq!(lang::value("42"), Ok(42.into()));
     assert_eq!(lang::value("3.14"), Ok((3.14).into()));
     assert_eq!(lang::value("true"), Ok(true.into()));
-    assert_eq!(lang::value("none"), Ok(Value::none()));
+    assert_eq!(lang::value("none int"), Ok(Value::none(ValueType::Int)));
     assert_eq!(
         lang::value(r#""Hello, world!""#),
         Ok("Hello, world!".to_string().into())
@@ -30,7 +30,17 @@ fn bool() {
 
 #[test]
 fn none() {
-    assert_eq!(lang::none("none"), Ok(Value::none()));
+    assert_eq!(lang::none("none bool"), Ok(Value::none(ValueType::Bool)));
+    assert_eq!(lang::none("none int"), Ok(Value::none(ValueType::Int)));
+    assert_eq!(lang::none("none real"), Ok(Value::none(ValueType::Real)));
+    assert_eq!(lang::none("none str"), Ok(Value::none(ValueType::Str)));
+    assert_eq!(lang::none("none array"), Ok(Value::none(ValueType::Array)));
+    assert_eq!(lang::none("none point"), Ok(Value::none(ValueType::Point)));
+    assert_eq!(lang::none("none line"), Ok(Value::none(ValueType::Line)));
+    assert_eq!(
+        lang::none("none circle"),
+        Ok(Value::none(ValueType::Circle))
+    );
 }
 
 #[test]

@@ -246,7 +246,7 @@ peg::parser! {
         }
 
         pub rule none() -> Value
-            = "none" { Value::none() }
+            = "none" __ value_type:value_type() { Value::none(value_type) }
 
         pub rule _str() -> Value
             = "\"" s:(_char()*) "\""
