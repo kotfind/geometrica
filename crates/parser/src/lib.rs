@@ -80,7 +80,7 @@ peg::parser! {
 
                 --
 
-                lhs:(@) _ ">" _ rhs:@ { binary("#ge", lhs, rhs).into() }
+                lhs:(@) _ ">" _ rhs:@ { binary("#gr", lhs, rhs).into() }
                 lhs:(@) _ "<" _ rhs:@ { binary("#le", lhs, rhs).into() }
                 lhs:(@) _ ">=" _ rhs:@ { binary("#geq", lhs, rhs).into() }
                 lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
@@ -114,13 +114,15 @@ peg::parser! {
 
                 --
 
+                e:(@) __ "as" __ value_type:value_type() { unary(&format!("#as_{}", value_type) as &str, e).into() }
+                array:array() { array.into() } // array
                 "(" _ e:expr() _ ")" { e } // braced
                 func_call:func_call_expr() { func_call.into() } // function call
                 let_expr:let_expr() { let_expr.into() } // let expr
                 if_expr:if_expr() { if_expr.into() } // if expr
-                var:ident() { var.into() } // variable
                 val:value() { val.into() } // value
-            }
+                var:ident() { var.into() } // variable
+        }
 
         // A kind of expr, using that won't be ambiguous without brackets
         rule simple_expr() -> Expr
@@ -131,7 +133,7 @@ peg::parser! {
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)
         {
-            FuncCallExpr { name, args: args }
+            FuncCallExpr { name, args }
         }
 
         pub rule if_expr() -> IfExpr
@@ -174,7 +176,7 @@ peg::parser! {
         }
 
         rule keyword()
-            = ("if" / "let" / "in" / "is" / "then" / "else")
+            = ("if" / "let" / "in" / "is" / "as" / "then" / "else")
                 &(whitespace() / eof())
 
         rule eof() = ![_]

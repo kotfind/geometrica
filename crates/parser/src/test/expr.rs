@@ -65,6 +65,19 @@ fn type_check() {
 }
 
 #[test]
+fn type_cast() {
+    assert_eq!(
+        lang::expr("x as bool"),
+        Ok(unary("#as_bool", Ident::from("x")).into())
+    );
+
+    assert_eq!(
+        lang::expr("x + 1.0 as int"),
+        Ok(binary("#add", Ident::from("x"), unary("#as_int", Value::from(1.0))).into())
+    );
+}
+
+#[test]
 fn dot_notation() {
     assert_eq!(lang::expr("l.p1.x"), lang::expr("x (p1 l)"));
     assert_eq!(lang::expr("1 + l.p1.x"), lang::expr("1 + x (p1 l)"));
@@ -268,5 +281,13 @@ fn _let() {
             }
             .into()
         })
+    );
+}
+
+#[test]
+fn array() {
+    assert_eq!(
+        lang::expr("(1, 2, 3)"),
+        Ok(Value::from(vec![1.into(), 2.into(), 3.into()]).into())
     );
 }

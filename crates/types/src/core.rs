@@ -12,6 +12,40 @@ pub enum Value {
     Circle(Option<Circle>),
 }
 
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Bool(Some(v)) => write!(f, "{}", v),
+            Value::Int(Some(v)) => write!(f, "{}", v),
+            Value::Real(Some(v)) => write!(f, "{:?}", v),
+            Value::Str(Some(v)) => write!(f, r#""{}""#, v),
+            Value::Array(Some(v)) => {
+                write!(
+                    f,
+                    "({})",
+                    v.iter()
+                        .map(|item| item.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+            Value::Point(Some(v)) => write!(f, "{}", v),
+            Value::Line(Some(v)) => write!(f, "{}", v),
+            Value::Circle(Some(v)) => write!(f, "{}", v),
+            Value::Bool(None)
+            | Value::Int(None)
+            | Value::Real(None)
+            | Value::Str(None)
+            | Value::Array(None)
+            | Value::Point(None)
+            | Value::Line(None)
+            | Value::Circle(None) => {
+                write!(f, "none_{}", self.value_type())
+            }
+        }
+    }
+}
+
 macro_rules! value_from {
     ($variant:ident, $inner_type:ty) => {
         // T -> Value
@@ -114,16 +148,36 @@ pub struct Point {
     pub y: f64,
 }
 
+impl Display for Point {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "pt {x} {y}", x = self.x, y = self.y)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Line {
     pub p1: Point,
     pub p2: Point,
 }
 
+impl Display for Line {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "line ({p1}) ({p2})", p1 = self.p1, p2 = self.p2)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Circle {
-    pub center: Point,
-    pub radius: f64,
+    /// Center
+    pub o: Point,
+    /// Radius
+    pub r: f64,
+}
+
+impl Display for Circle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "circ ({o}) ({r})", o = self.o, r = self.r)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
