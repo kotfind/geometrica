@@ -1,12 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use once_cell::sync::Lazy;
 use types::{
-    core::{Value, ValueType},
+    core::Value,
     lang::{Expr, FunctionSignature, Ident},
 };
 
-use crate::executor::{Eval, EvalResult, EvalScope};
+use crate::eval::{Eval, EvalResult, EvalScope};
+
+mod builtin;
 
 #[derive(Clone)]
 pub struct Function(Arc<FunctionInner>);
@@ -23,38 +24,6 @@ impl Function {
             FunctionKind::BuiltIn(builtin) => builtin(args),
             FunctionKind::CustomFunction(custom) => custom.eval(&inner.signature, args),
         }
-    }
-
-    pub fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
-        assert!(sign.name.0.starts_with('#'));
-
-        static BUILT_IN_FUNCS: Lazy<HashMap<FunctionSignature, Function>> = Lazy::new(|| {
-            let mut ans: HashMap<FunctionSignature, Function> = HashMap::new();
-
-            // XXX: Need better syntax for built-in function definition (possibly macro)
-            let sign = FunctionSignature {
-                name: Ident::from("#add"),
-                arg_types: vec![ValueType::Int, ValueType::Int],
-            };
-            ans.insert(
-                sign.clone(),
-                Function(Arc::new(FunctionInner {
-                    signature: sign,
-                    kind: FunctionKind::BuiltIn(Box::new(|args: Vec<Value>| {
-                        let Value::Int(Some(lhs)) = args[0] else {
-                            panic!("Fix Me")
-                        };
-                        let Value::Int(Some(rhs)) = args[1] else {
-                            panic!("Fix Me")
-                        };
-                        Ok(Value::Int(Some(lhs + rhs)))
-                    })),
-                })),
-            );
-            ans
-        });
-
-        BUILT_IN_FUNCS.get(sign).cloned()
     }
 }
 

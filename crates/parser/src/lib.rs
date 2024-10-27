@@ -97,7 +97,7 @@ peg::parser! {
 
                 lhs:(@) _ "*" _ rhs:@ { binary("#mul", lhs, rhs).into() }
                 lhs:(@) _ "/" _ rhs:@ { binary("#div", lhs, rhs).into() }
-                lhs:(@) _ "%" _ rhs:@ { binary("#mod", lhs, rhs).into() }
+                lhs:(@) _ "%" _ rhs:@ { binary("#rem", lhs, rhs).into() }
 
                 --
 

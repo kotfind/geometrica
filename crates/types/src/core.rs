@@ -53,6 +53,19 @@ impl Value {
         }
     }
 
+    pub fn is_none(&self) -> bool {
+        match self {
+            Value::Bool(v) => v.is_none(),
+            Value::Int(v) => v.is_none(),
+            Value::Real(v) => v.is_none(),
+            Value::Str(v) => v.is_none(),
+            Value::Array(v) => v.is_none(),
+            Value::Point(v) => v.is_none(),
+            Value::Line(v) => v.is_none(),
+            Value::Circle(v) => v.is_none(),
+        }
+    }
+
     pub fn none(value_type: ValueType) -> Value {
         match value_type {
             ValueType::Bool => Value::Bool(None),

@@ -37,6 +37,10 @@ impl<'a> EvalScope<'a> {
     }
 
     pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
+        if sign.name.0.starts_with('#') {
+            return Function::get_builtin(sign);
+        }
+
         let maybe_ans = self.funcs.get(sign).cloned();
         if maybe_ans.is_some() {
             maybe_ans
@@ -193,5 +197,21 @@ impl Eval for LetExpr {
         }
 
         self.body.eval(&new_scope)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn smth() {
+        assert_eq!(
+            parser::expr("1 + 1")
+                .unwrap()
+                .eval(&EvalScope::new())
+                .unwrap(),
+            2.into()
+        );
     }
 }
