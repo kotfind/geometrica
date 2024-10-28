@@ -40,7 +40,7 @@ impl Display for Value {
             | Value::Point(None)
             | Value::Line(None)
             | Value::Circle(None) => {
-                write!(f, "none_{}", self.value_type())
+                write!(f, "none {}", self.value_type())
             }
         }
     }
@@ -242,10 +242,7 @@ mod text {
     #[test]
     fn value_from_circle() {
         let p = Point { x: 1., y: 2. };
-        let c = Circle {
-            center: p,
-            radius: 3.,
-        };
+        let c = Circle { o: p, r: 3. };
         assert_eq!(Value::Circle(Some(c.clone())), c.into());
     }
 

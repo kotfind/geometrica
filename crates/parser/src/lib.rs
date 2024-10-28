@@ -87,6 +87,7 @@ peg::parser! {
                 lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
                 lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
                 lhs:@ _ "is" _ rhs:value_type() { unary(&format!("#is_{}", rhs) as &str, lhs).into() }
+                lhs:@ _ "is" _ "none" { unary("#is_none", lhs).into() }
 
                 --
 
@@ -176,7 +177,7 @@ peg::parser! {
         }
 
         rule keyword()
-            = ("if" / "let" / "in" / "is" / "as" / "then" / "else")
+            = ("if" / "let" / "in" / "is" / "as" / "then" / "else" / "none")
                 &(whitespace() / eof())
 
         rule eof() = ![_]

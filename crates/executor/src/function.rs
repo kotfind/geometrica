@@ -7,7 +7,7 @@ use types::{
 
 use crate::eval::{Eval, EvalResult, EvalScope};
 
-mod builtin;
+mod builtins;
 
 #[derive(Clone)]
 pub struct Function(Arc<FunctionInner>);
