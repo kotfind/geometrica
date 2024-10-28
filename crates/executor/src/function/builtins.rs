@@ -39,18 +39,18 @@ macro_rules! unwrap_none {
 }
 use unwrap_none;
 
-// Inserts pair (FunctionSignature, Function) into builtin_functions HashMap for function
-// with name '#' + $name and specified arguments, return type and body
+// Inserts pair (FunctionSignature, Function) into $builtin_functions HashMap for function
+// with name $name and specified arguments, return type and body
 macro_rules! builtin {
     (INTO $builtin_functions:ident INSERT) => {};
 
     (INTO $builtin_functions:ident INSERT
-        fn $name:ident ($($arg_name:ident : $arg_type:ident),*) -> $ret_type:ident $body:block
+        fn $name:literal ($($arg_name:ident : $arg_type:ident),*) -> $ret_type:ident $body:block
         $($rest:tt)*
     ) => {
         {
             let sign = FunctionSignature {
-                name: Ident("#".to_string() + stringify!($name)),
+                name: Ident::from($name),
                 arg_types: vec![
                     $(ValueType::$arg_type),*
                 ]
@@ -90,7 +90,7 @@ macro_rules! simple_builtin {
     (INTO $builtin_functions:ident INSERT) => {};
 
     (INTO $builtin_functions:ident INSERT
-        fn $name:ident ($($arg_name:ident : $arg_type:ident),*) -> $ret_type:ident $body:block
+        fn $name:literal ($($arg_name:ident : $arg_type:ident),*) -> $ret_type:ident $body:block
         $($rest:tt)*
     ) => {
         builtin!(INTO $builtin_functions INSERT fn $name ($($arg_name : $arg_type),*) -> $ret_type {

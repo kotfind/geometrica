@@ -3,45 +3,45 @@ use super::*;
 pub fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Add
-        fn add (lhs:  Int, rhs:  Int) ->  Int { lhs        + rhs }
-        fn add (lhs: Real, rhs: Real) -> Real { lhs        + rhs }
-        fn add (lhs:  Int, rhs: Real) -> Real { lhs as f64 + rhs }
-        fn add (lhs: Real, rhs:  Int) -> Real { lhs        + rhs as f64 }
-        fn add (lhs:  Str, rhs:  Str) -> Str  { lhs + &rhs }
-        fn add (lhs: Array, rhs: Array) -> Array {
+        fn "#add" (lhs:  Int, rhs:  Int) ->  Int { lhs        + rhs }
+        fn "#add" (lhs: Real, rhs: Real) -> Real { lhs        + rhs }
+        fn "#add" (lhs:  Int, rhs: Real) -> Real { lhs as f64 + rhs }
+        fn "#add" (lhs: Real, rhs:  Int) -> Real { lhs        + rhs as f64 }
+        fn "#add" (lhs:  Str, rhs:  Str) -> Str  { lhs + &rhs }
+        fn "#add" (lhs: Array, rhs: Array) -> Array {
                 let mut lhs = lhs;
                 let mut rhs = rhs;
                 lhs.append(&mut rhs);
                 lhs
         }
         // Sub
-        fn sub (lhs:  Int, rhs:  Int) -> Int  { lhs        - rhs }
-        fn sub (lhs: Real, rhs: Real) -> Real { lhs        - rhs }
-        fn sub (lhs:  Int, rhs: Real) -> Real { lhs as f64 - rhs }
-        fn sub (lhs: Real, rhs:  Int) -> Real { lhs        - rhs as f64 }
+        fn "#sub" (lhs:  Int, rhs:  Int) -> Int  { lhs        - rhs }
+        fn "#sub" (lhs: Real, rhs: Real) -> Real { lhs        - rhs }
+        fn "#sub" (lhs:  Int, rhs: Real) -> Real { lhs as f64 - rhs }
+        fn "#sub" (lhs: Real, rhs:  Int) -> Real { lhs        - rhs as f64 }
         // Mul
-        fn mul (lhs:  Int, rhs:  Int) -> Int  { lhs        * rhs }
-        fn mul (lhs: Real, rhs: Real) -> Real { lhs        * rhs }
-        fn mul (lhs:  Int, rhs: Real) -> Real { lhs as f64 * rhs }
-        fn mul (lhs: Real, rhs:  Int) -> Real { lhs        * rhs as f64 }
+        fn "#mul" (lhs:  Int, rhs:  Int) -> Int  { lhs        * rhs }
+        fn "#mul" (lhs: Real, rhs: Real) -> Real { lhs        * rhs }
+        fn "#mul" (lhs:  Int, rhs: Real) -> Real { lhs as f64 * rhs }
+        fn "#mul" (lhs: Real, rhs:  Int) -> Real { lhs        * rhs as f64 }
         // Div
-        fn div (lhs:  Int, rhs:  Int) -> Int  { lhs        / rhs }
-        fn div (lhs: Real, rhs: Real) -> Real { lhs        / rhs }
-        fn div (lhs:  Int, rhs: Real) -> Real { lhs as f64 / rhs }
-        fn div (lhs: Real, rhs:  Int) -> Real { lhs        / rhs as f64 }
+        fn "#div" (lhs:  Int, rhs:  Int) -> Int  { lhs        / rhs }
+        fn "#div" (lhs: Real, rhs: Real) -> Real { lhs        / rhs }
+        fn "#div" (lhs:  Int, rhs: Real) -> Real { lhs as f64 / rhs }
+        fn "#div" (lhs: Real, rhs:  Int) -> Real { lhs        / rhs as f64 }
         // Pow
-        fn pow (lhs:  Int, rhs:  Int) -> Int  { lhs       .pow(rhs as u32 /* TODO: check if cast fails */) }
-        fn pow (lhs: Real, rhs: Real) -> Real { lhs       .powf(rhs) }
-        fn pow (lhs:  Int, rhs: Real) -> Real { (lhs as f64).powf(rhs) }
-        fn pow (lhs: Real, rhs:  Int) -> Real { lhs       .powi(rhs as i32 /* TODO: check if cast fails */) }
+        fn "#pow" (lhs:  Int, rhs:  Int) -> Int  { lhs       .pow(rhs as u32 /* TODO: check if cast fails */) }
+        fn "#pow" (lhs: Real, rhs: Real) -> Real { lhs       .powf(rhs) }
+        fn "#pow" (lhs:  Int, rhs: Real) -> Real { (lhs as f64).powf(rhs) }
+        fn "#pow" (lhs: Real, rhs:  Int) -> Real { lhs       .powi(rhs as i32 /* TODO: check if cast fails */) }
         // Rem
-        fn rem (lhs:  Int, rhs:  Int) -> Int  { lhs        % rhs }
-        fn rem (lhs: Real, rhs: Real) -> Real { lhs        % rhs }
-        fn rem (lhs:  Int, rhs: Real) -> Real { lhs as f64 % rhs }
-        fn rem (lhs: Real, rhs:  Int) -> Real { lhs        % rhs as f64 }
+        fn "#rem" (lhs:  Int, rhs:  Int) -> Int  { lhs        % rhs }
+        fn "#rem" (lhs: Real, rhs: Real) -> Real { lhs        % rhs }
+        fn "#rem" (lhs:  Int, rhs: Real) -> Real { lhs as f64 % rhs }
+        fn "#rem" (lhs: Real, rhs:  Int) -> Real { lhs        % rhs as f64 }
         // Minus
-        fn minus (v:  Int) -> Int  { -v }
-        fn minus (v: Real) -> Real { -v }
+        fn "#minus" (v:  Int) -> Int  { -v }
+        fn "#minus" (v: Real) -> Real { -v }
     );
 }
 

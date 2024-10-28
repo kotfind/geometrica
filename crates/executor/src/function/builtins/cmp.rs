@@ -16,43 +16,43 @@ fn array_eq(lhs: &[Value], rhs: &[Value]) -> bool {
 pub fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Gr
-        fn gr (lhs:  Int, rhs:  Int) -> Bool { lhs        > rhs }
-        fn gr (lhs: Real, rhs: Real) -> Bool { lhs        > rhs }
-        fn gr (lhs:  Int, rhs: Real) -> Bool { lhs as f64 > rhs }
-        fn gr (lhs: Real, rhs:  Int) -> Bool { lhs        > rhs as f64 }
-        fn gr (lhs:  Str, rhs:  Str) -> Bool { lhs        > rhs}
+        fn "#gr" (lhs:  Int, rhs:  Int) -> Bool { lhs        > rhs }
+        fn "#gr" (lhs: Real, rhs: Real) -> Bool { lhs        > rhs }
+        fn "#gr" (lhs:  Int, rhs: Real) -> Bool { lhs as f64 > rhs }
+        fn "#gr" (lhs: Real, rhs:  Int) -> Bool { lhs        > rhs as f64 }
+        fn "#gr" (lhs:  Str, rhs:  Str) -> Bool { lhs        > rhs}
         // Le
-        fn le (lhs:  Int, rhs:  Int) -> Bool { lhs        < rhs }
-        fn le (lhs: Real, rhs: Real) -> Bool { lhs        < rhs }
-        fn le (lhs:  Int, rhs: Real) -> Bool { (lhs as f64) < rhs }
-        fn le (lhs: Real, rhs:  Int) -> Bool { lhs        < rhs as f64 }
-        fn le (lhs:  Str, rhs:  Str) -> Bool { lhs        < rhs }
+        fn "#le" (lhs:  Int, rhs:  Int) -> Bool { lhs        < rhs }
+        fn "#le" (lhs: Real, rhs: Real) -> Bool { lhs        < rhs }
+        fn "#le" (lhs:  Int, rhs: Real) -> Bool { (lhs as f64) < rhs }
+        fn "#le" (lhs: Real, rhs:  Int) -> Bool { lhs        < rhs as f64 }
+        fn "#le" (lhs:  Str, rhs:  Str) -> Bool { lhs        < rhs }
         // Leq
-        fn leq (lhs:  Int, rhs:  Int) -> Bool { lhs        <= rhs }
-        fn leq (lhs: Real, rhs: Real) -> Bool { lhs        <= rhs }
-        fn leq (lhs:  Int, rhs: Real) -> Bool { lhs as f64 <= rhs }
-        fn leq (lhs: Real, rhs:  Int) -> Bool { lhs        <= rhs as f64 }
-        fn leq (lhs:  Str, rhs:  Str) -> Bool { lhs        <= rhs }
+        fn "#leq" (lhs:  Int, rhs:  Int) -> Bool { lhs        <= rhs }
+        fn "#leq" (lhs: Real, rhs: Real) -> Bool { lhs        <= rhs }
+        fn "#leq" (lhs:  Int, rhs: Real) -> Bool { lhs as f64 <= rhs }
+        fn "#leq" (lhs: Real, rhs:  Int) -> Bool { lhs        <= rhs as f64 }
+        fn "#leq" (lhs:  Str, rhs:  Str) -> Bool { lhs        <= rhs }
         // Geq
-        fn geq (lhs:  Int, rhs:  Int) -> Bool { lhs        >= rhs }
-        fn geq (lhs: Real, rhs: Real) -> Bool { lhs        >= rhs }
-        fn geq (lhs:  Int, rhs: Real) -> Bool { lhs as f64 >= rhs }
-        fn geq (lhs: Real, rhs:  Int) -> Bool { lhs        >= rhs as f64 }
-        fn geq (lhs:  Str, rhs:  Str) -> Bool { lhs        >= rhs }
+        fn "#geq" (lhs:  Int, rhs:  Int) -> Bool { lhs        >= rhs }
+        fn "#geq" (lhs: Real, rhs: Real) -> Bool { lhs        >= rhs }
+        fn "#geq" (lhs:  Int, rhs: Real) -> Bool { lhs as f64 >= rhs }
+        fn "#geq" (lhs: Real, rhs:  Int) -> Bool { lhs        >= rhs as f64 }
+        fn "#geq" (lhs:  Str, rhs:  Str) -> Bool { lhs        >= rhs }
         // Eq
-        fn eq (lhs:  Int, rhs:  Int) -> Bool { lhs        == rhs }
-        fn eq (lhs: Real, rhs: Real) -> Bool { lhs        == rhs }
-        fn eq (lhs:  Int, rhs: Real) -> Bool { lhs as f64 == rhs }
-        fn eq (lhs: Real, rhs:  Int) -> Bool { lhs        == rhs as f64 }
-        fn eq (lhs:  Str, rhs:  Str) -> Bool { lhs        == rhs }
-        fn eq (lhs: Array, rhs: Array) -> Bool { array_eq(&lhs, &rhs) }
+        fn "#eq" (lhs:  Int, rhs:  Int) -> Bool { lhs        == rhs }
+        fn "#eq" (lhs: Real, rhs: Real) -> Bool { lhs        == rhs }
+        fn "#eq" (lhs:  Int, rhs: Real) -> Bool { lhs as f64 == rhs }
+        fn "#eq" (lhs: Real, rhs:  Int) -> Bool { lhs        == rhs as f64 }
+        fn "#eq" (lhs:  Str, rhs:  Str) -> Bool { lhs        == rhs }
+        fn "#eq" (lhs: Array, rhs: Array) -> Bool { array_eq(&lhs, &rhs) }
         // Neq
-        fn neq (lhs:  Int, rhs:  Int) -> Bool { lhs        != rhs }
-        fn neq (lhs: Real, rhs: Real) -> Bool { lhs        != rhs }
-        fn neq (lhs:  Int, rhs: Real) -> Bool { lhs as f64 != rhs }
-        fn neq (lhs: Real, rhs:  Int) -> Bool { lhs        != rhs as f64 }
-        fn neq (lhs:  Str, rhs:  Str) -> Bool { lhs        != rhs }
-        fn neq (lhs: Array, rhs: Array) -> Bool { !array_eq(&lhs, &rhs) }
+        fn "#neq" (lhs:  Int, rhs:  Int) -> Bool { lhs        != rhs }
+        fn "#neq" (lhs: Real, rhs: Real) -> Bool { lhs        != rhs }
+        fn "#neq" (lhs:  Int, rhs: Real) -> Bool { lhs as f64 != rhs }
+        fn "#neq" (lhs: Real, rhs:  Int) -> Bool { lhs        != rhs as f64 }
+        fn "#neq" (lhs:  Str, rhs:  Str) -> Bool { lhs        != rhs }
+        fn "#neq" (lhs: Array, rhs: Array) -> Bool { !array_eq(&lhs, &rhs) }
     );
 }
 

@@ -3,11 +3,11 @@ use super::*;
 pub fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Or
-        fn or (lhs: Bool, rhs: Bool) -> Bool { lhs || rhs }
+        fn "#or" (lhs: Bool, rhs: Bool) -> Bool { lhs || rhs }
         // And
-        fn and (lhs: Bool, rhs: Bool) -> Bool { lhs && rhs }
+        fn "#and" (lhs: Bool, rhs: Bool) -> Bool { lhs && rhs }
         // Not
-        fn not (v: Bool) -> Bool { !v }
+        fn "#not" (v: Bool) -> Bool { !v }
     );
 }
 
