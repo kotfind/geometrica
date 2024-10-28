@@ -5,7 +5,7 @@ fn script() {
     assert_eq!(
         lang::script(
             r#"
-            p = point 1 2;
+            p = pt 1 2;
             move p 3 4
         "#
         ),
@@ -13,7 +13,7 @@ fn script() {
             Definition::ValueDefinition(ValueDefinition {
                 name: Ident::from("p"),
                 value_type: None,
-                body: binary("point", Value::from(1), Value::from(2)).into(),
+                body: binary("pt", Value::from(1), Value::from(2)).into(),
             })
             .into(),
             Command {
@@ -32,11 +32,11 @@ fn script() {
 #[test]
 fn statement() {
     assert_eq!(
-        lang::statement("p = point 1 2"),
+        lang::statement("p = pt 1 2"),
         Ok(Definition::ValueDefinition(ValueDefinition {
             name: Ident::from("p"),
             value_type: None,
-            body: binary("point", Value::from(1), Value::from(2)).into()
+            body: binary("pt", Value::from(1), Value::from(2)).into()
         })
         .into())
     );

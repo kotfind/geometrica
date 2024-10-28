@@ -35,11 +35,11 @@ fn none() {
     assert_eq!(lang::none("none real"), Ok(Value::none(ValueType::Real)));
     assert_eq!(lang::none("none str"), Ok(Value::none(ValueType::Str)));
     assert_eq!(lang::none("none array"), Ok(Value::none(ValueType::Array)));
-    assert_eq!(lang::none("none point"), Ok(Value::none(ValueType::Point)));
+    assert_eq!(lang::none("none pt"), Ok(Value::none(ValueType::Pt)));
     assert_eq!(lang::none("none line"), Ok(Value::none(ValueType::Line)));
     assert_eq!(
-        lang::none("none circle"),
-        Ok(Value::none(ValueType::Circle))
+        lang::none("none circ"),
+        Ok(Value::none(ValueType::Circ))
     );
 }
 
@@ -83,7 +83,7 @@ fn value_type() {
     assert_eq!(lang::value_type("real"), Ok(ValueType::Real));
     assert_eq!(lang::value_type("str"), Ok(ValueType::Str));
     assert_eq!(lang::value_type("array"), Ok(ValueType::Array));
-    assert_eq!(lang::value_type("point"), Ok(ValueType::Point));
+    assert_eq!(lang::value_type("pt"), Ok(ValueType::Pt));
     assert_eq!(lang::value_type("line"), Ok(ValueType::Line));
-    assert_eq!(lang::value_type("circle"), Ok(ValueType::Circle));
+    assert_eq!(lang::value_type("circ"), Ok(ValueType::Circ));
 }

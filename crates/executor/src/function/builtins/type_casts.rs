@@ -22,74 +22,74 @@ pub fn populate(builtins: &mut FuncMap) {
         fn "#as_str" (v: Real) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v: Str) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v: Array) -> Str { Ok(Value::from(v).to_string()) }
-        fn "#as_str" (v: Point) -> Str { Ok(Value::from(v).to_string()) }
+        fn "#as_str" (v: Pt) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v: Line) -> Str { Ok(Value::from(v).to_string()) }
-        fn "#as_str" (v: Circle) -> Str { Ok(Value::from(v).to_string()) }
+        fn "#as_str" (v: Circ) -> Str { Ok(Value::from(v).to_string()) }
         // Is
         fn "#is_bool" (_v: Bool) -> Bool { Ok(true) }
         fn "#is_bool" (_v: Int) -> Bool { Ok(false) }
         fn "#is_bool" (_v: Real) -> Bool { Ok(false) }
         fn "#is_bool" (_v: Str) -> Bool { Ok(false) }
         fn "#is_bool" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_bool" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_bool" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_bool" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_bool" (_v: Circle) -> Bool { Ok(false) }
+        fn "#is_bool" (_v: Circ) -> Bool { Ok(false) }
         fn "#is_int" (_v: Bool) -> Bool { Ok(false) }
         fn "#is_int" (_v: Int) -> Bool { Ok(true) }
         fn "#is_int" (_v: Real) -> Bool { Ok(false) }
         fn "#is_int" (_v: Str) -> Bool { Ok(false) }
         fn "#is_int" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_int" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_int" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_int" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_int" (_v: Circle) -> Bool { Ok(false) }
+        fn "#is_int" (_v: Circ) -> Bool { Ok(false) }
         fn "#is_real" (_v: Bool) -> Bool { Ok(false) }
         fn "#is_real" (_v: Int) -> Bool { Ok(false) }
         fn "#is_real" (_v: Real) -> Bool { Ok(true) }
         fn "#is_real" (_v: Str) -> Bool { Ok(false) }
         fn "#is_real" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_real" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_real" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_real" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_real" (_v: Circle) -> Bool { Ok(false) }
+        fn "#is_real" (_v: Circ) -> Bool { Ok(false) }
         fn "#is_str" (_v: Bool) -> Bool { Ok(false) }
         fn "#is_str" (_v: Int) -> Bool { Ok(false) }
         fn "#is_str" (_v: Real) -> Bool { Ok(false) }
         fn "#is_str" (_v: Str) -> Bool { Ok(true) }
         fn "#is_str" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_str" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_str" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_str" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_str" (_v: Circle) -> Bool { Ok(false) }
+        fn "#is_str" (_v: Circ) -> Bool { Ok(false) }
         fn "#is_array" (_v: Bool) -> Bool { Ok(false) }
         fn "#is_array" (_v: Int) -> Bool { Ok(false) }
         fn "#is_array" (_v: Real) -> Bool { Ok(false) }
         fn "#is_array" (_v: Str) -> Bool { Ok(false) }
         fn "#is_array" (_v: Array) -> Bool { Ok(true) }
-        fn "#is_array" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_array" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_array" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_array" (_v: Circle) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Bool) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Int) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Real) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Str) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Point) -> Bool { Ok(true) }
-        fn "#is_point" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_point" (_v: Circle) -> Bool { Ok(false) }
+        fn "#is_array" (_v: Circ) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Bool) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Int) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Real) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Str) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Array) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Pt) -> Bool { Ok(true) }
+        fn "#is_pt" (_v: Line) -> Bool { Ok(false) }
+        fn "#is_pt" (_v: Circ) -> Bool { Ok(false) }
         fn "#is_line" (_v: Bool) -> Bool { Ok(false) }
         fn "#is_line" (_v: Int) -> Bool { Ok(false) }
         fn "#is_line" (_v: Real) -> Bool { Ok(false) }
         fn "#is_line" (_v: Str) -> Bool { Ok(false) }
         fn "#is_line" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_line" (_v: Point) -> Bool { Ok(false) }
+        fn "#is_line" (_v: Pt) -> Bool { Ok(false) }
         fn "#is_line" (_v: Line) -> Bool { Ok(true) }
-        fn "#is_line" (_v: Circle) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Bool) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Int) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Real) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Str) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Array) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Point) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Line) -> Bool { Ok(false) }
-        fn "#is_circle" (_v: Circle) -> Bool { Ok(true) }
+        fn "#is_line" (_v: Circ) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Bool) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Int) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Real) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Str) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Array) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Pt) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Line) -> Bool { Ok(false) }
+        fn "#is_circ" (_v: Circ) -> Bool { Ok(true) }
         // TODO optimize is_ construction
         // is_none
         fn "#is_none" (v: Bool) -> Bool { Ok(v.is_none()) }
@@ -97,9 +97,9 @@ pub fn populate(builtins: &mut FuncMap) {
         fn "#is_none" (v: Real) -> Bool { Ok(v.is_none()) }
         fn "#is_none" (v: Str) -> Bool { Ok(v.is_none()) }
         fn "#is_none" (v: Array) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v: Point) -> Bool { Ok(v.is_none()) }
+        fn "#is_none" (v: Pt) -> Bool { Ok(v.is_none()) }
         fn "#is_none" (v: Line) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v: Circle) -> Bool { Ok(v.is_none()) }
+        fn "#is_none" (v: Circ) -> Bool { Ok(v.is_none()) }
     );
 }
 
@@ -110,7 +110,7 @@ mod test {
 
     #[test]
     fn is() {
-        // TODO: test point, line, circle
+        // TODO: test pt, line, circ
         let value_to_type = [
             ("true", "bool"),
             ("1", "int"),
@@ -171,7 +171,7 @@ mod test {
             r#""abacaba""#.to_string().into()
         );
         assert_eq!(eval("(1, 2, 3) as str"), "(1, 2, 3)".to_string().into());
-        // TODO: test point, line, circle
+        // TODO: test pt, line, circ
     }
 
     #[test]
@@ -181,9 +181,9 @@ mod test {
         assert_eq!(eval("none real as str"), "none real".to_string().into());
         assert_eq!(eval("none str as str"), "none str".to_string().into());
         assert_eq!(eval("none array as str"), "none array".to_string().into());
-        assert_eq!(eval("none point as str"), "none point".to_string().into());
+        assert_eq!(eval("none pt as str"), "none pt".to_string().into());
         assert_eq!(eval("none line as str"), "none line".to_string().into());
-        assert_eq!(eval("none circle as str"), "none circle".to_string().into());
+        assert_eq!(eval("none circ as str"), "none circ".to_string().into());
     }
 
     #[test]
@@ -193,14 +193,14 @@ mod test {
         assert_eq!(eval("none real is none"), true.into());
         assert_eq!(eval("none str is none"), true.into());
         assert_eq!(eval("none array is none"), true.into());
-        assert_eq!(eval("none point is none"), true.into());
+        assert_eq!(eval("none pt is none"), true.into());
         assert_eq!(eval("none line is none"), true.into());
-        assert_eq!(eval("none circle is none"), true.into());
+        assert_eq!(eval("none circ is none"), true.into());
         assert_eq!(eval("false is none"), false.into());
         assert_eq!(eval("1 is none"), false.into());
         assert_eq!(eval("1.0 is none"), false.into());
         assert_eq!(eval("\"abacaba\" is none"), false.into());
         assert_eq!(eval("(1, 2, 3) is none"), false.into());
-        // TODO: test point, line, circle
+        // TODO: test pt, line, circ
     }
 }

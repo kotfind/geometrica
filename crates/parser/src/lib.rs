@@ -199,9 +199,9 @@ peg::parser! {
             / "real"
             / "str"
             / "array"
-            / "point"
+            / "pt"
             / "line"
-            / "circle")
+            / "circ")
         {
             match value_type {
                 "bool" => ValueType::Bool,
@@ -209,9 +209,9 @@ peg::parser! {
                 "real" => ValueType::Real,
                 "str" => ValueType::Str,
                 "array" => ValueType::Array,
-                "point" => ValueType::Point,
+                "pt" => ValueType::Pt,
                 "line" => ValueType::Line,
-                "circle" => ValueType::Circle,
+                "circ" => ValueType::Circ,
                 _ => unreachable!()
             }
         }
