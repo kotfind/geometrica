@@ -9,8 +9,9 @@ use types::{
     lang::Ident,
 };
 
-use super::{Function, FunctionInner, FunctionKind};
-use crate::eval::{EvalError, EvalResult};
+use super::{FuncMap, Function, FunctionInner, FunctionKind};
+use crate::error::Error;
+use crate::eval::EvalResult;
 
 mod cmp;
 mod ctors;
@@ -31,7 +32,7 @@ macro_rules! unwrap_none {
             let $var = match $var {
                 Some(v) => v,
                 None => {
-                    return Err(EvalError::UnexpectedNone);
+                    return Err(Error::UnexpectedNone);
                 }
             };
         )*
@@ -101,8 +102,6 @@ macro_rules! simple_builtin {
     };
 }
 use simple_builtin;
-
-type FuncMap = HashMap<FunctionSignature, Function>;
 
 static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
     // TODO: check for overflow

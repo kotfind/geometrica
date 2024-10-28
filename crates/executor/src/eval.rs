@@ -1,6 +1,5 @@
 use std::collections::{hash_map::Entry, HashMap};
 
-use thiserror::Error;
 use types::{
     core::{Value, ValueType},
     lang::{
@@ -8,20 +7,23 @@ use types::{
     },
 };
 
-use crate::function::Function;
+use crate::{error::Error, exec::ExecScope, function::Function};
+
+enum EvalOrExecScope<'a> {
+    EvalScope(&'a EvalScope<'a>),
+    ExecScope(&'a ExecScope<'a>),
+}
 
 pub struct EvalScope<'a> {
     items: HashMap<Ident, Value>,
-    funcs: HashMap<FunctionSignature, Function>,
-    parent_scope: Option<&'a EvalScope<'a>>,
+    parent_scope: EvalOrExecScope<'a>,
 }
 
 impl<'a> EvalScope<'a> {
-    pub fn new() -> Self {
+    pub fn from(exec_scope: &'a ExecScope<'a>) -> Self {
         Self {
             items: HashMap::new(),
-            funcs: HashMap::new(),
-            parent_scope: None,
+            parent_scope: EvalOrExecScope::ExecScope(exec_scope),
         }
     }
 
@@ -29,39 +31,41 @@ impl<'a> EvalScope<'a> {
         let maybe_ans = self.items.get(name).cloned();
         if maybe_ans.is_some() {
             maybe_ans
-        } else if let Some(parent) = self.parent_scope {
+        } else if let EvalOrExecScope::EvalScope(parent) = self.parent_scope {
             parent.get_value(name)
         } else {
             None
         }
     }
 
-    pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
-        if let Some(func) = Function::get_builtin(sign) {
-            return Some(func);
+    pub fn get_exec_scope(&self) -> &ExecScope {
+        let mut scope = self;
+        loop {
+            match scope.parent_scope {
+                EvalOrExecScope::EvalScope(eval_scope) => {
+                    scope = eval_scope;
+                }
+                EvalOrExecScope::ExecScope(exec_scope) => {
+                    return exec_scope;
+                }
+            }
         }
+    }
 
-        let maybe_ans = self.funcs.get(sign).cloned();
-        if maybe_ans.is_some() {
-            maybe_ans
-        } else if let Some(parent) = self.parent_scope {
-            parent.get_func(sign)
-        } else {
-            None
-        }
+    pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
+        self.get_exec_scope().get_func(sign)
     }
 
     pub fn push(&'a self) -> EvalScope<'a> {
         EvalScope {
             items: HashMap::new(),
-            funcs: HashMap::new(),
-            parent_scope: Some(self),
+            parent_scope: EvalOrExecScope::EvalScope(self),
         }
     }
 
-    pub fn insert_value(&mut self, name: Ident, value: Value) -> Result<(), EvalError> {
+    pub fn insert_value(&mut self, name: Ident, value: Value) -> Result<(), Error> {
         match self.items.entry(name.clone()) {
-            Entry::Occupied(_) => Err(EvalError::VariableRedefinition(name)),
+            Entry::Occupied(_) => Err(Error::VariableRedefinition(name)),
             Entry::Vacant(entry) => {
                 entry.insert(value);
                 Ok(())
@@ -70,32 +74,7 @@ impl<'a> EvalScope<'a> {
     }
 }
 
-#[derive(Debug, Error)]
-pub enum EvalError {
-    #[error("variable '{0}' undefined")]
-    UndefinedVariable(Ident),
-
-    #[error("function '{0:?}' undefined")]
-    UndefinedFunction(FunctionSignature),
-
-    #[error("unexpected type for {_for}: expected {expected}, got {got}")]
-    UnexpectedType {
-        _for: String,
-        expected: ValueType,
-        got: ValueType,
-    },
-
-    #[error("got unexpected none value")]
-    UnexpectedNone,
-
-    #[error("if: no cases matched, default value not provided")]
-    NotingMatched,
-
-    #[error("Redefinition of variable '{0}'")]
-    VariableRedefinition(Ident),
-}
-
-pub type EvalResult = Result<Value, EvalError>;
+pub type EvalResult = Result<Value, Error>;
 
 pub trait Eval {
     fn eval(&self, scope: &EvalScope) -> EvalResult;
@@ -123,7 +102,7 @@ impl Eval for Ident {
     fn eval(&self, scope: &EvalScope) -> EvalResult {
         scope
             .get_value(self)
-            .ok_or(EvalError::UndefinedVariable(self.clone()))
+            .ok_or(Error::UndefinedVariable(self.clone()))
     }
 }
 
@@ -144,9 +123,9 @@ impl Eval for FuncCallExpr {
 
         let func = scope
             .get_func(&sign)
-            .ok_or(EvalError::UndefinedFunction(sign))?;
+            .ok_or(Error::UndefinedFunction(sign))?;
 
-        func.eval(arg_values)
+        func.eval(arg_values, scope.get_exec_scope())
     }
 }
 
@@ -156,9 +135,9 @@ impl Eval for IfExpr {
             match case.condition.eval(scope)? {
                 Value::Bool(Some(true)) => return case.value.eval(scope),
                 Value::Bool(Some(false)) => {}
-                Value::Bool(None) => return Err(EvalError::UnexpectedNone),
+                Value::Bool(None) => return Err(Error::UnexpectedNone),
                 val => {
-                    return Err(EvalError::UnexpectedType {
+                    return Err(Error::UnexpectedType {
                         _for: "if condition".to_string(),
                         expected: ValueType::Bool,
                         got: val.value_type(),
@@ -169,7 +148,7 @@ impl Eval for IfExpr {
         if let Some(default_case_value) = &self.default_case_value {
             default_case_value.eval(scope)
         } else {
-            Err(EvalError::NotingMatched)
+            Err(Error::NotingMatched)
         }
     }
 }
@@ -186,7 +165,7 @@ impl Eval for LetExpr {
             let value = body.eval(&new_scope)?;
             if let Some(value_type) = value_type {
                 if &value.value_type() != value_type {
-                    return Err(EvalError::UnexpectedType {
+                    return Err(Error::UnexpectedType {
                         _for: name.to_string(),
                         expected: value_type.clone(),
                         got: value.value_type(),
@@ -204,7 +183,10 @@ impl Eval for LetExpr {
 pub fn eval(expr: &str) -> Value {
     use crate::eval::{Eval, EvalScope};
 
-    parser::expr(expr).unwrap().eval(&EvalScope::new()).unwrap()
+    let exec_scope = ExecScope::new();
+    let eval_scope = EvalScope::from(&exec_scope);
+
+    parser::expr(expr).unwrap().eval(&eval_scope).unwrap()
 }
 
 #[cfg(test)]
