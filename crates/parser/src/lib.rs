@@ -139,7 +139,8 @@ peg::parser! {
 
         pub rule if_expr() -> IfExpr
             = "if"
-            _ cases:(if_expr_case() ++ _)
+            _ cases:(if_expr_case() ++ (_ "," _))
+            (_ ",")?
             _ default_case_value:("else" _ e:expr() { e })?
         {
             IfExpr { cases, default_case_value }
@@ -154,6 +155,7 @@ peg::parser! {
         pub rule let_expr() -> LetExpr
             = "let"
             _ definitions:(let_expr_definition() ++ (_ "," _))
+            (_ ",")?
             _ "in"
             _ body:expr()
         {

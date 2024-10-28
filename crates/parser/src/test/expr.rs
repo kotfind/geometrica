@@ -106,7 +106,7 @@ fn _if() {
     assert_eq!(
         lang::if_expr(
             r#"if
-            is_odd x then "odd"
+            is_odd x then "odd",
             is_even x then "even""#
         ),
         Ok(IfExpr {
@@ -136,7 +136,7 @@ fn _if() {
     assert_eq!(
         lang::if_expr(
             r#"if
-            is_odd x then "odd"
+            is_odd x then "odd",
             is_even x then "even"
             else unreachable """#
         ),

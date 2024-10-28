@@ -48,6 +48,7 @@ pub fn populate(builtins: &mut FuncMap) {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::eval::eval;
 
     #[test]
     fn add() {

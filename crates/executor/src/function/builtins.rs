@@ -116,10 +116,3 @@ static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
 
     builtins
 });
-
-#[cfg(test)]
-fn eval(expr: &str) -> Value {
-    use crate::eval::{Eval, EvalScope};
-
-    parser::expr(expr).unwrap().eval(&EvalScope::new()).unwrap()
-}

@@ -201,17 +201,59 @@ impl Eval for LetExpr {
 }
 
 #[cfg(test)]
+pub fn eval(expr: &str) -> Value {
+    use crate::eval::{Eval, EvalScope};
+
+    parser::expr(expr).unwrap().eval(&EvalScope::new()).unwrap()
+}
+
+#[cfg(test)]
 mod test {
+    use types::core::Pt;
+
     use super::*;
 
     #[test]
-    fn smth() {
+    fn value() {
+        assert_eq!(eval("2"), 2.into());
+    }
+
+    #[test]
+    fn func_call() {
+        assert_eq!(eval("1 + 1"), 2.into());
+        assert_eq!(eval("pt 1.0 2.0"), Pt { x: 1.0, y: 2.0 }.into());
+    }
+
+    #[test]
+    fn let_() {
+        // Simple
+        assert_eq!(eval("let x = 1 in x"), 1.into());
+
+        // Multiple definitions
+        assert_eq!(eval("let x = 1, y = 2 in x + y"), 3.into());
+
+        // Complex expr
         assert_eq!(
-            parser::expr("1 + 1")
-                .unwrap()
-                .eval(&EvalScope::new())
-                .unwrap(),
-            2.into()
+            eval(
+                r#"let
+                x = 2,
+                y = 3 * x,
+                z = x + y,
+            in z"#
+            ),
+            8.into()
         );
+    }
+
+    #[test]
+    fn if_() {
+        // Simple
+        assert_eq!(eval("if 1 == 1 then 1 else 2"), 1.into());
+        assert_eq!(eval("if 1 == 2 then 1 else 2"), 2.into());
+
+        // Multiple cases
+        assert_eq!(eval("if 1 == 1 then 1, 1 == 2 then 2 else 3"), 1.into());
+        assert_eq!(eval("if 2 == 1 then 1, 2 == 2 then 2 else 3"), 2.into());
+        assert_eq!(eval("if 3 == 1 then 1, 3 == 2 then 2 else 3"), 3.into());
     }
 }
