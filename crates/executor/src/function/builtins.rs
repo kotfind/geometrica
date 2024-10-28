@@ -13,13 +13,13 @@ use super::{Function, FunctionInner, FunctionKind};
 use crate::eval::{EvalError, EvalResult};
 
 mod cmp;
+mod ctors;
 mod logic;
 mod math;
 mod type_casts;
 
 impl Function {
     pub fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
-        assert!(sign.name.0.starts_with('#'));
         BUILT_IN_FUNCS.get(sign).cloned()
     }
 }
@@ -112,6 +112,7 @@ static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
     cmp::populate(&mut builtins);
     logic::populate(&mut builtins);
     type_casts::populate(&mut builtins);
+    ctors::populate(&mut builtins);
 
     builtins
 });

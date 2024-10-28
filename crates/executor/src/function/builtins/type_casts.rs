@@ -110,13 +110,15 @@ mod test {
 
     #[test]
     fn is() {
-        // TODO: test pt, line, circ
         let value_to_type = [
             ("true", "bool"),
             ("1", "int"),
             ("1.0", "real"),
             (r#""abc""#, "str"),
             ("(1, 2, 3)", "array"),
+            ("(pt 1.0 2.0)", "pt"),
+            ("(line (pt 1.0 2.0) (pt 3.0 4.0))", "line"),
+            ("(circ (pt 1.0 2.0) 3.0)", "circ"),
         ];
 
         for i in 0..value_to_type.len() {
@@ -171,7 +173,15 @@ mod test {
             r#""abacaba""#.to_string().into()
         );
         assert_eq!(eval("(1, 2, 3) as str"), "(1, 2, 3)".to_string().into());
-        // TODO: test pt, line, circ
+        assert_eq!(eval("(pt 1.0 2.0) as str"), "pt 1 2".to_string().into());
+        assert_eq!(
+            eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) as str"),
+            "line (pt 1 2) (pt 3 4)".to_string().into()
+        );
+        assert_eq!(
+            eval("(circ (pt 1.0 2.0) 3.0) as str"),
+            "circ (pt 1 2) 3".to_string().into()
+        );
     }
 
     #[test]
@@ -201,6 +211,11 @@ mod test {
         assert_eq!(eval("1.0 is none"), false.into());
         assert_eq!(eval("\"abacaba\" is none"), false.into());
         assert_eq!(eval("(1, 2, 3) is none"), false.into());
-        // TODO: test pt, line, circ
+        assert_eq!(eval("(pt 1.0 2.0) is none"), false.into());
+        assert_eq!(
+            eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) is none"),
+            false.into()
+        );
+        assert_eq!(eval("(circ (pt 1.0 2.0) 3.0) is none"), false.into());
     }
 }

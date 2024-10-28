@@ -37,8 +37,8 @@ impl<'a> EvalScope<'a> {
     }
 
     pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
-        if sign.name.0.starts_with('#') {
-            return Function::get_builtin(sign);
+        if let Some(func) = Function::get_builtin(sign) {
+            return Some(func);
         }
 
         let maybe_ans = self.funcs.get(sign).cloned();
