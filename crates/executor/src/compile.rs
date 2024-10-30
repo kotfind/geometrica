@@ -43,7 +43,7 @@ impl<'a> CScope<'a> {
         }
     }
 
-    fn bind(&mut self, name: Ident, value: CExpr) -> CResult<()> {
+    fn bind(&mut self, name: Ident, value: CExpr) -> Result<(), CError> {
         match self.bindings.entry(name.clone()) {
             hash_map::Entry::Occupied(_) => return Err(CError::VariableRedefinition(name)),
             hash_map::Entry::Vacant(entry) => {
@@ -118,53 +118,66 @@ pub enum CError {
 }
 
 /// Compile Result
-type CResult<T> = Result<T, CError>;
+type CResult = Result<CExpr, CError>;
+
+pub trait Compile {
+    fn compile(self, cscope: &CScope) -> CResult;
+}
 
 impl CExpr {
     fn from_inner(inner: CExprInner) -> Self {
         Self(Arc::new(inner))
     }
+}
 
-    pub fn from(expr: Expr, cscope: &CScope) -> CResult<Self> {
-        match &expr.0 as &ExprInner {
-            ExprInner::Value(value) => Ok(Self::from_value(value.clone())),
-            ExprInner::Variable(var) => Self::from_var(var.clone(), cscope),
-            ExprInner::FuncCall(func_call) => Self::from_func_call(func_call.clone(), cscope),
-            ExprInner::If(if_expr) => Self::from_if(if_expr.clone(), cscope),
-            ExprInner::Let(let_expr) => Self::from_let(let_expr.clone(), cscope),
+impl Compile for Expr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        match &self.0 as &ExprInner {
+            ExprInner::Value(value) => value.clone().compile(cscope),
+            ExprInner::Variable(var) => var.clone().compile(cscope),
+            ExprInner::FuncCall(func_call) => func_call.clone().compile(cscope),
+            ExprInner::If(if_expr) => if_expr.clone().compile(cscope),
+            ExprInner::Let(let_expr) => let_expr.clone().compile(cscope),
         }
     }
+}
 
-    fn from_value(value: Value) -> Self {
-        Self::from_inner(CExprInner {
+impl Compile for Value {
+    fn compile(self, _cscope: &CScope) -> CResult {
+        Ok(CExpr::from_inner(CExprInner {
             required_vars: HashSet::new(),
-            value_type: value.value_type(),
-            kind: CExprInnerKind::Value(value.clone()),
-        })
+            value_type: self.value_type(),
+            kind: CExprInnerKind::Value(self),
+        }))
     }
+}
 
-    fn from_var(var: Ident, cscope: &CScope) -> CResult<Self> {
-        if let Some(cexpr) = cscope.get_binding(&var) {
+impl Compile for Ident {
+    fn compile(self, cscope: &CScope) -> CResult {
+        if let Some(cexpr) = cscope.get_binding(&self) {
             return Ok(cexpr);
         }
 
-        let Some(value_type) = cscope.get_var_type(&var) else {
-            return Err(CError::UndefinedVariable(var.clone()));
+        let Some(value_type) = cscope.get_var_type(&self) else {
+            return Err(CError::UndefinedVariable(self.clone()));
         };
 
-        Ok(Self::from_inner(CExprInner {
-            required_vars: HashSet::from([var.clone()]),
+        Ok(CExpr::from_inner(CExprInner {
+            required_vars: HashSet::from([self.clone()]),
             value_type: value_type.clone(),
-            kind: CExprInnerKind::Variable(var),
+            kind: CExprInnerKind::Variable(self),
         }))
     }
+}
 
-    fn from_func_call(FuncCallExpr { name, args }: FuncCallExpr, cscope: &CScope) -> CResult<Self> {
+impl Compile for FuncCallExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let FuncCallExpr { name, args } = self;
         let args = args
             .clone()
             .into_iter()
-            .map(|arg| CExpr::from(arg, cscope))
-            .collect::<CResult<Vec<_>>>()?;
+            .map(|arg| arg.compile(cscope))
+            .collect::<Result<Vec<_>, _>>()?;
 
         let sign = FunctionSignature {
             name: name.clone(),
@@ -175,7 +188,7 @@ impl CExpr {
             return Err(CError::UndefinedFunction(sign));
         };
 
-        Ok(Self::from_inner(CExprInner {
+        Ok(CExpr::from_inner(CExprInner {
             required_vars: args
                 .iter()
                 .map(|arg| arg.0.required_vars.clone().into_iter())
@@ -185,23 +198,24 @@ impl CExpr {
             kind: CExprInnerKind::FuncCall(FuncCallCExpr { func, args }),
         }))
     }
+}
 
-    fn from_if(
-        IfExpr {
+impl Compile for IfExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let IfExpr {
             cases,
             default_case_value,
-        }: IfExpr,
-        cscope: &CScope,
-    ) -> CResult<Self> {
+        } = self;
+
         let cases = cases
             .into_iter()
             .map(|case| {
                 Ok(IfCExprCase {
-                    cond: CExpr::from(case.condition, &cscope)?,
-                    value: CExpr::from(case.value, &cscope)?,
+                    cond: case.condition.compile(cscope)?,
+                    value: case.value.compile(cscope)?,
                 })
             })
-            .collect::<CResult<Vec<_>>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         assert!(!cases.is_empty());
         let value_type = cases[0].value.0.value_type.clone();
@@ -221,7 +235,7 @@ impl CExpr {
         }
 
         let default_case_value = if let Some(default_value) = default_case_value.clone() {
-            let ans = CExpr::from(default_value, &cscope)?;
+            let ans = default_value.compile(cscope)?;
             if ans.0.value_type != value_type {
                 return Err(CError::IfDifferentTypes(
                     value_type.clone(),
@@ -233,7 +247,7 @@ impl CExpr {
             None
         };
 
-        Ok(Self::from_inner(CExprInner {
+        Ok(CExpr::from_inner(CExprInner {
             required_vars: vars,
             value_type,
             kind: CExprInnerKind::If(IfCExpr {
@@ -242,8 +256,11 @@ impl CExpr {
             }),
         }))
     }
+}
 
-    fn from_let(LetExpr { definitions, body }: LetExpr, cscope: &CScope) -> CResult<Self> {
+impl Compile for LetExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let LetExpr { definitions, body } = self;
         let mut new_cscope = cscope.push();
         for LetExprDefinition {
             name,
@@ -251,7 +268,7 @@ impl CExpr {
             body,
         } in definitions
         {
-            let body = CExpr::from(body, &new_cscope)?;
+            let body = body.compile(&new_cscope)?;
             if let Some(value_type) = value_type {
                 if body.0.value_type != value_type {
                     return Err(CError::UnexpectedLetDefinitionType {
@@ -262,6 +279,6 @@ impl CExpr {
             }
             new_cscope.bind(name, body)?;
         }
-        CExpr::from(body, &new_cscope)
+        body.compile(&new_cscope)
     }
 }

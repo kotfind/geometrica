@@ -88,10 +88,10 @@ impl Eval for IfCExpr {
 
 #[cfg(test)]
 pub fn eval(expr: &str) -> Value {
-    use crate::compile::CScope;
+    use crate::compile::{CScope, Compile};
 
     let expr = parser::expr(expr).expect("failed to parse");
-    let cexpr = CExpr::from(expr, &CScope::new()).expect("failed to compile");
+    let cexpr = expr.compile(&CScope::new()).expect("failed to compile");
     cexpr.eval(&VarsMap::new()).expect("failed to eval")
 }
 
