@@ -6,9 +6,7 @@ use std::{
 use thiserror::Error;
 use types::{
     core::{Value, ValueType},
-    lang::{
-        Expr, ExprInner, FuncCallExpr, FunctionSignature, Ident, IfExpr, LetExpr, LetExprDefinition,
-    },
+    lang::{Expr, FuncCallExpr, FunctionSignature, Ident, IfExpr, LetExpr, LetExprDefinition},
 };
 
 use crate::{
@@ -132,12 +130,12 @@ impl CExpr {
 
 impl Compile for Expr {
     fn compile(self, cscope: &CScope) -> CResult {
-        match &self.0 as &ExprInner {
-            ExprInner::Value(value) => value.clone().compile(cscope),
-            ExprInner::Variable(var) => var.clone().compile(cscope),
-            ExprInner::FuncCall(func_call) => func_call.clone().compile(cscope),
-            ExprInner::If(if_expr) => if_expr.clone().compile(cscope),
-            ExprInner::Let(let_expr) => let_expr.clone().compile(cscope),
+        match self {
+            Expr::Value(value) => value.compile(cscope),
+            Expr::Variable(var) => var.compile(cscope),
+            Expr::FuncCall(func_call) => func_call.compile(cscope),
+            Expr::If(if_expr) => if_expr.compile(cscope),
+            Expr::Let(let_expr) => let_expr.compile(cscope),
         }
     }
 }
@@ -191,8 +189,7 @@ impl Compile for FuncCallExpr {
         Ok(CExpr::from_inner(CExprInner {
             required_vars: args
                 .iter()
-                .map(|arg| arg.0.required_vars.clone().into_iter())
-                .flatten()
+                .flat_map(|arg| arg.0.required_vars.clone().into_iter())
                 .collect(),
             value_type: func.0.return_type.clone(),
             kind: CExprInnerKind::FuncCall(FuncCallCExpr { func, args }),
@@ -204,14 +201,14 @@ impl Compile for IfExpr {
     fn compile(self, cscope: &CScope) -> CResult {
         let IfExpr {
             cases,
-            default_case_value,
+            default_value: default_case_value,
         } = self;
 
         let cases = cases
             .into_iter()
             .map(|case| {
                 Ok(IfCExprCase {
-                    cond: case.condition.compile(cscope)?,
+                    cond: case.cond.compile(cscope)?,
                     value: case.value.compile(cscope)?,
                 })
             })
@@ -260,7 +257,10 @@ impl Compile for IfExpr {
 
 impl Compile for LetExpr {
     fn compile(self, cscope: &CScope) -> CResult {
-        let LetExpr { definitions, body } = self;
+        let LetExpr {
+            defs: definitions,
+            body,
+        } = self;
         let mut new_cscope = cscope.push();
         for LetExprDefinition {
             name,

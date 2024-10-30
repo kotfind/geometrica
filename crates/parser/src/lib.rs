@@ -141,25 +141,25 @@ peg::parser! {
             = "if"
             _ cases:(if_expr_case() ++ (_ "," _))
             (_ ",")?
-            _ default_case_value:("else" _ e:expr() { e })?
+            _ default_value:("else" _ e:expr() { e })?
         {
-            IfExpr { cases, default_case_value }
+            IfExpr { cases, default_value: default_value.map(Box::new) }
         }
 
         rule if_expr_case() -> IfExprCase
             = cond:expr() _ "then" _ value:expr()
         {
-            IfExprCase { condition: cond, value }
+            IfExprCase { cond: Box::new(cond), value: Box::new(value) }
         }
 
         pub rule let_expr() -> LetExpr
             = "let"
-            _ definitions:(let_expr_definition() ++ (_ "," _))
+            _ defs:(let_expr_definition() ++ (_ "," _))
             (_ ",")?
             _ "in"
             _ body:expr()
         {
-            LetExpr { definitions, body }
+            LetExpr { defs, body: Box::new(body) }
         }
 
         rule let_expr_definition() -> LetExprDefinition
@@ -167,7 +167,7 @@ peg::parser! {
             _ "="
             _ body:expr()
         {
-            LetExprDefinition { name, value_type, body }
+            LetExprDefinition { name, value_type, body: Box::new(body) }
         }
 
         // -------------------- Ident --------------------

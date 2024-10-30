@@ -91,14 +91,14 @@ fn _if() {
         lang::if_expr(r#"if is_odd x then "odd""#),
         Ok(IfExpr {
             cases: vec![IfExprCase {
-                condition: FuncCallExpr {
+                cond: FuncCallExpr {
                     name: "is_odd".into(),
                     args: vec![Ident::from("x").into()]
                 }
                 .into(),
                 value: Value::from("odd".to_string()).into()
             },],
-            default_case_value: None
+            default_value: None
         })
     );
 
@@ -112,7 +112,7 @@ fn _if() {
         Ok(IfExpr {
             cases: vec![
                 IfExprCase {
-                    condition: FuncCallExpr {
+                    cond: FuncCallExpr {
                         name: "is_odd".into(),
                         args: vec![Ident::from("x").into()]
                     }
@@ -120,7 +120,7 @@ fn _if() {
                     value: Value::from("odd".to_string()).into()
                 },
                 IfExprCase {
-                    condition: FuncCallExpr {
+                    cond: FuncCallExpr {
                         name: "is_even".into(),
                         args: vec![Ident::from("x").into()]
                     }
@@ -128,7 +128,7 @@ fn _if() {
                     value: Value::from("even".to_string()).into()
                 },
             ],
-            default_case_value: None
+            default_value: None
         })
     );
 
@@ -143,7 +143,7 @@ fn _if() {
         Ok(IfExpr {
             cases: vec![
                 IfExprCase {
-                    condition: FuncCallExpr {
+                    cond: FuncCallExpr {
                         name: "is_odd".into(),
                         args: vec![Ident::from("x").into()]
                     }
@@ -151,7 +151,7 @@ fn _if() {
                     value: Value::from("odd".to_string()).into()
                 },
                 IfExprCase {
-                    condition: FuncCallExpr {
+                    cond: FuncCallExpr {
                         name: "is_even".into(),
                         args: vec![Ident::from("x").into()]
                     }
@@ -159,7 +159,7 @@ fn _if() {
                     value: Value::from("even".to_string()).into()
                 },
             ],
-            default_case_value: Some(
+            default_value: Some(
                 FuncCallExpr {
                     name: "unreachable".into(),
                     args: vec![Value::from("".to_string()).into()]
@@ -222,7 +222,7 @@ fn _let() {
     assert_eq!(
         lang::let_expr("let x = 10 in fact x"),
         Ok(LetExpr {
-            definitions: vec![LetExprDefinition {
+            defs: vec![LetExprDefinition {
                 name: Ident::from("x"),
                 value_type: None,
                 body: Value::from(10).into()
@@ -239,7 +239,7 @@ fn _let() {
     assert_eq!(
         lang::let_expr("let x = 10, y = 42 in add x y"),
         Ok(LetExpr {
-            definitions: vec![
+            defs: vec![
                 LetExprDefinition {
                     name: Ident::from("x"),
                     value_type: None,
@@ -263,7 +263,7 @@ fn _let() {
     assert_eq!(
         lang::let_expr("let x:int = 10, y:int = 42 in add x y"),
         Ok(LetExpr {
-            definitions: vec![
+            defs: vec![
                 LetExprDefinition {
                     name: Ident::from("x"),
                     value_type: Some(ValueType::Int),
