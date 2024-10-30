@@ -10,12 +10,13 @@ use types::{
 };
 
 use super::{FuncMap, Function, FunctionInner, FunctionKind};
+use crate::eval::{EvalError, EvalResult};
 
-// mod cmp;
-// mod ctors;
-// mod logic;
-// mod math;
-// mod type_casts;
+mod cmp;
+mod ctors;
+mod logic;
+mod math;
+mod type_casts;
 
 impl Function {
     pub fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
@@ -30,7 +31,7 @@ macro_rules! unwrap_none {
             let $var = match $var {
                 Some(v) => v,
                 None => {
-                    return Err(Error::UnexpectedNone);
+                    return Err(EvalError::UnexpectedNone);
                 }
             };
         )*
@@ -55,7 +56,8 @@ macro_rules! builtin {
                 ]
             };
             let func = Function(Arc::new(FunctionInner {
-                signature: sign.clone(),
+                sign: sign.clone(),
+                return_type: ValueType::$ret_type,
                 kind: FunctionKind::BuiltIn(Box::new(move |args: Vec<Value>| -> EvalResult {
                     let mut args_iter = args.into_iter();
                     $(
@@ -105,11 +107,11 @@ static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
     // TODO: check for overflow
     let mut builtins = HashMap::new();
 
-    // math::populate(&mut builtins);
-    // cmp::populate(&mut builtins);
-    // logic::populate(&mut builtins);
-    // type_casts::populate(&mut builtins);
-    // ctors::populate(&mut builtins);
+    math::populate(&mut builtins);
+    cmp::populate(&mut builtins);
+    logic::populate(&mut builtins);
+    type_casts::populate(&mut builtins);
+    ctors::populate(&mut builtins);
 
     builtins
 });

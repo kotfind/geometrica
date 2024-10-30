@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// Scope for compiling Expr into CExpr
-struct CScope<'a> {
+pub struct CScope<'a> {
     funcs: FuncMap,
     var_types: HashMap<Ident, ValueType>,
     bindings: HashMap<Ident, CExpr>,
@@ -25,6 +25,15 @@ struct CScope<'a> {
 }
 
 impl<'a> CScope<'a> {
+    pub fn new() -> Self {
+        Self {
+            funcs: FuncMap::new(),
+            var_types: HashMap::new(),
+            bindings: HashMap::new(),
+            parent: None,
+        }
+    }
+
     fn push(&'a self) -> Self {
         Self {
             funcs: FuncMap::new(),
@@ -88,7 +97,7 @@ impl<'a> CScope<'a> {
 
 /// Compile error
 #[derive(Debug, Error)]
-enum CError {
+pub enum CError {
     #[error("variable undefined: {0}")]
     UndefinedVariable(Ident),
 
@@ -103,6 +112,9 @@ enum CError {
 
     #[error("variable redefinition: {0}")]
     VariableRedefinition(Ident),
+
+    #[error("if condition should be bool")]
+    IfConditionNotBool,
 }
 
 /// Compile Result
@@ -113,7 +125,7 @@ impl CExpr {
         Self(Arc::new(inner))
     }
 
-    fn from(expr: Expr, cscope: &CScope) -> CResult<Self> {
+    pub fn from(expr: Expr, cscope: &CScope) -> CResult<Self> {
         match &expr.0 as &ExprInner {
             ExprInner::Value(value) => Ok(Self::from_value(value.clone())),
             ExprInner::Variable(var) => Self::from_var(var.clone(), cscope),
@@ -125,7 +137,7 @@ impl CExpr {
 
     fn from_value(value: Value) -> Self {
         Self::from_inner(CExprInner {
-            vars: HashSet::new(),
+            required_vars: HashSet::new(),
             value_type: value.value_type(),
             kind: CExprInnerKind::Value(value.clone()),
         })
@@ -141,7 +153,7 @@ impl CExpr {
         };
 
         Ok(Self::from_inner(CExprInner {
-            vars: HashSet::from([var.clone()]),
+            required_vars: HashSet::from([var.clone()]),
             value_type: value_type.clone(),
             kind: CExprInnerKind::Variable(var),
         }))
@@ -164,9 +176,9 @@ impl CExpr {
         };
 
         Ok(Self::from_inner(CExprInner {
-            vars: args
+            required_vars: args
                 .iter()
-                .map(|arg| arg.0.vars.clone().into_iter())
+                .map(|arg| arg.0.required_vars.clone().into_iter())
                 .flatten()
                 .collect(),
             value_type: func.0.return_type.clone(),
@@ -201,8 +213,11 @@ impl CExpr {
                     case.value.0.value_type.clone(),
                 ));
             }
-            vars.extend(case.cond.0.vars.clone());
-            vars.extend(case.value.0.vars.clone());
+            if case.cond.0.value_type != ValueType::Bool {
+                return Err(CError::IfConditionNotBool);
+            }
+            vars.extend(case.cond.0.required_vars.clone());
+            vars.extend(case.value.0.required_vars.clone());
         }
 
         let default_case_value = if let Some(default_value) = default_case_value.clone() {
@@ -219,7 +234,7 @@ impl CExpr {
         };
 
         Ok(Self::from_inner(CExprInner {
-            vars,
+            required_vars: vars,
             value_type,
             kind: CExprInnerKind::If(IfCExpr {
                 cases,

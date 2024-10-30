@@ -14,7 +14,7 @@ pub struct CExpr(pub Arc<CExprInner>);
 #[derive(Clone)]
 pub struct CExprInner {
     /// Set of all variables used inside of this CExpr
-    pub vars: HashSet<Ident>,
+    pub required_vars: HashSet<Ident>,
 
     /// CExpr has some [return] type, that may NOT change
     pub value_type: ValueType,
