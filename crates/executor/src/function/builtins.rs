@@ -10,14 +10,12 @@ use types::{
 };
 
 use super::{FuncMap, Function, FunctionInner, FunctionKind};
-use crate::error::Error;
-use crate::eval::EvalResult;
 
-mod cmp;
-mod ctors;
-mod logic;
-mod math;
-mod type_casts;
+// mod cmp;
+// mod ctors;
+// mod logic;
+// mod math;
+// mod type_casts;
 
 impl Function {
     pub fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
@@ -107,11 +105,11 @@ static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
     // TODO: check for overflow
     let mut builtins = HashMap::new();
 
-    math::populate(&mut builtins);
-    cmp::populate(&mut builtins);
-    logic::populate(&mut builtins);
-    type_casts::populate(&mut builtins);
-    ctors::populate(&mut builtins);
+    // math::populate(&mut builtins);
+    // cmp::populate(&mut builtins);
+    // logic::populate(&mut builtins);
+    // type_casts::populate(&mut builtins);
+    // ctors::populate(&mut builtins);
 
     builtins
 });
