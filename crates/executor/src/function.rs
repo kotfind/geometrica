@@ -23,10 +23,10 @@ impl PartialEq for Function {
     }
 }
 
-pub struct FunctionInner {
-    pub sign: FunctionSignature,
-    pub return_type: ValueType,
-    kind: FunctionKind,
+impl From<FunctionInner> for Function {
+    fn from(inner: FunctionInner) -> Self {
+        Self(Arc::new(inner))
+    }
 }
 
 impl Function {
@@ -34,21 +34,27 @@ impl Function {
         // TODO: check arg_types if #[cfg(debug)]
         let inner = &self.0;
         match &inner.kind {
-            FunctionKind::BuiltIn(builtin) => builtin(args),
-            FunctionKind::CustomFunction(custom) => custom.eval(args),
+            FunctionInnerKind::BuiltIn(builtin) => builtin(args),
+            FunctionInnerKind::CustomFunction(custom) => custom.eval(args),
         }
         // TODO: check return type if #[cfg(debug)]
     }
 }
 
-enum FunctionKind {
+pub struct FunctionInner {
+    pub sign: FunctionSignature,
+    pub return_type: ValueType,
+    pub kind: FunctionInnerKind,
+}
+
+pub enum FunctionInnerKind {
     BuiltIn(Box<dyn Sync + Send + 'static + Fn(Vec<Value>) -> EvalResult>),
     CustomFunction(CustomFunction),
 }
 
-struct CustomFunction {
-    arg_names: Vec<Ident>,
-    body: CExpr,
+pub struct CustomFunction {
+    pub arg_names: Vec<Ident>,
+    pub body: CExpr,
 }
 
 impl CustomFunction {

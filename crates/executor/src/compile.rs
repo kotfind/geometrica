@@ -116,7 +116,7 @@ pub enum CError {
 }
 
 /// Compile Result
-type CResult = Result<CExpr, CError>;
+pub type CResult = Result<CExpr, CError>;
 
 pub trait Compile {
     fn compile(self, cscope: &CScope) -> CResult;
