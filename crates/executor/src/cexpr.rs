@@ -8,10 +8,10 @@ use types::{
 use crate::function::Function;
 
 /// Compiled Expr
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CExpr(pub Arc<CExprInner>);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CExprInner {
     /// Set of all variables used inside of this CExpr
     pub required_vars: HashSet<Ident>,
@@ -22,7 +22,7 @@ pub struct CExprInner {
     pub kind: CExprInnerKind,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum CExprInnerKind {
     Value(Value),
     Variable(Ident),
@@ -30,19 +30,19 @@ pub enum CExprInnerKind {
     If(IfCExpr),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FuncCallCExpr {
     pub func: Function,
     pub args: Vec<CExpr>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IfCExpr {
     pub cases: Vec<IfCExprCase>,
     pub default_case_value: Option<CExpr>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IfCExprCase {
     pub cond: CExpr,
     pub value: CExpr,

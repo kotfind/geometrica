@@ -182,7 +182,11 @@ impl Exec for FunctionDefinition {
             body,
         } = self;
 
-        let body = body.compile(&CScope::new(scope))?;
+        let mut cscope = CScope::new(scope);
+        for arg in &args {
+            cscope.insert_var_type(arg.name.clone(), arg.value_type.clone())?;
+        }
+        let body = body.compile(&cscope)?;
 
         let (arg_names, arg_types): (Vec<_>, Vec<_>) = args
             .into_iter()
@@ -225,5 +229,90 @@ impl Exec for FunctionDefinition {
         });
 
         scope.insert_func(func)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use types::core::Value;
+
+    use super::*;
+
+    mod function_definition {
+        use super::*;
+
+        #[test]
+        fn simple() {
+            let mut scope = ExecScope::new();
+            parser::statement("sq x:int -> int = x * x")
+                .unwrap()
+                .exec(&mut scope)
+                .unwrap();
+            assert_eq!(
+                scope
+                    .get_func(&FunctionSignature {
+                        name: Ident::from("sq"),
+                        arg_types: vec![ValueType::Int]
+                    })
+                    .unwrap()
+                    .0
+                    .return_type,
+                ValueType::Int,
+            );
+        }
+    }
+
+    mod value_definition {
+        use super::*;
+
+        #[test]
+        fn value() {
+            let mut scope = ExecScope::new();
+            parser::statement("x = 1")
+                .unwrap()
+                .exec(&mut scope)
+                .unwrap();
+            assert!(matches!(
+                scope
+                    .get_node(&Ident::from("x"))
+                    .unwrap()
+                    .0
+                    .lock()
+                    .unwrap()
+                    .kind,
+                NodeInnerKind::Value(Value::Int(Some(1)))
+            ));
+        }
+
+        #[test]
+        fn complex_value() {
+            let mut scope = ExecScope::new();
+            parser::statement("x = 1 + 1")
+                .unwrap()
+                .exec(&mut scope)
+                .unwrap();
+            assert!(matches!(
+                scope
+                    .get_node(&Ident::from("x"))
+                    .unwrap()
+                    .0
+                    .lock()
+                    .unwrap()
+                    .kind,
+                NodeInnerKind::Value(Value::Int(Some(2)))
+            ));
+        }
+
+        #[test]
+        fn type_assert() {
+            let mut scope = ExecScope::new();
+            assert!(matches!(
+                parser::statement("x:real = 1").unwrap().exec(&mut scope),
+                Err(ExecError::UnexpectedType {
+                    expected: ValueType::Real,
+                    got: ValueType::Int
+                })
+            ));
+        }
     }
 }

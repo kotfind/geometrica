@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use types::{
     core::{Value, ValueType},
@@ -16,6 +16,25 @@ pub type FuncMap = HashMap<FunctionSignature, Function>;
 
 #[derive(Clone)]
 pub struct Function(pub Arc<FunctionInner>);
+
+impl Debug for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{name} {args} -> {ret}",
+            name = self.0.sign.name,
+            args = self
+                .0
+                .sign
+                .arg_types
+                .iter()
+                .map(|arg_type| arg_type.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+            ret = self.0.return_type
+        )
+    }
+}
 
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {

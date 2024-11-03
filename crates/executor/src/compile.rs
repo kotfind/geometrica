@@ -19,6 +19,7 @@ use crate::{
 pub struct CScope<'a, 'b> {
     exec_scope: &'a ExecScope,
     bindings: HashMap<Ident, CExpr>,
+    var_types: HashMap<Ident, ValueType>,
     parent: Option<&'b CScope<'a, 'b>>,
 }
 
@@ -27,6 +28,7 @@ impl<'a, 'b> CScope<'a, 'b> {
         Self {
             exec_scope,
             bindings: HashMap::new(),
+            var_types: HashMap::new(),
             parent: None,
         }
     }
@@ -35,15 +37,26 @@ impl<'a, 'b> CScope<'a, 'b> {
         Self {
             exec_scope: self.exec_scope,
             bindings: HashMap::new(),
+            var_types: HashMap::new(),
             parent: Some(self),
         }
     }
 
-    fn bind(&mut self, name: Ident, value: CExpr) -> Result<(), CError> {
+    fn insert_binding(&mut self, name: Ident, value: CExpr) -> Result<(), CError> {
         match self.bindings.entry(name.clone()) {
             hash_map::Entry::Occupied(_) => return Err(CError::VariableRedefinition(name)),
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(value);
+            }
+        }
+        Ok(())
+    }
+
+    pub fn insert_var_type(&mut self, name: Ident, var_type: ValueType) -> Result<(), CError> {
+        match self.var_types.entry(name.clone()) {
+            hash_map::Entry::Occupied(_) => return Err(CError::VariableRedefinition(name)),
+            hash_map::Entry::Vacant(entry) => {
+                entry.insert(var_type);
             }
         }
         Ok(())
@@ -62,6 +75,14 @@ impl<'a, 'b> CScope<'a, 'b> {
     }
 
     fn get_var_type(&self, name: &Ident) -> Option<ValueType> {
+        let mut scope_ = Some(self);
+        while let Some(scope) = scope_ {
+            let ans = scope.var_types.get(name);
+            if ans.is_some() {
+                return ans.cloned();
+            }
+            scope_ = scope.parent;
+        }
         self.exec_scope.get_node(name).map(|node| node.value_type())
     }
 
@@ -254,7 +275,7 @@ impl Compile for LetExpr {
                     });
                 }
             }
-            new_cscope.bind(name, body)?;
+            new_cscope.insert_binding(name, body)?;
         }
         body.compile(&new_cscope)
     }
