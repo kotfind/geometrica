@@ -13,7 +13,7 @@ use crate::{
     compile::{CError, CScope, Compile},
     eval::{Eval, EvalError},
     function::{CustomFunction, FuncMap, Function, FunctionInner, FunctionInnerKind},
-    node::{CExprNode, Node, NodeInnerKind},
+    node::Node,
 };
 
 #[derive(Debug, Error)]
@@ -92,6 +92,16 @@ pub trait Exec {
     fn exec(self, scope: &mut ExecScope) -> ExecResult;
 }
 
+impl Exec for Vec<Statement> {
+    fn exec(self, scope: &mut ExecScope) -> ExecResult {
+        // TODO: nested scope; recover on error
+        for stmt in self {
+            stmt.exec(scope)?;
+        }
+        Ok(())
+    }
+}
+
 impl Exec for Statement {
     fn exec(self, scope: &mut ExecScope) -> ExecResult {
         match self {
@@ -136,7 +146,7 @@ impl Exec for ValueDefinition {
         }
 
         if body.0.required_vars.is_empty() {
-            let node = Node::from(NodeInnerKind::Value(body.eval(&HashMap::new())?));
+            let node = Node::from_value(body.eval(&HashMap::new())?);
             scope.insert_node(name, node)?;
         } else {
             let bindings: Vec<(Ident, Node)> = body
@@ -152,19 +162,17 @@ impl Exec for ValueDefinition {
                     )
                 })
                 .collect();
-            let node = Node::from(NodeInnerKind::CExpr(CExprNode {
-                bindings: bindings.clone(),
-                body,
-            }));
+
+            let node = Node::from_cexpr(body, bindings.clone())?;
 
             scope.insert_node(name, node)?;
 
             for (_, binding_node) in bindings {
                 binding_node
                     .0
+                    .required_by
                     .lock()
                     .unwrap()
-                    .required_by
                     .push(binding_node.downgrade());
             }
         }
@@ -263,6 +271,8 @@ mod test {
     }
 
     mod value_definition {
+        use crate::node::NodeInnerKind;
+
         use super::*;
 
         #[test]
@@ -272,16 +282,11 @@ mod test {
                 .unwrap()
                 .exec(&mut scope)
                 .unwrap();
-            assert!(matches!(
-                scope
-                    .get_node(&Ident::from("x"))
-                    .unwrap()
-                    .0
-                    .lock()
-                    .unwrap()
-                    .kind,
-                NodeInnerKind::Value(Value::Int(Some(1)))
-            ));
+            let NodeInnerKind::Value(value) = &scope.get_node(&Ident::from("x")).unwrap().0.kind
+            else {
+                panic!();
+            };
+            assert_eq!(&value.lock().unwrap() as &Value, &1.into());
         }
 
         #[test]
@@ -291,16 +296,11 @@ mod test {
                 .unwrap()
                 .exec(&mut scope)
                 .unwrap();
-            assert!(matches!(
-                scope
-                    .get_node(&Ident::from("x"))
-                    .unwrap()
-                    .0
-                    .lock()
-                    .unwrap()
-                    .kind,
-                NodeInnerKind::Value(Value::Int(Some(2)))
-            ));
+            let NodeInnerKind::Value(value) = &scope.get_node(&Ident::from("x")).unwrap().0.kind
+            else {
+                panic!();
+            };
+            assert_eq!(&value.lock().unwrap() as &Value, &2.into());
         }
 
         #[test]
