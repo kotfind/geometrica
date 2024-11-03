@@ -11,22 +11,21 @@ use types::{
 
 use crate::{
     cexpr::{CExpr, CExprInner, CExprInnerKind, FuncCallCExpr, IfCExpr, IfCExprCase},
-    function::{FuncMap, Function},
+    exec::ExecScope,
+    function::Function,
 };
 
 /// Scope for compiling Expr into CExpr
-pub struct CScope<'a> {
-    funcs: FuncMap,
-    var_types: HashMap<Ident, ValueType>,
+pub struct CScope<'a, 'b> {
+    exec_scope: &'a ExecScope,
     bindings: HashMap<Ident, CExpr>,
-    parent: Option<&'a CScope<'a>>,
+    parent: Option<&'b CScope<'a, 'b>>,
 }
 
-impl<'a> CScope<'a> {
-    pub fn new() -> Self {
+impl<'a, 'b> CScope<'a, 'b> {
+    pub fn new(exec_scope: &'a ExecScope) -> Self {
         Self {
-            funcs: FuncMap::new(),
-            var_types: HashMap::new(),
+            exec_scope,
             bindings: HashMap::new(),
             parent: None,
         }
@@ -34,8 +33,7 @@ impl<'a> CScope<'a> {
 
     fn push(&'a self) -> Self {
         Self {
-            funcs: FuncMap::new(),
-            var_types: HashMap::new(),
+            exec_scope: self.exec_scope,
             bindings: HashMap::new(),
             parent: Some(self),
         }
@@ -64,32 +62,11 @@ impl<'a> CScope<'a> {
     }
 
     fn get_var_type(&self, name: &Ident) -> Option<ValueType> {
-        let mut scope_ = Some(self);
-        while let Some(scope) = scope_ {
-            let ans = scope.var_types.get(name);
-            if ans.is_some() {
-                return ans.cloned();
-            }
-            scope_ = scope.parent;
-        }
-        None
+        self.exec_scope.get_node(name).map(|node| node.value_type())
     }
 
     fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
-        let ans = Function::get_builtin(sign);
-        if ans.is_some() {
-            return ans;
-        }
-
-        let mut scope_ = Some(self);
-        while let Some(scope) = scope_ {
-            let ans = scope.funcs.get(sign);
-            if ans.is_some() {
-                return ans.cloned();
-            }
-            scope_ = scope.parent;
-        }
-        None
+        self.exec_scope.get_func(sign)
     }
 }
 

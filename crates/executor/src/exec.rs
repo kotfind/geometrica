@@ -43,7 +43,23 @@ pub struct ExecScope {
 }
 
 impl ExecScope {
-    fn insert_func(&mut self, func: Function) -> ExecResult {
+    pub fn new() -> Self {
+        Self {
+            funcs: FuncMap::new(),
+            nodes: HashMap::new(),
+        }
+    }
+
+    pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
+        let ans = Function::get_builtin(sign);
+        if ans.is_some() {
+            return ans;
+        }
+
+        self.funcs.get(sign).cloned()
+    }
+
+    pub fn insert_func(&mut self, func: Function) -> ExecResult {
         match self.funcs.entry(func.0.sign.clone()) {
             hash_map::Entry::Occupied(_) => {
                 Err(ExecError::FunctionRedefinition(func.0.sign.clone()))
@@ -55,7 +71,7 @@ impl ExecScope {
         }
     }
 
-    fn insert_node(&mut self, name: Ident, node: Node) -> ExecResult {
+    pub fn insert_node(&mut self, name: Ident, node: Node) -> ExecResult {
         match self.nodes.entry(name.clone()) {
             hash_map::Entry::Occupied(_) => Err(ExecError::VariableRedefinition(name)),
             hash_map::Entry::Vacant(e) => {
@@ -65,7 +81,7 @@ impl ExecScope {
         }
     }
 
-    fn get_node(&self, name: &Ident) -> Option<Node> {
+    pub fn get_node(&self, name: &Ident) -> Option<Node> {
         self.nodes.get(name).cloned()
     }
 }
@@ -108,7 +124,7 @@ impl Exec for ValueDefinition {
             body,
         } = self;
 
-        let body = body.compile(&CScope::new() /* XXX: provide actual scope */)?;
+        let body = body.compile(&CScope::new(scope))?;
 
         if let Some(expected_type) = value_type {
             if body.0.value_type != expected_type {
@@ -166,7 +182,7 @@ impl Exec for FunctionDefinition {
             body,
         } = self;
 
-        let body = body.compile(&CScope::new() /* XXX: provide actual scope */)?;
+        let body = body.compile(&CScope::new(scope))?;
 
         let (arg_names, arg_types): (Vec<_>, Vec<_>) = args
             .into_iter()

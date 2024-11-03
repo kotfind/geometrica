@@ -1,6 +1,9 @@
 use std::sync::{Arc, Mutex, Weak};
 
-use types::{core::Value, lang::Ident};
+use types::{
+    core::{Value, ValueType},
+    lang::Ident,
+};
 
 use crate::cexpr::CExpr;
 
@@ -19,6 +22,14 @@ pub struct Node(pub Arc<Mutex<NodeInner>>);
 impl Node {
     pub fn downgrade(&self) -> WeakNode {
         WeakNode(Arc::downgrade(&self.0))
+    }
+
+    pub fn value_type(&self) -> ValueType {
+        let inner = self.0.lock().unwrap();
+        match &inner.kind {
+            NodeInnerKind::Value(value) => value.value_type(),
+            NodeInnerKind::CExpr(cexpr_node) => cexpr_node.body.0.value_type.clone(),
+        }
     }
 }
 
