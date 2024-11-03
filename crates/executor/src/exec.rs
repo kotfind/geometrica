@@ -145,9 +145,8 @@ impl Exec for ValueDefinition {
             }
         }
 
-        if body.0.required_vars.is_empty() {
-            let node = Node::from_value(body.eval(&HashMap::new())?);
-            scope.insert_node(name, node)?;
+        let node = if body.0.required_vars.is_empty() {
+            Node::from_value(body.eval(&HashMap::new())?)
         } else {
             let bindings: Vec<(Ident, Node)> = body
                 .0
@@ -163,19 +162,10 @@ impl Exec for ValueDefinition {
                 })
                 .collect();
 
-            let node = Node::from_cexpr(body, bindings.clone())?;
+            Node::from_cexpr(body, bindings.clone())?
+        };
 
-            scope.insert_node(name, node)?;
-
-            for (_, binding_node) in bindings {
-                binding_node
-                    .0
-                    .required_by
-                    .lock()
-                    .unwrap()
-                    .push(binding_node.downgrade());
-            }
-        }
+        scope.insert_node(name, node)?;
 
         Ok(())
     }

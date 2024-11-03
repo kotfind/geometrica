@@ -10,7 +10,7 @@ use crate::{
     eval::{Eval, EvalError},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WeakNode(pub Weak<NodeInner>);
 
 impl WeakNode {
@@ -19,7 +19,7 @@ impl WeakNode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Node(pub Arc<NodeInner>);
 
 impl Node {
@@ -28,7 +28,7 @@ impl Node {
     }
 
     pub fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
-        Ok(Node::from(NodeInnerKind::CExpr(CExprNode {
+        let node = Node::from(NodeInnerKind::CExpr(CExprNode {
             value: Mutex::new(
                 body.eval(
                     &bindings
@@ -38,8 +38,19 @@ impl Node {
                 )?,
             ),
             body,
-            bindings,
-        })))
+            bindings: bindings.clone(),
+        }));
+
+        for (_, binding_node) in bindings {
+            binding_node
+                .0
+                .required_by
+                .lock()
+                .unwrap()
+                .push(node.downgrade());
+        }
+
+        Ok(node)
     }
 
     pub fn downgrade(&self) -> WeakNode {
@@ -90,12 +101,19 @@ impl Node {
 
     fn update(&self) -> Result<(), EvalError> {
         self.update_self()?;
-        let required_by = &self.0.required_by.lock().unwrap();
+
+        let required_by = {
+            let required_by = &mut self.0.required_by.lock().unwrap();
+            required_by.retain(|node| node.upgrade().is_some());
+            required_by.clone()
+        };
+
         for node in required_by.iter() {
             if let Some(node) = node.upgrade() {
                 node.update()?;
             }
         }
+
         Ok(())
     }
 }
@@ -115,16 +133,19 @@ impl From<NodeInnerKind> for Node {
     }
 }
 
+#[derive(Debug)]
 pub struct NodeInner {
     pub required_by: Mutex<Vec<WeakNode>>,
     pub kind: NodeInnerKind,
 }
 
+#[derive(Debug)]
 pub enum NodeInnerKind {
     Value(Mutex<Value>),
     CExpr(CExprNode),
 }
 
+#[derive(Debug)]
 pub struct CExprNode {
     /// Last evaluated value
     pub value: Mutex<Value>,
