@@ -25,7 +25,7 @@ peg::parser! {
     grammar lang() for str {
         // -------------------- Statements --------------------
         pub rule script() -> Vec<Statement>
-            = _ stmts:(statement() ** (_ ";" _)) _
+            = _ stmts:(statement() ** (_ ";" _)) (_ ";")? _
         {
             stmts
         }
