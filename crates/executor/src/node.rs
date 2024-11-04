@@ -5,13 +5,13 @@ use types::{
     lang::Ident,
 };
 
-use crate::{
-    cexpr::CExpr,
+use crate::cexpr::{
     eval::{Eval, EvalError},
+    CExpr,
 };
 
 #[derive(Clone, Debug)]
-pub struct WeakNode(pub Weak<NodeInner>);
+pub struct WeakNode(Weak<NodeInner>);
 
 impl WeakNode {
     pub fn upgrade(&self) -> Option<Node> {
@@ -20,7 +20,7 @@ impl WeakNode {
 }
 
 #[derive(Clone, Debug)]
-pub struct Node(pub Arc<NodeInner>);
+pub struct Node(Arc<NodeInner>);
 
 impl Node {
     pub fn from_value(value: Value) -> Self {
@@ -60,7 +60,7 @@ impl Node {
     pub fn value_type(&self) -> ValueType {
         match &self.0.kind {
             NodeInnerKind::Value(value) => value.lock().unwrap().value_type(),
-            NodeInnerKind::CExpr(cexpr_node) => cexpr_node.body.0.value_type.clone(),
+            NodeInnerKind::CExpr(cexpr_node) => cexpr_node.body.value_type(),
         }
     }
 
@@ -141,23 +141,23 @@ impl From<NodeInnerKind> for Node {
 }
 
 #[derive(Debug)]
-pub struct NodeInner {
-    pub required_by: Mutex<Vec<WeakNode>>,
-    pub kind: NodeInnerKind,
+struct NodeInner {
+    required_by: Mutex<Vec<WeakNode>>,
+    kind: NodeInnerKind,
 }
 
 #[derive(Debug)]
-pub enum NodeInnerKind {
+enum NodeInnerKind {
     Value(Mutex<Value>),
     CExpr(CExprNode),
 }
 
 #[derive(Debug)]
-pub struct CExprNode {
+struct CExprNode {
     /// Last evaluated value
-    pub value: Mutex<Value>,
-    pub body: CExpr,
-    pub bindings: Vec<(Ident, Node)>,
+    value: Mutex<Value>,
+    body: CExpr,
+    bindings: Vec<(Ident, Node)>,
 }
 
 #[cfg(test)]

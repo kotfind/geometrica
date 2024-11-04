@@ -189,7 +189,7 @@ impl Compile for FuncCallExpr {
                 .iter()
                 .flat_map(|arg| arg.0.required_vars.clone().into_iter())
                 .collect(),
-            value_type: func.0.return_type.clone(),
+            value_type: func.return_type(),
             kind: CExprInnerKind::FuncCall(FuncCallCExpr { func, args }),
         }))
     }

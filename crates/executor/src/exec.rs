@@ -1,4 +1,4 @@
-use std::collections::{hash_map, HashMap, HashSet};
+use std::collections::{hash_map, HashMap};
 
 use thiserror::Error;
 use types::{
@@ -10,9 +10,11 @@ use types::{
 };
 
 use crate::{
-    compile::{CError, CScope, Compile},
-    eval::{Eval, EvalError},
-    function::{CustomFunction, FuncMap, Function, FunctionInner, FunctionInnerKind},
+    cexpr::{
+        compile::{CError, CScope, Compile},
+        eval::{Eval, EvalError},
+    },
+    function::{FuncMap, Function},
     node::Node,
 };
 
@@ -60,10 +62,8 @@ impl ExecScope {
     }
 
     pub fn insert_func(&mut self, func: Function) -> ExecResult {
-        match self.funcs.entry(func.0.sign.clone()) {
-            hash_map::Entry::Occupied(_) => {
-                Err(ExecError::FunctionRedefinition(func.0.sign.clone()))
-            }
+        match self.funcs.entry(func.sign()) {
+            hash_map::Entry::Occupied(_) => Err(ExecError::FunctionRedefinition(func.sign())),
             hash_map::Entry::Vacant(e) => {
                 e.insert(func);
                 Ok(())
@@ -137,20 +137,19 @@ impl Exec for ValueDefinition {
         let body = body.compile(&CScope::new(scope))?;
 
         if let Some(expected_type) = value_type {
-            if body.0.value_type != expected_type {
+            if body.value_type() != expected_type {
                 return Err(ExecError::UnexpectedType {
                     expected: expected_type,
-                    got: body.0.value_type.clone(),
+                    got: body.value_type(),
                 });
             }
         }
 
-        let node = if body.0.required_vars.is_empty() {
+        let node = if body.required_vars().is_empty() {
             Node::from_value(body.eval(&HashMap::new())?)
         } else {
             let bindings: Vec<(Ident, Node)> = body
-                .0
-                .required_vars
+                .required_vars()
                 .iter()
                 .map(|var| {
                     (
@@ -173,67 +172,13 @@ impl Exec for ValueDefinition {
 
 impl Exec for FunctionDefinition {
     fn exec(self, scope: &mut ExecScope) -> ExecResult {
-        let FunctionDefinition {
-            name,
-            args,
-            return_type,
-            body,
-        } = self;
-
-        let mut cscope = CScope::new(scope);
-        for arg in &args {
-            cscope.insert_var_type(arg.name.clone(), arg.value_type.clone())?;
-        }
-        let body = body.compile(&cscope)?;
-
-        let (arg_names, arg_types): (Vec<_>, Vec<_>) = args
-            .into_iter()
-            .map(|arg| (arg.name, arg.value_type))
-            .unzip();
-
-        let sign = FunctionSignature { name, arg_types };
-
-        // Check for unprovided arguments
-        let arg_names_set: HashSet<_> = arg_names.iter().collect();
-        for required_var in &body.0.required_vars {
-            if !arg_names_set.contains(required_var) {
-                return Err(ExecError::UndefinedVariableInFunction {
-                    var: required_var.clone(),
-                    func: sign,
-                });
-            }
-        }
-
-        // Check for unused arguments
-        for arg_name in &arg_names_set {
-            if !body.0.required_vars.contains(arg_name) {
-                // TODO: use better warning processing
-                println!("WARN: unused variable {arg_name}");
-            }
-        }
-
-        // Check return type
-        if body.0.value_type != return_type {
-            return Err(ExecError::UnexpectedType {
-                expected: return_type,
-                got: body.0.value_type.clone(),
-            });
-        }
-
-        let func = Function::from(FunctionInner {
-            sign,
-            return_type,
-            kind: FunctionInnerKind::CustomFunction(CustomFunction { arg_names, body }),
-        });
-
-        scope.insert_func(func)
+        scope.insert_func(Function::from_definition(self, scope)?)?;
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use types::core::Value;
-
     use super::*;
 
     mod function_definition {
@@ -253,16 +198,13 @@ mod test {
                         arg_types: vec![ValueType::Int]
                     })
                     .unwrap()
-                    .0
-                    .return_type,
+                    .return_type(),
                 ValueType::Int,
             );
         }
     }
 
     mod value_definition {
-        use crate::node::NodeInnerKind;
-
         use super::*;
 
         #[test]
@@ -272,11 +214,10 @@ mod test {
                 .unwrap()
                 .exec(&mut scope)
                 .unwrap();
-            let NodeInnerKind::Value(value) = &scope.get_node(&Ident::from("x")).unwrap().0.kind
-            else {
-                panic!();
-            };
-            assert_eq!(&value.lock().unwrap() as &Value, &1.into());
+            assert_eq!(
+                scope.get_node(&Ident::from("x")).unwrap().get_value(),
+                1.into()
+            );
         }
 
         #[test]
@@ -286,11 +227,10 @@ mod test {
                 .unwrap()
                 .exec(&mut scope)
                 .unwrap();
-            let NodeInnerKind::Value(value) = &scope.get_node(&Ident::from("x")).unwrap().0.kind
-            else {
-                panic!();
-            };
-            assert_eq!(&value.lock().unwrap() as &Value, &2.into());
+            assert_eq!(
+                scope.get_node(&Ident::from("x")).unwrap().get_value(),
+                2.into()
+            );
         }
 
         #[test]

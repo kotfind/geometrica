@@ -58,7 +58,7 @@ pub fn populate(builtins: &mut FuncMap) {
 
 #[cfg(test)]
 mod test {
-    use crate::eval::eval;
+    use crate::cexpr::eval::eval;
 
     #[test]
     fn gr() {

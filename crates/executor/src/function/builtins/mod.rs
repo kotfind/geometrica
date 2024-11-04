@@ -10,7 +10,7 @@ use types::{
 };
 
 use super::{FuncMap, Function, FunctionInner, FunctionInnerKind};
-use crate::eval::{EvalError, EvalResult};
+use crate::cexpr::eval::{EvalError, EvalResult};
 
 mod cmp;
 mod ctors;
