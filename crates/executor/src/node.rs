@@ -1,13 +1,20 @@
-use std::sync::{Arc, Mutex, Weak};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, Weak},
+};
 
 use types::{
     core::{Value, ValueType},
-    lang::Ident,
+    lang::{Ident, ValueDefinition},
 };
 
-use crate::cexpr::{
-    eval::{Eval, EvalError},
-    CExpr,
+use crate::{
+    cexpr::{
+        compile::{CScope, Compile},
+        eval::{Eval, EvalError},
+        CExpr,
+    },
+    exec::{ExecError, ExecScope},
 };
 
 #[derive(Clone, Debug)]
@@ -23,11 +30,11 @@ impl WeakNode {
 pub struct Node(Arc<NodeInner>);
 
 impl Node {
-    pub fn from_value(value: Value) -> Self {
+    fn from_value(value: Value) -> Self {
         Node::from(NodeInnerKind::Value(Mutex::new(value)))
     }
 
-    pub fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
+    fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
         let node = Node::from(NodeInnerKind::CExpr(CExprNode {
             value: Mutex::new(
                 body.eval(
@@ -69,6 +76,47 @@ impl Node {
             NodeInnerKind::Value(value) => value.lock().unwrap().clone(),
             NodeInnerKind::CExpr(cexpr) => cexpr.value.lock().unwrap().clone(),
         }
+    }
+
+    pub fn from_value_definition(
+        def: ValueDefinition,
+        scope: &ExecScope,
+    ) -> Result<Node, ExecError> {
+        let ValueDefinition {
+            value_type, body, ..
+        } = def;
+
+        let body = body.compile(&CScope::new(scope))?;
+
+        if let Some(expected_type) = value_type {
+            if body.value_type() != expected_type {
+                return Err(ExecError::UnexpectedType {
+                    expected: expected_type,
+                    got: body.value_type(),
+                });
+            }
+        }
+
+        let node = if body.required_vars().is_empty() {
+            Node::from_value(body.eval(&HashMap::new())?)
+        } else {
+            let bindings: Vec<(Ident, Node)> = body
+                .required_vars()
+                .iter()
+                .map(|var| {
+                    (
+                        var.clone(),
+                        scope
+                            .get_node(var)
+                            .expect("var should be defined as body was successfully compiled"),
+                    )
+                })
+                .collect();
+
+            Node::from_cexpr(body, bindings.clone())?
+        };
+
+        Ok(node)
     }
 
     pub fn set(&self, value: Value) -> Result<(), EvalError> {

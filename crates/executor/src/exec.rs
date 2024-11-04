@@ -10,10 +10,7 @@ use types::{
 };
 
 use crate::{
-    cexpr::{
-        compile::{CError, CScope, Compile},
-        eval::{Eval, EvalError},
-    },
+    cexpr::{compile::CError, eval::EvalError},
     function::{FuncMap, Function},
     node::Node,
 };
@@ -128,43 +125,7 @@ impl Exec for Definition {
 
 impl Exec for ValueDefinition {
     fn exec(self, scope: &mut ExecScope) -> ExecResult {
-        let ValueDefinition {
-            name,
-            value_type,
-            body,
-        } = self;
-
-        let body = body.compile(&CScope::new(scope))?;
-
-        if let Some(expected_type) = value_type {
-            if body.value_type() != expected_type {
-                return Err(ExecError::UnexpectedType {
-                    expected: expected_type,
-                    got: body.value_type(),
-                });
-            }
-        }
-
-        let node = if body.required_vars().is_empty() {
-            Node::from_value(body.eval(&HashMap::new())?)
-        } else {
-            let bindings: Vec<(Ident, Node)> = body
-                .required_vars()
-                .iter()
-                .map(|var| {
-                    (
-                        var.clone(),
-                        scope
-                            .get_node(var)
-                            .expect("var should be defined as body was successfully compiled"),
-                    )
-                })
-                .collect();
-
-            Node::from_cexpr(body, bindings.clone())?
-        };
-
-        scope.insert_node(name, node)?;
+        scope.insert_node(self.name.clone(), Node::from_value_definition(self, scope)?)?;
 
         Ok(())
     }
