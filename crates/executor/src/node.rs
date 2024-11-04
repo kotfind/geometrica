@@ -18,16 +18,16 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct WeakNode(Weak<NodeInner>);
+pub(crate) struct WeakNode(Weak<NodeInner>);
 
 impl WeakNode {
-    pub fn upgrade(&self) -> Option<Node> {
+    pub(crate) fn upgrade(&self) -> Option<Node> {
         Weak::upgrade(&self.0).map(Node)
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct Node(Arc<NodeInner>);
+pub(crate) struct Node(Arc<NodeInner>);
 
 impl Node {
     fn from_value(value: Value) -> Self {
@@ -60,25 +60,25 @@ impl Node {
         Ok(node)
     }
 
-    pub fn downgrade(&self) -> WeakNode {
+    pub(crate) fn downgrade(&self) -> WeakNode {
         WeakNode(Arc::downgrade(&self.0))
     }
 
-    pub fn value_type(&self) -> ValueType {
+    pub(crate) fn value_type(&self) -> ValueType {
         match &self.0.kind {
             NodeInnerKind::Value(value) => value.lock().unwrap().value_type(),
             NodeInnerKind::CExpr(cexpr_node) => cexpr_node.body.value_type(),
         }
     }
 
-    pub fn get_value(&self) -> Value {
+    pub(crate) fn get_value(&self) -> Value {
         match &self.0.kind {
             NodeInnerKind::Value(value) => value.lock().unwrap().clone(),
             NodeInnerKind::CExpr(cexpr) => cexpr.value.lock().unwrap().clone(),
         }
     }
 
-    pub fn from_value_definition(
+    pub(crate) fn from_value_definition(
         def: ValueDefinition,
         scope: &ExecScope,
     ) -> Result<Node, ExecError> {
@@ -119,7 +119,7 @@ impl Node {
         Ok(node)
     }
 
-    pub fn set(&self, value: Value) -> Result<(), EvalError> {
+    pub(crate) fn set(&self, value: Value) -> Result<(), EvalError> {
         assert!(self.value_type() == value.value_type());
 
         let NodeInnerKind::Value(val) = &self.0.kind else {

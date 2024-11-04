@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn populate(builtins: &mut FuncMap) {
+pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // As
         fn "#as_bool" (v: Bool) -> Bool { v }

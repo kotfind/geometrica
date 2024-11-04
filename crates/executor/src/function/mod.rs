@@ -20,10 +20,10 @@ use crate::{
 
 mod builtins;
 
-pub type FuncMap = HashMap<FunctionSignature, Function>;
+pub(crate) type FuncMap = HashMap<FunctionSignature, Function>;
 
 #[derive(Clone)]
-pub struct Function(Arc<FunctionInner>);
+pub(crate) struct Function(Arc<FunctionInner>);
 
 impl Debug for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -56,7 +56,7 @@ impl From<FunctionInner> for Function {
 }
 
 impl Function {
-    pub fn eval(&self, args: Vec<Value>) -> EvalResult {
+    pub(crate) fn eval(&self, args: Vec<Value>) -> EvalResult {
         // TODO: check arg_types if #[cfg(debug)]
         let inner = &self.0;
         match &inner.kind {
@@ -66,15 +66,18 @@ impl Function {
         // TODO: check return type if #[cfg(debug)]
     }
 
-    pub fn sign(&self) -> FunctionSignature {
+    pub(crate) fn sign(&self) -> FunctionSignature {
         self.0.sign.clone()
     }
 
-    pub fn return_type(&self) -> ValueType {
+    pub(crate) fn return_type(&self) -> ValueType {
         self.0.return_type.clone()
     }
 
-    pub fn from_definition(def: FunctionDefinition, scope: &ExecScope) -> Result<Self, ExecError> {
+    pub(crate) fn from_definition(
+        def: FunctionDefinition,
+        scope: &ExecScope,
+    ) -> Result<Self, ExecError> {
         let FunctionDefinition {
             name,
             args,

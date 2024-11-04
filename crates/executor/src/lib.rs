@@ -1,4 +1,6 @@
 mod cexpr;
-mod exec;
+pub mod exec;
 mod function;
 mod node;
+
+pub use cexpr::{compile, eval};

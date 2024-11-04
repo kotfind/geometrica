@@ -2,7 +2,7 @@ use super::*;
 
 use types::core::{Circ, Line, Pt};
 
-pub fn populate(builtins: &mut FuncMap) {
+pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // As
         fn "pt" (x: Real, y: Real) -> Pt { Pt {x, y} }

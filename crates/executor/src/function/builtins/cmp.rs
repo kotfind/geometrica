@@ -13,7 +13,7 @@ fn array_eq(lhs: &[Value], rhs: &[Value]) -> bool {
     true
 }
 
-pub fn populate(builtins: &mut FuncMap) {
+pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Gr
         fn "#gr" (lhs:  Int, rhs:  Int) -> Bool { lhs        > rhs }

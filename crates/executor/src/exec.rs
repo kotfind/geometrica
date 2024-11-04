@@ -49,7 +49,7 @@ impl ExecScope {
         }
     }
 
-    pub fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
+    pub(crate) fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
         let ans = Function::get_builtin(sign);
         if ans.is_some() {
             return ans;
@@ -58,7 +58,7 @@ impl ExecScope {
         self.funcs.get(sign).cloned()
     }
 
-    pub fn insert_func(&mut self, func: Function) -> ExecResult {
+    pub(crate) fn insert_func(&mut self, func: Function) -> ExecResult {
         match self.funcs.entry(func.sign()) {
             hash_map::Entry::Occupied(_) => Err(ExecError::FunctionRedefinition(func.sign())),
             hash_map::Entry::Vacant(e) => {
@@ -68,7 +68,7 @@ impl ExecScope {
         }
     }
 
-    pub fn insert_node(&mut self, name: Ident, node: Node) -> ExecResult {
+    pub(crate) fn insert_node(&mut self, name: Ident, node: Node) -> ExecResult {
         match self.nodes.entry(name.clone()) {
             hash_map::Entry::Occupied(_) => Err(ExecError::VariableRedefinition(name)),
             hash_map::Entry::Vacant(e) => {
@@ -78,7 +78,7 @@ impl ExecScope {
         }
     }
 
-    pub fn get_node(&self, name: &Ident) -> Option<Node> {
+    pub(crate) fn get_node(&self, name: &Ident) -> Option<Node> {
         self.nodes.get(name).cloned()
     }
 }

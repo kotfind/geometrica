@@ -12,14 +12,14 @@ pub mod eval;
 
 /// Compiled Expr
 #[derive(Clone, Debug)]
-pub struct CExpr(Arc<CExprInner>);
+pub(crate) struct CExpr(Arc<CExprInner>);
 
 impl CExpr {
-    pub fn required_vars(&self) -> &HashSet<Ident> {
+    pub(crate) fn required_vars(&self) -> &HashSet<Ident> {
         &self.0.required_vars
     }
 
-    pub fn value_type(&self) -> ValueType {
+    pub(crate) fn value_type(&self) -> ValueType {
         self.0.value_type.clone()
     }
 }

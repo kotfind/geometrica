@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn populate(builtins: &mut FuncMap) {
+pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Or
         fn "#or" (lhs: Bool, rhs: Bool) -> Bool { lhs || rhs }

@@ -16,9 +16,9 @@ pub enum EvalError {
 
 pub type EvalResult = Result<Value, EvalError>;
 
-pub type VarsMap = HashMap<Ident, Value>;
+pub(crate) type VarsMap = HashMap<Ident, Value>;
 
-pub trait Eval {
+pub(crate) trait Eval {
     fn eval(&self, vars: &VarsMap) -> EvalResult;
 }
 
@@ -86,7 +86,7 @@ impl Eval for IfCExpr {
 }
 
 #[cfg(test)]
-pub fn eval(expr: &str) -> Value {
+pub(crate) fn eval(expr: &str) -> Value {
     use crate::{
         cexpr::compile::{CScope, Compile},
         exec::ExecScope,

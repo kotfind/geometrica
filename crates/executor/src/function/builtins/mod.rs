@@ -19,7 +19,7 @@ mod math;
 mod type_casts;
 
 impl Function {
-    pub fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
+    pub(crate) fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
         BUILT_IN_FUNCS.get(sign).cloned()
     }
 }

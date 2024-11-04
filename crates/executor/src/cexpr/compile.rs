@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Scope for compiling Expr into CExpr
-pub struct CScope<'a, 'b> {
+pub(crate) struct CScope<'a, 'b> {
     exec_scope: &'a ExecScope,
     bindings: HashMap<Ident, CExpr>,
     var_types: HashMap<Ident, ValueType>,
@@ -24,7 +24,7 @@ pub struct CScope<'a, 'b> {
 }
 
 impl<'a, 'b> CScope<'a, 'b> {
-    pub fn new(exec_scope: &'a ExecScope) -> Self {
+    pub(crate) fn new(exec_scope: &'a ExecScope) -> Self {
         Self {
             exec_scope,
             bindings: HashMap::new(),
@@ -52,7 +52,11 @@ impl<'a, 'b> CScope<'a, 'b> {
         Ok(())
     }
 
-    pub fn insert_var_type(&mut self, name: Ident, var_type: ValueType) -> Result<(), CError> {
+    pub(crate) fn insert_var_type(
+        &mut self,
+        name: Ident,
+        var_type: ValueType,
+    ) -> Result<(), CError> {
         match self.var_types.entry(name.clone()) {
             hash_map::Entry::Occupied(_) => return Err(CError::VariableRedefinition(name)),
             hash_map::Entry::Vacant(entry) => {
@@ -116,7 +120,7 @@ pub enum CError {
 /// Compile Result
 pub type CResult = Result<CExpr, CError>;
 
-pub trait Compile {
+pub(crate) trait Compile {
     fn compile(self, cscope: &CScope) -> CResult;
 }
 
