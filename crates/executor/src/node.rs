@@ -82,31 +82,38 @@ impl Node {
         self.update()
     }
 
-    fn update_self(&self) -> Result<(), EvalError> {
+    /// Returns
+    ///     - Err(_) on error
+    ///     - Ok(true) if value changed
+    ///     - Ok(false) if value is same
+    fn update_self(&self) -> Result<bool, EvalError> {
         if let NodeInnerKind::CExpr(CExprNode {
             value,
             body,
             bindings,
         }) = &self.0.kind
         {
-            *value.lock().unwrap() = body.eval(
+            let mut value = value.lock().unwrap();
+            let old_value = value.clone();
+            *value = body.eval(
                 &bindings
                     .iter()
                     .map(|(name, node)| (name.clone(), node.get_value()))
                     .collect(),
             )?;
+            Ok(&value as &Value != &old_value)
+        } else {
+            Ok(true)
         }
-        Ok(())
     }
 
     fn update(&self) -> Result<(), EvalError> {
-        self.update_self()?;
+        if !self.update_self()? {
+            return Ok(());
+        }
 
-        let required_by = {
-            let required_by = &mut self.0.required_by.lock().unwrap();
-            required_by.retain(|node| node.upgrade().is_some());
-            required_by.clone()
-        };
+        let required_by = &mut self.0.required_by.lock().unwrap();
+        required_by.retain(|node| node.upgrade().is_some());
 
         for node in required_by.iter() {
             if let Some(node) = node.upgrade() {
@@ -240,6 +247,39 @@ mod test {
         assert_eq!(
             scope.get_node(&Ident::from("z")).unwrap().get_value(),
             109.into()
+        );
+    }
+
+    #[test]
+    fn with_set_chain() {
+        let mut scope = ExecScope::new();
+        parser::script(
+            r#"
+            x1 = 1;
+            x2 = 2 * x1;
+            x3 = 2 * x2;
+            x4 = 2 * x3;
+            x5 = 2 * x4;
+            "#,
+        )
+        .unwrap()
+        .exec(&mut scope)
+        .unwrap();
+
+        assert_eq!(
+            scope.get_node(&Ident::from("x5")).unwrap().get_value(),
+            16.into()
+        );
+
+        scope
+            .get_node(&Ident::from("x1"))
+            .unwrap()
+            .set(10.into())
+            .unwrap();
+
+        assert_eq!(
+            scope.get_node(&Ident::from("x5")).unwrap().get_value(),
+            160.into()
         );
     }
 }
