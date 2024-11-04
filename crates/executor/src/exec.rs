@@ -4,13 +4,15 @@ use thiserror::Error;
 use types::{
     core::{Value, ValueType},
     lang::{
-        Command, Definition, FunctionDefinition, FunctionSignature, Ident, Statement,
+        Command, Definition, Expr, FunctionDefinition, FunctionSignature, Ident, Statement,
         ValueDefinition,
     },
 };
 
 use crate::{
     cexpr::{compile::CError, eval::EvalError},
+    compile::{CScope, Compile},
+    eval::Eval,
     function::{FuncMap, Function},
     node::Node,
 };
@@ -53,6 +55,11 @@ impl ExecScope {
             funcs: FuncMap::new(),
             nodes: HashMap::new(),
         }
+    }
+
+    pub fn eval_expr(&self, expr: Expr, vars: HashMap<Ident, Value>) -> Result<Value, ExecError> {
+        let cexpr = expr.compile(&CScope::new(self))?;
+        Ok(cexpr.eval(&vars)?)
     }
 
     pub fn get_all_items(&self) -> Vec<(Ident, Value)> {

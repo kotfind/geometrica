@@ -1,8 +1,11 @@
 use std::fmt::Display;
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::{Value, ValueType};
 
-#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct Ident(pub String);
 
 impl Display for Ident {
