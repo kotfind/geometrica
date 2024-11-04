@@ -2,6 +2,22 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, PartialEq, Clone, Hash, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Ident(pub String);
+
+impl Display for Ident {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<&str> for Ident {
+    fn from(v: &str) -> Self {
+        Ident(v.to_string())
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Value {
     Bool(Option<bool>),

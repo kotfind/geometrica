@@ -1,24 +1,4 @@
-use std::fmt::Display;
-
-use serde::{Deserialize, Serialize};
-
-use crate::core::{Value, ValueType};
-
-#[derive(Debug, PartialEq, Clone, Hash, Eq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct Ident(pub String);
-
-impl Display for Ident {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<&str> for Ident {
-    fn from(v: &str) -> Self {
-        Ident(v.to_string())
-    }
-}
+use crate::core::{Ident, Value, ValueType};
 
 macro_rules! enum_from_variant {
     ($enum:ty, $variant:ident, $inner_type:ty) => {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use thiserror::Error;
-use types::{core::Value, lang::Ident};
+use types::{core::Value, core::Ident};
 
 use crate::cexpr::{CExpr, CExprInnerKind, FuncCallCExpr, IfCExpr};
 

@@ -1,4 +1,7 @@
-use types::lang::{FuncCallExpr, Ident, LetExpr, LetExprDefinition};
+use types::{
+    core::Ident,
+    lang::{FuncCallExpr, LetExpr, LetExprDefinition},
+};
 
 use crate::lang;
 

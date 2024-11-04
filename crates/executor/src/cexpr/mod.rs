@@ -2,7 +2,7 @@ use std::{collections::HashSet, sync::Arc};
 
 use types::{
     core::{Value, ValueType},
-    lang::Ident,
+    core::Ident,
 };
 
 use crate::function::Function;

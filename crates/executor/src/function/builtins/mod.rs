@@ -6,7 +6,7 @@ use std::{
 use types::{
     core::{Value, ValueType},
     lang::FunctionSignature,
-    lang::Ident,
+    core::Ident,
 };
 
 use super::{FuncMap, Function, FunctionInner, FunctionInnerKind};

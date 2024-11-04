@@ -1,4 +1,4 @@
-use crate::{core::Value, lang::Ident};
+use crate::{core::Value, core::Ident};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Write};
 

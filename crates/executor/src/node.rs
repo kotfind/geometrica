@@ -4,8 +4,8 @@ use std::{
 };
 
 use types::{
-    core::{Value, ValueType},
-    lang::{Ident, ValueDefinition},
+    core::{Ident, Value, ValueType},
+    lang::ValueDefinition,
 };
 
 use crate::{

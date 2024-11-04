@@ -5,8 +5,8 @@ use std::{
 
 use thiserror::Error;
 use types::{
-    core::{Value, ValueType},
-    lang::{Expr, FuncCallExpr, FunctionSignature, Ident, IfExpr, LetExpr, LetExprDefinition},
+    core::{Ident, Value, ValueType},
+    lang::{Expr, FuncCallExpr, FunctionSignature, IfExpr, LetExpr, LetExprDefinition},
 };
 
 use crate::{

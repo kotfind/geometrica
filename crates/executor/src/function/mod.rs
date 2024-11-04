@@ -5,8 +5,8 @@ use std::{
 };
 
 use types::{
-    core::{Value, ValueType},
-    lang::{FunctionDefinition, FunctionSignature, Ident},
+    core::{Ident, Value, ValueType},
+    lang::{FunctionDefinition, FunctionSignature},
 };
 
 use crate::{

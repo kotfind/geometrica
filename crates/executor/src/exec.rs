@@ -2,9 +2,9 @@ use std::collections::{hash_map, HashMap};
 
 use thiserror::Error;
 use types::{
-    core::{Value, ValueType},
+    core::{Ident, Value, ValueType},
     lang::{
-        Command, Definition, Expr, FunctionDefinition, FunctionSignature, Ident, Statement,
+        Command, Definition, Expr, FunctionDefinition, FunctionSignature, Statement,
         ValueDefinition,
     },
 };
@@ -169,8 +169,6 @@ impl Exec for FunctionDefinition {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashSet;
-
     use super::*;
 
     #[test]
