@@ -228,6 +228,18 @@ mod test {
     }
 
     #[test]
+    fn type_assert() {
+        let mut scope = ExecScope::new();
+        assert!(matches!(
+            parser::statement("x:real = 1").unwrap().exec(&mut scope),
+            Err(ExecError::UnexpectedType {
+                expected: ValueType::Real,
+                got: ValueType::Int
+            })
+        ));
+    }
+
+    #[test]
     fn multiple_statements() {
         let mut scope = ExecScope::new();
         parser::script(

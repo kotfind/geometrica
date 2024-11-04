@@ -142,68 +142,44 @@ impl Exec for FunctionDefinition {
 mod test {
     use super::*;
 
-    mod function_definition {
-        use super::*;
+    #[test]
+    fn definitions() {
+        let mut scope = ExecScope::new();
+        parser::script(
+            r#"
+            sq x:int -> int = x^2;
+            sq x:real -> real = x^2;
+            sum x:int y:int -> int = x + y;
+            a = 1;
+            b = 2;
+            c = sum (sq a) (sq b);
+            "#,
+        )
+        .unwrap()
+        .exec(&mut scope)
+        .unwrap();
 
-        #[test]
-        fn simple() {
-            let mut scope = ExecScope::new();
-            parser::statement("sq x:int -> int = x * x")
-                .unwrap()
-                .exec(&mut scope)
-                .unwrap();
-            assert_eq!(
-                scope
-                    .get_func(&FunctionSignature {
-                        name: Ident::from("sq"),
-                        arg_types: vec![ValueType::Int]
-                    })
-                    .unwrap()
-                    .return_type(),
-                ValueType::Int,
-            );
-        }
-    }
-
-    mod value_definition {
-        use super::*;
-
-        #[test]
-        fn value() {
-            let mut scope = ExecScope::new();
-            parser::statement("x = 1")
-                .unwrap()
-                .exec(&mut scope)
-                .unwrap();
-            assert_eq!(
-                scope.get_node(&Ident::from("x")).unwrap().get_value(),
-                1.into()
-            );
+        let node_names = ["a", "b", "c"];
+        for node_name in node_names {
+            assert!(scope.get_node(&Ident::from(node_name)).is_some());
         }
 
-        #[test]
-        fn complex_value() {
-            let mut scope = ExecScope::new();
-            parser::statement("x = 1 + 1")
-                .unwrap()
-                .exec(&mut scope)
-                .unwrap();
-            assert_eq!(
-                scope.get_node(&Ident::from("x")).unwrap().get_value(),
-                2.into()
-            );
-        }
-
-        #[test]
-        fn type_assert() {
-            let mut scope = ExecScope::new();
-            assert!(matches!(
-                parser::statement("x:real = 1").unwrap().exec(&mut scope),
-                Err(ExecError::UnexpectedType {
-                    expected: ValueType::Real,
-                    got: ValueType::Int
-                })
-            ));
+        let func_signs = [
+            FunctionSignature {
+                name: Ident::from("sq"),
+                arg_types: vec![ValueType::Int],
+            },
+            FunctionSignature {
+                name: Ident::from("sq"),
+                arg_types: vec![ValueType::Real],
+            },
+            FunctionSignature {
+                name: Ident::from("sum"),
+                arg_types: vec![ValueType::Int, ValueType::Int],
+            },
+        ];
+        for func_sign in func_signs {
+            assert!(scope.get_func(&func_sign).is_some());
         }
     }
 }

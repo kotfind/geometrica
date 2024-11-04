@@ -154,3 +154,29 @@ impl CustomFunction {
         self.body.eval(&vars)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::exec::Exec;
+
+    use super::*;
+
+    #[test]
+    fn simple() {
+        let mut scope = ExecScope::new();
+        parser::statement("sq x:int -> int = x * x")
+            .unwrap()
+            .exec(&mut scope)
+            .unwrap();
+        assert_eq!(
+            scope
+                .get_func(&FunctionSignature {
+                    name: Ident::from("sq"),
+                    arg_types: vec![ValueType::Int]
+                })
+                .unwrap()
+                .return_type(),
+            ValueType::Int,
+        );
+    }
+}
