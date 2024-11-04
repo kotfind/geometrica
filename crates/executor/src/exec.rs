@@ -2,7 +2,7 @@ use std::collections::{hash_map, HashMap};
 
 use thiserror::Error;
 use types::{
-    core::ValueType,
+    core::{Value, ValueType},
     lang::{
         Command, Definition, FunctionDefinition, FunctionSignature, Ident, Statement,
         ValueDefinition,
@@ -53,6 +53,13 @@ impl ExecScope {
             funcs: FuncMap::new(),
             nodes: HashMap::new(),
         }
+    }
+
+    pub fn get_all_items(&self) -> Vec<(Ident, Value)> {
+        self.nodes
+            .iter()
+            .map(|(name, node)| (name.clone(), node.get_value()))
+            .collect()
     }
 
     pub(crate) fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
@@ -146,6 +153,8 @@ impl Exec for FunctionDefinition {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -187,5 +196,31 @@ mod test {
         for func_sign in func_signs {
             assert!(scope.get_func(&func_sign).is_some());
         }
+    }
+
+    #[test]
+    fn get_all_items() {
+        let mut scope = ExecScope::new();
+        parser::script(
+            r#"
+            sq x:int -> int = x^2; sq x:real -> real = x^2;
+            sum x:int y:int -> int = x + y;
+            a = 1;
+            b = 2;
+            c = sum (sq a) (sq b);
+            "#,
+        )
+        .unwrap()
+        .exec(&mut scope)
+        .unwrap();
+
+        let all_items: HashMap<Ident, Value> = scope.get_all_items().into_iter().collect();
+        let expected_items: HashMap<Ident, Value> = HashMap::from([
+            (Ident::from("a"), 1.into()),
+            (Ident::from("b"), 2.into()),
+            (Ident::from("c"), 5.into()),
+        ]);
+
+        assert_eq!(all_items, expected_items);
     }
 }
