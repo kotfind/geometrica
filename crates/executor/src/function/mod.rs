@@ -30,16 +30,15 @@ impl Debug for Function {
         write!(
             f,
             "{name} {args} -> {ret}",
-            name = self.0.sign.name,
+            name = self.sign().name,
             args = self
-                .0
-                .sign
+                .sign()
                 .arg_types
                 .iter()
                 .map(|arg_type| arg_type.to_string())
                 .collect::<Vec<_>>()
                 .join(" "),
-            ret = self.0.return_type
+            ret = self.return_type()
         )
     }
 }

@@ -24,7 +24,7 @@ pub trait Eval {
 
 impl Eval for CExpr {
     fn eval(&self, vars: &HashMap<Ident, Value>) -> EvalResult {
-        for required_var in &self.0.required_vars {
+        for required_var in self.required_vars() {
             assert!(vars.contains_key(required_var));
         }
 
