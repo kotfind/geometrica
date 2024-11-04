@@ -5,7 +5,7 @@ use executor::exec::ExecScope;
 use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
 use tracing_subscriber::prelude::*;
-use types::api::ApiError;
+use types::api;
 
 mod eval;
 mod exec;
@@ -50,4 +50,4 @@ struct App {
     scope: Arc<Mutex<ExecScope>>,
 }
 
-type ApiResult<T> = Result<Json<T>, Json<ApiError>>;
+type ApiResult<T> = Result<Json<T>, Json<api::Error>>;

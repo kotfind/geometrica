@@ -3,11 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::ExecScope;
 use tokio::sync::Mutex;
-use types::{
-    api::{ApiError, EvalRequest, EvalRequestExpr, EvalResponse},
-    core::Value,
-    lang::Ident,
-};
+use types::{api, core::Value, lang::Ident};
 
 use crate::App;
 
@@ -18,13 +14,13 @@ pub fn router() -> Router<App> {
 #[debug_handler(state = App)]
 async fn eval(
     State(App { scope, .. }): State<App>,
-    Json(EvalRequest { exprs }): Json<EvalRequest>,
-) -> Json<EvalResponse> {
+    Json(api::eval::Request { exprs }): Json<api::eval::Request>,
+) -> Json<api::eval::Response> {
     async fn process_expr(
         expr: String,
         vars: HashMap<Ident, Value>,
         scope: Arc<Mutex<ExecScope>>,
-    ) -> Result<Value, ApiError> {
+    ) -> Result<Value, api::Error> {
         let expr = parser::expr(&expr)?;
         let value = scope.lock().await.eval_expr(expr, vars)?;
         Ok(value)
@@ -32,9 +28,9 @@ async fn eval(
 
     let mut values = Vec::with_capacity(exprs.len());
 
-    for EvalRequestExpr { expr, vars } in exprs {
+    for api::eval::RequestExpr { expr, vars } in exprs {
         values.push(process_expr(expr, vars, scope.clone()).await);
     }
 
-    Json(EvalResponse { values })
+    Json(api::eval::Response { values })
 }

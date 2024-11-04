@@ -1,5 +1,5 @@
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
-use types::api::{GetAllItemsRequest, GetAllItemsResponse};
+use types::api;
 
 use crate::{ApiResult, App};
 
@@ -10,9 +10,9 @@ pub fn router() -> Router<App> {
 #[debug_handler(state = App)]
 async fn get_all(
     State(App { scope, .. }): State<App>,
-    Json(GetAllItemsRequest): Json<GetAllItemsRequest>,
-) -> ApiResult<GetAllItemsResponse> {
+    Json(api::items::get_all::Request): Json<api::items::get_all::Request>,
+) -> ApiResult<api::items::get_all::Response> {
     let scope = scope.lock().await;
     let items = scope.get_all_items();
-    Ok(Json(GetAllItemsResponse { items }))
+    Ok(Json(api::items::get_all::Response { items }))
 }
