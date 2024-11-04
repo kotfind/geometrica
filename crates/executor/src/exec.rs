@@ -62,12 +62,20 @@ impl ExecScope {
         expr: Expr,
         mut vars: HashMap<Ident, Value>,
     ) -> Result<Value, ExecError> {
-        let cexpr = expr.compile(&CScope::new(self))?;
+        // TODO: create new exec scope and push vars there
+        let mut cscope = CScope::new(self);
+        for (name, value) in &vars {
+            cscope.insert_var_type(name.clone(), value.value_type().clone())?;
+        }
+
+        let cexpr = expr.compile(&cscope)?;
+
         for var in cexpr.required_vars() {
             if let Some(node) = self.get_node(var) {
                 vars.insert(var.clone(), node.get_value());
             }
         }
+
         Ok(cexpr.eval(&vars)?)
     }
 

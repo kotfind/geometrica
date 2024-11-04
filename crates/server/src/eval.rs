@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::ExecScope;
 use tokio::sync::Mutex;
-use types::{api, core::Value, core::Ident};
+use types::{api, core::Ident, core::Value};
 
 use crate::App;
 
