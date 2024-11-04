@@ -41,6 +41,12 @@ pub struct ExecScope {
     nodes: HashMap<Ident, Node>,
 }
 
+impl Default for ExecScope {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ExecScope {
     pub fn new() -> Self {
         Self {

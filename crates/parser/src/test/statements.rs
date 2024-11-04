@@ -79,11 +79,11 @@ fn function_definition() {
             args: vec![
                 FunctionDefinitionArgument {
                     name: Ident::from("x"),
-                    value_type: ValueType::Int.into()
+                    value_type: ValueType::Int
                 },
                 FunctionDefinitionArgument {
                     name: Ident::from("y"),
-                    value_type: ValueType::Int.into()
+                    value_type: ValueType::Int
                 },
             ],
             return_type: ValueType::Int,

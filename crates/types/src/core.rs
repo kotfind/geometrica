@@ -202,7 +202,7 @@ mod text {
 
     #[test]
     fn value_from_real() {
-        assert_eq!(Value::Real(Some(3.14)), 3.14.into());
+        assert_eq!(Value::Real(Some(1.23)), 1.23.into());
     }
 
     #[test]

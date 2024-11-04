@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn value() {
     assert_eq!(lang::value("42"), Ok(42.into()));
-    assert_eq!(lang::value("3.14"), Ok((3.14).into()));
+    assert_eq!(lang::value("1.23"), Ok((1.23).into()));
     assert_eq!(lang::value("true"), Ok(true.into()));
     assert_eq!(lang::value("none int"), Ok(Value::none(ValueType::Int)));
     assert_eq!(
@@ -37,10 +37,7 @@ fn none() {
     assert_eq!(lang::none("none array"), Ok(Value::none(ValueType::Array)));
     assert_eq!(lang::none("none pt"), Ok(Value::none(ValueType::Pt)));
     assert_eq!(lang::none("none line"), Ok(Value::none(ValueType::Line)));
-    assert_eq!(
-        lang::none("none circ"),
-        Ok(Value::none(ValueType::Circ))
-    );
+    assert_eq!(lang::none("none circ"), Ok(Value::none(ValueType::Circ)));
 }
 
 #[test]
@@ -59,8 +56,8 @@ fn array() {
         Ok(vec![1.into(), 2.into(), 3.into()].into())
     );
     assert_eq!(
-        lang::array(r#"(1, 3.14, "hello")"#),
-        Ok(vec![1.into(), (3.14).into(), "hello".to_string().into()].into())
+        lang::array(r#"(1, 1.23, "hello")"#),
+        Ok(vec![1.into(), (1.23).into(), "hello".to_string().into()].into())
     );
 }
 
