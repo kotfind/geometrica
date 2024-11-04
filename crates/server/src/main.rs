@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
-use axum::Router;
+use axum::{Json, Router};
 use executor::exec::ExecScope;
 use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
 use tracing_subscriber::prelude::*;
+use types::api::ApiError;
 
 mod eval;
 mod exec;
+mod items;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -39,6 +41,7 @@ fn router() -> Router {
     Router::new()
         .nest("/eval", eval::router())
         .nest("/exec", exec::router())
+        .nest("/items", items::router())
         .with_state(app)
 }
 
@@ -46,3 +49,5 @@ fn router() -> Router {
 struct App {
     scope: Arc<Mutex<ExecScope>>,
 }
+
+type ApiResult<T> = Result<Json<T>, Json<ApiError>>;

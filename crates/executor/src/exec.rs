@@ -71,7 +71,7 @@ impl ExecScope {
         Ok(cexpr.eval(&vars)?)
     }
 
-    pub fn get_all_items(&self) -> Vec<(Ident, Value)> {
+    pub fn get_all_items(&self) -> HashMap<Ident, Value> {
         self.nodes
             .iter()
             .map(|(name, node)| (name.clone(), node.get_value()))

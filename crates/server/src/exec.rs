@@ -2,7 +2,7 @@ use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::Exec;
 use types::api::{ApiError, ExecRequest, ExecResponse};
 
-use crate::App;
+use crate::{ApiResult, App};
 
 pub fn router() -> Router<App> {
     Router::new().route("/", post(exec))
@@ -12,7 +12,7 @@ pub fn router() -> Router<App> {
 async fn exec(
     State(App { scope, .. }): State<App>,
     Json(ExecRequest { script }): Json<ExecRequest>,
-) -> Result<Json<ExecResponse>, Json<ApiError>> {
+) -> ApiResult<ExecResponse> {
     let script = parser::script(&script)
         .map_err(ApiError::from)
         .map_err(Json)?;

@@ -54,3 +54,13 @@ pub struct ExecRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct ExecResponse;
+
+// -------------------- Get All Items --------------------
+
+#[derive(Serialize, Deserialize)]
+pub struct GetAllItemsRequest;
+
+#[derive(Serialize, Deserialize)]
+pub struct GetAllItemsResponse {
+    pub items: HashMap<Ident, Value>,
+}
