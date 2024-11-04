@@ -57,8 +57,17 @@ impl ExecScope {
         }
     }
 
-    pub fn eval_expr(&self, expr: Expr, vars: HashMap<Ident, Value>) -> Result<Value, ExecError> {
+    pub fn eval_expr(
+        &self,
+        expr: Expr,
+        mut vars: HashMap<Ident, Value>,
+    ) -> Result<Value, ExecError> {
         let cexpr = expr.compile(&CScope::new(self))?;
+        for var in cexpr.required_vars() {
+            if let Some(node) = self.get_node(var) {
+                vars.insert(var.clone(), node.get_value());
+            }
+        }
         Ok(cexpr.eval(&vars)?)
     }
 

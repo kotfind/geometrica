@@ -7,6 +7,7 @@ use tracing::info;
 use tracing_subscriber::prelude::*;
 
 mod eval;
+mod exec;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -35,7 +36,10 @@ fn router() -> Router {
         scope: Arc::new(Mutex::new(ExecScope::new())),
     };
 
-    Router::new().nest("/eval", eval::router()).with_state(app)
+    Router::new()
+        .nest("/eval", eval::router())
+        .nest("/exec", exec::router())
+        .with_state(app)
 }
 
 #[derive(Clone)]

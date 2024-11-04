@@ -3,24 +3,7 @@ use std::{collections::HashMap, fmt::Write};
 
 use crate::{core::Value, lang::Ident};
 
-#[derive(Serialize, Deserialize)]
-pub struct EvalRequest {
-    pub exprs: Vec<EvalRequestExpr>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct EvalRequestExpr {
-    pub expr: String,
-
-    #[serde(default)]
-    pub vars: HashMap<Ident, Value>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct EvalResponse {
-    pub values: Vec<Result<Value, ApiError>>,
-}
-
+// -------------------- ApiError --------------------
 #[derive(Serialize, Deserialize)]
 pub struct ApiError {
     pub msg: String,
@@ -40,3 +23,34 @@ impl<E: std::error::Error> From<E> for ApiError {
         Self { msg }
     }
 }
+
+// -------------------- Eval --------------------
+
+#[derive(Serialize, Deserialize)]
+pub struct EvalRequest {
+    pub exprs: Vec<EvalRequestExpr>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EvalRequestExpr {
+    pub expr: String,
+
+    #[serde(default)]
+    pub vars: HashMap<Ident, Value>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EvalResponse {
+    pub values: Vec<Result<Value, ApiError>>,
+}
+
+// -------------------- Exec --------------------
+
+#[derive(Serialize, Deserialize)]
+pub struct ExecRequest {
+    pub script: String,
+    // TODO: bindings
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ExecResponse;
