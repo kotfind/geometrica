@@ -1,13 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use types::{
-    core::Value,
-    lang::{Expr, FunctionSignature, Ident},
+    core::{Value, ValueType},
+    lang::{FunctionSignature, Ident},
 };
 
 use crate::{
-    eval::{Eval, EvalResult, EvalScope},
-    exec::ExecScope,
+    cexpr::CExpr,
+    eval::{Eval, EvalResult, VarsMap},
 };
 
 mod builtins;
@@ -15,7 +15,26 @@ mod builtins;
 pub type FuncMap = HashMap<FunctionSignature, Function>;
 
 #[derive(Clone)]
-pub struct Function(Arc<FunctionInner>);
+pub struct Function(pub Arc<FunctionInner>);
+
+impl Debug for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{name} {args} -> {ret}",
+            name = self.0.sign.name,
+            args = self
+                .0
+                .sign
+                .arg_types
+                .iter()
+                .map(|arg_type| arg_type.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+            ret = self.0.return_type
+        )
+    }
+}
 
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
@@ -23,46 +42,44 @@ impl PartialEq for Function {
     }
 }
 
-struct FunctionInner {
-    signature: FunctionSignature,
-    kind: FunctionKind,
-}
-
-impl Function {
-    pub fn eval(&self, args: Vec<Value>, exec_scope: &ExecScope) -> EvalResult {
-        let inner = &self.0;
-        match &inner.kind {
-            FunctionKind::BuiltIn(builtin) => builtin(args),
-            FunctionKind::CustomFunction(custom) => custom.eval(&inner.signature, args, exec_scope),
-        }
+impl From<FunctionInner> for Function {
+    fn from(inner: FunctionInner) -> Self {
+        Self(Arc::new(inner))
     }
 }
 
-enum FunctionKind {
+impl Function {
+    pub fn eval(&self, args: Vec<Value>) -> EvalResult {
+        // TODO: check arg_types if #[cfg(debug)]
+        let inner = &self.0;
+        match &inner.kind {
+            FunctionInnerKind::BuiltIn(builtin) => builtin(args),
+            FunctionInnerKind::CustomFunction(custom) => custom.eval(args),
+        }
+        // TODO: check return type if #[cfg(debug)]
+    }
+}
+
+pub struct FunctionInner {
+    pub sign: FunctionSignature,
+    pub return_type: ValueType,
+    pub kind: FunctionInnerKind,
+}
+
+pub enum FunctionInnerKind {
     BuiltIn(Box<dyn Sync + Send + 'static + Fn(Vec<Value>) -> EvalResult>),
     CustomFunction(CustomFunction),
 }
 
-struct CustomFunction {
-    arg_names: Vec<Ident>,
-    body: Expr,
+pub struct CustomFunction {
+    pub arg_names: Vec<Ident>,
+    pub body: CExpr,
 }
 
 impl CustomFunction {
-    fn eval(
-        &self,
-        sign: &FunctionSignature,
-        args: Vec<Value>,
-        exec_scope: &ExecScope,
-    ) -> EvalResult {
-        assert!(self.arg_names.len() == sign.arg_types.len());
+    fn eval(&self, args: Vec<Value>) -> EvalResult {
         assert!(self.arg_names.len() == args.len());
-
-        let mut scope = EvalScope::from(&exec_scope);
-        for (arg_name, arg_value) in self.arg_names.iter().zip(args.into_iter()) {
-            scope.insert_value(arg_name.clone(), arg_value)?;
-        }
-
-        self.body.eval(&scope)
+        let vars: VarsMap = self.arg_names.clone().into_iter().zip(args).collect();
+        self.body.eval(&vars)
     }
 }

@@ -1,4 +1,4 @@
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 
 use crate::core::{Value, ValueType};
 
@@ -76,33 +76,15 @@ pub struct Command {
     pub args: Vec<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Expr(pub Arc<ExprInner>);
-
-impl<T: Into<ExprInner>> From<T> for Expr {
-    fn from(v: T) -> Self {
-        Expr(Arc::new(v.into()))
-    }
-}
-
 // Note: operator calls are represented as function calls.
 // E.g. `1 + 2` and `#add 1 2` are the same
 //
 // Note: type casts are represented as function calls
-
+//
 // Note: type checks (`is` operator) are represented as function calls.
 // E.g. `x is int` and `#is_int x` are the same
-//
-// Expr vs Node:
-// - `Expr`
-//     - represents a language structure
-//     - may contain a ident (a variable; yet unknown value)
-// - `Node`
-//     - represent an object (final (that is shown in gui) or intermediate)
-//     - no variables (yet unknown values allowed)
-//     - stores information about dependencies
 #[derive(Debug, Clone, PartialEq)]
-pub enum ExprInner {
+pub enum Expr {
     Value(Value),
     Variable(Ident),
     FuncCall(FuncCallExpr),
@@ -110,36 +92,36 @@ pub enum ExprInner {
     Let(LetExpr),
 }
 
-enum_from_variant!(ExprInner, Value, Value);
-enum_from_variant!(ExprInner, Variable, Ident);
-enum_from_variant!(ExprInner, FuncCall, FuncCallExpr);
-enum_from_variant!(ExprInner, If, IfExpr);
-enum_from_variant!(ExprInner, Let, LetExpr);
+enum_from_variant!(Expr, Value, Value);
+enum_from_variant!(Expr, Variable, Ident);
+enum_from_variant!(Expr, FuncCall, FuncCallExpr);
+enum_from_variant!(Expr, If, IfExpr);
+enum_from_variant!(Expr, Let, LetExpr);
 
 // Note: fails if none of the cases matched and default_case_value is not provided
 #[derive(Debug, Clone, PartialEq)]
 pub struct IfExpr {
     pub cases: Vec<IfExprCase>,
-    pub default_case_value: Option<Expr>,
+    pub default_value: Option<Box<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IfExprCase {
-    pub condition: Expr,
-    pub value: Expr,
+    pub cond: Box<Expr>,
+    pub value: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetExpr {
-    pub definitions: Vec<LetExprDefinition>,
-    pub body: Expr,
+    pub defs: Vec<LetExprDefinition>,
+    pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetExprDefinition {
     pub name: Ident,
     pub value_type: Option<ValueType>,
-    pub body: Expr,
+    pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

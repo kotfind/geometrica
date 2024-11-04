@@ -9,9 +9,8 @@ use types::{
     lang::Ident,
 };
 
-use super::{FuncMap, Function, FunctionInner, FunctionKind};
-use crate::error::Error;
-use crate::eval::EvalResult;
+use super::{FuncMap, Function, FunctionInner, FunctionInnerKind};
+use crate::eval::{EvalError, EvalResult};
 
 mod cmp;
 mod ctors;
@@ -32,7 +31,7 @@ macro_rules! unwrap_none {
             let $var = match $var {
                 Some(v) => v,
                 None => {
-                    return Err(Error::UnexpectedNone);
+                    return Err(EvalError::UnexpectedNone);
                 }
             };
         )*
@@ -57,8 +56,9 @@ macro_rules! builtin {
                 ]
             };
             let func = Function(Arc::new(FunctionInner {
-                signature: sign.clone(),
-                kind: FunctionKind::BuiltIn(Box::new(move |args: Vec<Value>| -> EvalResult {
+                sign: sign.clone(),
+                return_type: ValueType::$ret_type,
+                kind: FunctionInnerKind::BuiltIn(Box::new(move |args: Vec<Value>| -> EvalResult {
                     let mut args_iter = args.into_iter();
                     $(
                         let $arg_name = match args_iter.next() {
