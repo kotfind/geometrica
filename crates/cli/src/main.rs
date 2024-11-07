@@ -4,7 +4,10 @@ use anyhow::Context;
 use clap::Parser;
 use client::{Connection, ConnectionSettings};
 use tabled::{builder::Builder, settings::Style};
-use tokio::io::{AsyncBufReadExt, BufReader};
+
+mod script_file_mode;
+mod stdin_mode;
+mod tty_mode;
 
 #[derive(clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -33,24 +36,18 @@ async fn main() -> anyhow::Result<()> {
     .await
     .context("failed to connect to server")?;
 
-    let script = if let Some(script_file) = cli.script_file {
-        tokio::fs::read_to_string(script_file)
-            .await
-            .context("failed to read script file")?
+    if let Some(script_file) = cli.script_file {
+        script_file_mode::run(con, script_file).await?;
+    } else if is_terminal::is_terminal(std::io::stdin()) {
+        tty_mode::run(con).await?;
     } else {
-        let mut script = String::new();
-        let mut reader = BufReader::new(tokio::io::stdin());
-        while reader
-            .read_line(&mut script)
-            .await
-            .context("stdin read failed")?
-            != 0
-        {}
-        script
-    };
+        stdin_mode::run(con).await?;
+    }
 
-    con.exec(script).await.context("failed to execute script")?;
+    Ok(())
+}
 
+async fn print_all_items(con: Connection) -> anyhow::Result<()> {
     let mut items: Vec<_> = con
         .get_all_items()
         .await
@@ -64,6 +61,5 @@ async fn main() -> anyhow::Result<()> {
         table.push_record([name.to_string(), value.to_string()]);
     }
     println!("{}", table.build().with(Style::sharp()));
-
     Ok(())
 }
