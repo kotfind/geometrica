@@ -51,14 +51,14 @@ impl Connection {
 }
 
 impl Connection {
-    pub fn kill_server(&mut self) -> anyhow::Result<()> {
+    pub(crate) fn kill_server(&mut self) -> anyhow::Result<()> {
         if let Some(child) = &mut self.server_process {
             child.kill().context("failed to kill server process")?;
         }
         Ok(())
     }
 
-    pub async fn req<REQ: Request>(&self, req: REQ) -> anyhow::Result<REQ::Response> {
+    pub(crate) async fn req<REQ: Request>(&self, req: REQ) -> anyhow::Result<REQ::Response> {
         let resp = self
             .client
             .post(self.server_url.join(REQ::PATH).unwrap())
