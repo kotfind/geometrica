@@ -4,11 +4,14 @@ use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::ExecScope;
 use tokio::sync::Mutex;
 use types::{
-    api::{self, IntoError},
+    api::{self},
     core::{Ident, Value},
 };
 
-use crate::App;
+use crate::{
+    result::{api_ok, ApiOk, IntoError},
+    App,
+};
 
 pub fn router() -> Router<App> {
     Router::new().route("/", post(eval))
@@ -18,7 +21,7 @@ pub fn router() -> Router<App> {
 async fn eval(
     State(App { scope, .. }): State<App>,
     Json(api::eval::Request { exprs }): Json<api::eval::Request>,
-) -> Json<api::eval::Response> {
+) -> ApiOk<api::eval::Response> {
     async fn process_expr(
         expr: String,
         vars: HashMap<Ident, Value>,
@@ -39,5 +42,5 @@ async fn eval(
         values.push(process_expr(expr, vars, scope.clone()).await);
     }
 
-    Json(api::eval::Response { values })
+    api_ok(api::eval::Response { values })
 }

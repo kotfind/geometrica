@@ -289,7 +289,6 @@ dependencies = [
  "anyhow",
  "reqwest",
  "serde_json",
- "server",
  "smart-default",
  "tempfile",
  "test_bin",

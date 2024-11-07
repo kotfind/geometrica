@@ -114,7 +114,7 @@ impl Connection {
 
     async fn can_ping_server(client: Client, server_url: Url) -> bool {
         client
-            .get(server_url.join("ping").unwrap())
+            .post(server_url.join("ping").unwrap())
             .send()
             .await
             .and_then(|resp| resp.error_for_status())

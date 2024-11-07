@@ -1,19 +1,19 @@
 use std::{io::Write, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 
 use anyhow::Context;
-use axum::{Json, Router};
+use axum::Router;
 use clap::Parser;
 use executor::exec::ExecScope;
 use tempfile::NamedTempFile;
 use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use types::api;
 
 mod eval;
 mod exec;
 mod items;
 mod ping;
+mod result;
 
 #[derive(clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -101,5 +101,3 @@ fn router() -> Router {
 struct App {
     scope: Arc<Mutex<ExecScope>>,
 }
-
-type ApiResult<T> = Result<Json<T>, Json<api::Error>>;

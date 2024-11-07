@@ -1,28 +1,10 @@
 use crate::{core::Ident, core::Value};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    fmt::{Display, Write},
-};
+use std::{collections::HashMap, fmt::Display};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Error {
     pub msg: String,
-}
-
-pub trait IntoError: std::error::Error + Sized {
-    fn into_error(self) -> Error {
-        let mut msg = String::new();
-        let mut error: Option<&dyn std::error::Error> = Some(&self);
-        while let Some(err) = error {
-            write!(msg, "{}", err).unwrap();
-            if err.source().is_some() {
-                write!(msg, ": ").unwrap();
-            }
-            error = err.source();
-        }
-        Error { msg }
-    }
 }
 
 impl Display for Error {
@@ -32,11 +14,29 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error {}
-impl<T: std::error::Error> IntoError for T {}
 
 pub trait Request: Serialize + DeserializeOwned {
-    type Response: Serialize + DeserializeOwned;
-    const PATH: &str;
+    const ROUTE: &str;
+    type Response: Response;
+}
+
+pub trait Response: Serialize + DeserializeOwned {
+    const ROUTE: &str;
+    type Request: Request;
+}
+
+macro_rules! query {
+    ($route:literal, $req:ident, $resp:ident) => {
+        impl crate::api::Request for $req {
+            type Response = $resp;
+            const ROUTE: &str = $route;
+        }
+
+        impl crate::api::Response for $resp {
+            type Request = $req;
+            const ROUTE: &str = $route;
+        }
+    };
 }
 
 pub mod eval {
@@ -60,10 +60,7 @@ pub mod eval {
         pub values: Vec<Result<Value, Error>>,
     }
 
-    impl super::Request for Request {
-        type Response = Response;
-        const PATH: &str = "/eval";
-    }
+    query!("/eval", Request, Response);
 }
 
 pub mod exec {
@@ -78,10 +75,7 @@ pub mod exec {
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
     pub struct Response;
 
-    impl super::Request for Request {
-        type Response = Response;
-        const PATH: &str = "/exec";
-    }
+    query!("/exec", Request, Response);
 }
 
 pub mod items {
@@ -98,9 +92,6 @@ pub mod items {
             pub items: HashMap<Ident, Value>,
         }
 
-        impl super::Request for Request {
-            type Response = Response;
-            const PATH: &str = "/items/get_all";
-        }
+        query!("/items/get_all", Request, Response);
     }
 }
