@@ -1,0 +1,11 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+clap = { version = "4.5.20", features = ["derive"] }
+client = { path = "../client" }
+tabled = "0.16.0"
+tokio = "1.41.1"

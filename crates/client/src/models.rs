@@ -19,7 +19,7 @@ pub struct ConnectionSettings {
     #[default(true)]
     pub do_init_server: bool,
 
-    #[default(true)]
+    #[default(false)]
     pub kill_server_on_drop: bool,
     // TODO: server args
 }

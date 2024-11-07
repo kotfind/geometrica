@@ -12,3 +12,6 @@ tokio = { version = "1.41.0", features = ["full"] }
 types = { path = "../types" }
 test_bin = "0.4.0"
 tempfile = "3.13.0"
+
+[dev-dependencies]
+server = { path = "../server" }

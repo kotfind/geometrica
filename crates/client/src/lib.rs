@@ -1,4 +1,4 @@
-pub use models::Connection;
+pub use models::{Connection, ConnectionSettings};
 
 mod eval;
 mod exec;
