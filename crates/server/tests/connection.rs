@@ -1,9 +1,6 @@
 use reqwest::Client;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{
-    io::Read,
-    process::{Child, Stdio},
-};
+use std::{net::SocketAddr, process::Child};
 
 pub struct Connection {
     child: Child,
@@ -13,33 +10,25 @@ pub struct Connection {
 
 impl Connection {
     pub fn new() -> Self {
+        let tmpdir = tempfile::tempdir().unwrap();
+        let addr_file = tmpdir.path().join("addr");
+
         // init server
-        let mut child = test_bin::get_test_bin("server")
-            .stderr(Stdio::piped())
-            .args(["--bind", "127.0.0.1:0", "--print-addr"])
+        let child = test_bin::get_test_bin("server")
+            .args([
+                "--bind",
+                "127.0.0.1:0",
+                "--write-addr",
+                &addr_file.to_string_lossy(),
+            ])
             .spawn()
             .unwrap();
 
-        let stderr = child.stderr.as_mut().unwrap();
-        let mut line = String::new();
-        let mut c = [0u8];
-        loop {
-            stderr.read_exact(&mut c).unwrap();
-            let ch = c[0] as char;
-            if ch == '\n' {
-                break;
-            }
-            line.push(ch);
-        }
+        while !addr_file.exists() { /* BLOCK */ }
 
-        let line_parts: Vec<_> = line.split(':').collect();
-        let ip = line_parts[1];
-        let port: u16 = line_parts[2].parse().unwrap();
+        let addr: SocketAddr = std::fs::read_to_string(addr_file).unwrap().parse().unwrap();
 
-        assert_eq!(line_parts[0], "listener_addr");
-        assert_eq!(ip, "127.0.0.1");
-
-        let url = format!("http://{ip}:{port}");
+        let url = format!("http://{}:{}", addr.ip(), addr.port());
 
         // init client
         let client = Client::new();

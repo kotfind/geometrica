@@ -3,7 +3,10 @@ use std::{collections::HashMap, sync::Arc};
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::ExecScope;
 use tokio::sync::Mutex;
-use types::{api, core::Ident, core::Value};
+use types::{
+    api::{self, IntoError},
+    core::{Ident, Value},
+};
 
 use crate::App;
 
@@ -21,8 +24,12 @@ async fn eval(
         vars: HashMap<Ident, Value>,
         scope: Arc<Mutex<ExecScope>>,
     ) -> Result<Value, api::Error> {
-        let expr = parser::expr(&expr)?;
-        let value = scope.lock().await.eval_expr(expr, vars)?;
+        let expr = parser::expr(&expr).map_err(IntoError::into_error)?;
+        let value = scope
+            .lock()
+            .await
+            .eval_expr(expr, vars)
+            .map_err(IntoError::into_error)?;
         Ok(value)
     }
 

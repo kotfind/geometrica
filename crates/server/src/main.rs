@@ -1,16 +1,19 @@
-use std::{net::SocketAddr, str::FromStr, sync::Arc};
+use std::{io::Write, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 
+use anyhow::Context;
 use axum::{Json, Router};
 use clap::Parser;
 use executor::exec::ExecScope;
+use tempfile::NamedTempFile;
 use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use types::api;
 
 mod eval;
 mod exec;
 mod items;
+mod ping;
 
 #[derive(clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -19,10 +22,9 @@ struct Cli {
     #[arg(long, default_value_t = SocketAddr::from_str("127.0.0.1:4242").unwrap())]
     bind: SocketAddr,
 
-    /// Prints listener address to stderr in format 'listener_addr:{IP}:{PORT}'.
-    /// Is mostly used in debugging purposes
-    #[arg(long)]
-    print_addr: bool,
+    /// Writes listener address to <FILE> in format '{IP}:{PORT}'.
+    #[arg(long, value_name = "FILE")]
+    write_addr: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -42,13 +44,43 @@ async fn main() -> anyhow::Result<()> {
 
     let listener = TcpListener::bind(cli.bind).await?;
     let local_addr = listener.local_addr()?;
-    if cli.print_addr {
-        eprintln!("listener_addr:{}:{}", local_addr.ip(), local_addr.port());
+    if let Some(write_addr_file) = cli.write_addr {
+        write_addr(local_addr, write_addr_file)?;
     }
     info!("Listening on {}...", local_addr);
 
     axum::serve(listener, router()).await?;
 
+    Ok(())
+}
+
+// TODO: delete file on close
+fn write_addr(local_addr: SocketAddr, write_addr_file: PathBuf) -> anyhow::Result<()> {
+    let tempfile = NamedTempFile::new_in({
+        let mut dir = write_addr_file.clone();
+        dir.pop();
+        dir
+    })
+    .context("failed to create tempfile")?;
+    write!(
+        tempfile.as_file(),
+        "{}:{}",
+        local_addr.ip(),
+        local_addr.port()
+    )
+    .with_context(|| {
+        format!(
+            "failed to write addr to {}",
+            tempfile.path().to_string_lossy()
+        )
+    })?;
+    std::fs::rename(tempfile.path(), write_addr_file.clone()).with_context(|| {
+        format!(
+            "failed to move {} to {}",
+            tempfile.path().to_string_lossy(),
+            write_addr_file.to_string_lossy()
+        )
+    })?;
     Ok(())
 }
 
@@ -61,6 +93,7 @@ fn router() -> Router {
         .nest("/eval", eval::router())
         .nest("/exec", exec::router())
         .nest("/items", items::router())
+        .nest("/ping", ping::router())
         .with_state(app)
 }
 

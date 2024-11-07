@@ -1,6 +1,6 @@
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
 use executor::exec::Exec;
-use types::api::{self};
+use types::api::{self, IntoError};
 
 use crate::{ApiResult, App};
 
@@ -14,14 +14,14 @@ async fn exec(
     Json(api::exec::Request { script }): Json<api::exec::Request>,
 ) -> ApiResult<api::exec::Response> {
     let script = parser::script(&script)
-        .map_err(api::Error::from)
+        .map_err(IntoError::into_error)
         .map_err(Json)?;
 
     let mut scope = scope.lock().await;
 
     script
         .exec(&mut scope)
-        .map_err(api::Error::from)
+        .map_err(IntoError::into_error)
         .map_err(Json)?;
 
     Ok(Json(api::exec::Response))
