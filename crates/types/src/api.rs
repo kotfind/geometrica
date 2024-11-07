@@ -94,4 +94,20 @@ pub mod items {
 
         query!("/items/get_all", Request, Response);
     }
+
+    pub mod get {
+        use super::*;
+
+        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+        pub struct Request {
+            pub name: Ident,
+        }
+
+        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+        pub struct Response {
+            pub value: Value,
+        }
+
+        query!("/items/get", Request, Response);
+    }
 }

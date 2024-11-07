@@ -86,6 +86,10 @@ impl ExecScope {
             .collect()
     }
 
+    pub fn get_item(&self, name: &Ident) -> Option<Value> {
+        self.get_node(name).map(|node| node.get_value())
+    }
+
     pub(crate) fn get_func(&self, sign: &FunctionSignature) -> Option<Function> {
         let ans = Function::get_builtin(sign);
         if ans.is_some() {
