@@ -11,9 +11,9 @@ pub struct Error {
 }
 
 pub trait IntoError: std::error::Error + Sized {
-    fn into_error(error: Self) -> Error {
+    fn into_error(self) -> Error {
         let mut msg = String::new();
-        let mut error: Option<&dyn std::error::Error> = Some(&error);
+        let mut error: Option<&dyn std::error::Error> = Some(&self);
         while let Some(err) = error {
             write!(msg, "{}", err).unwrap();
             if err.source().is_some() {
