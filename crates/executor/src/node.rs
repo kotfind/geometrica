@@ -244,9 +244,9 @@ mod test {
         let mut scope = ExecScope::new();
         parser::script(
             r#"
-            x = 2;
-            y = 3;
-            z = x^2 + y^2;
+            x = 2
+            y = 3
+            z = x^2 + y^2
             "#,
         )
         .unwrap()
@@ -263,10 +263,10 @@ mod test {
         let mut scope = ExecScope::new();
         parser::script(
             r#"
-            sqsum a:int b:int -> int = a^2 + b^2;
-            x = 2;
-            y = 3;
-            z = sqsum x y;
+            sqsum a:int b:int -> int = a^2 + b^2
+            x = 2
+            y = 3
+            z = sqsum x y
             "#,
         )
         .unwrap()
@@ -283,10 +283,10 @@ mod test {
         let mut scope = ExecScope::new();
         parser::script(
             r#"
-            sqsum a:int b:int -> int = a^2 + b^2;
-            x = 2;
-            y = 3;
-            z = sqsum x y;
+            sqsum a:int b:int -> int = a^2 + b^2
+            x = 2
+            y = 3
+            z = sqsum x y
             "#,
         )
         .unwrap()
@@ -315,11 +315,11 @@ mod test {
         let mut scope = ExecScope::new();
         parser::script(
             r#"
-            x1 = 1;
-            x2 = 2 * x1;
-            x3 = 2 * x2;
-            x4 = 2 * x3;
-            x5 = 2 * x4;
+            x1 = 1
+            x2 = 2 * x1
+            x3 = 2 * x2
+            x4 = 2 * x3
+            x5 = 2 * x4
             "#,
         )
         .unwrap()

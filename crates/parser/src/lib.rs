@@ -24,8 +24,13 @@ fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -
 peg::parser! {
     grammar lang() for str {
         // -------------------- Statements --------------------
+        // pub rule script() -> Vec<Statement>
+        //     = _ stmts:(statement() ** (_ ";" _)) (_ ";")? _
+        // {
+        //     stmts
+        // }
         pub rule script() -> Vec<Statement>
-            = _ stmts:(statement() ** (_ ";" _)) (_ ";")? _
+            = _ stmts:(statement() ** __) _
         {
             stmts
         }
@@ -35,7 +40,7 @@ peg::parser! {
             / (cmd:command() { cmd.into() })
 
         pub rule command() -> Command
-            = name:ident()
+            = name:ident() "!"
             __ args:(simple_expr() ** __)
         {
             Command { name, args }
@@ -71,7 +76,7 @@ peg::parser! {
 
         // -------------------- Expr --------------------
         pub rule expr() -> Expr
-            = precedence! {
+            =  !statement() e:precedence! {
                 lhs:(@) _ "|" _ rhs:@ { binary("#or", lhs, rhs).into() }
 
                 --
@@ -123,13 +128,16 @@ peg::parser! {
                 if_expr:if_expr() { if_expr.into() } // if expr
                 val:value() { val.into() } // value
                 var:ident() { var.into() } // variable
-        }
+        } { e }
 
         // A kind of expr, using that won't be ambiguous without brackets
         rule simple_expr() -> Expr
-            = ("(" _ e:expr() _ ")" { e }) // braced
-            / (var:ident() { var.into() }) // variable
-            / (val:value() { val.into() }) // value
+            = !statement()
+            e:(
+                ("(" _ e:expr() _ ")" { e }) // braced
+                / (var:ident() { var.into() }) // variable
+                / (val:value() { val.into() }) // value
+            ) { e }
 
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)

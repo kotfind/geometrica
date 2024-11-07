@@ -5,8 +5,8 @@ fn script() {
     assert_eq!(
         lang::script(
             r#"
-            p = pt 1 2;
-            move p 3 4
+            p = pt 1 2
+            move! p 3 4
         "#
         ),
         Ok(vec![
@@ -42,7 +42,7 @@ fn statement() {
     );
 
     assert_eq!(
-        lang::statement("move p 3 4"),
+        lang::statement("move! p 3 4"),
         Ok(Command {
             name: Ident::from("move"),
             args: vec![
@@ -58,7 +58,7 @@ fn statement() {
 #[test]
 fn command() {
     assert_eq!(
-        lang::command("move l 1 2"),
+        lang::command("move! l 1 2"),
         Ok(Command {
             name: Ident::from("move"),
             args: vec![
