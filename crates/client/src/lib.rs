@@ -1,4 +1,5 @@
-pub mod connection;
-mod eval;
+pub use models::Connection;
 
-pub use connection::Connection;
+mod eval;
+mod models;
+mod new;
