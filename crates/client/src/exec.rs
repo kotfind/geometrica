@@ -25,9 +25,9 @@ mod test {
 
         con.exec(
             r#"
-            x = 1;
-            y = 2;
-            z = x + y;
+            x = 1
+            y = 2
+            z = x + y
         "#,
         )
         .await
@@ -47,12 +47,12 @@ mod test {
 
         con.exec(
             r#"
-                sq x:int -> int = x^2;
-                sq x:real -> real = x^2;
-                sum x:int y:int -> int = x + y;
-                a = 1;
-                b = 2;
-                c = sum (sq a) (sq b);
+                sq x:int -> int = x^2
+                sq x:real -> real = x^2
+                sum x:int y:int -> int = x + y
+                a = 1
+                b = 2
+                c = sum (sq a) (sq b)
         "#,
         )
         .await
@@ -72,9 +72,9 @@ mod test {
 
         con.exec(
             r#"
-            sq x:int -> int = x^2;
-            sq x:real -> real = x^2;
-            sum x:int y:int -> int = x + y;
+            sq x:int -> int = x^2
+            sq x:real -> real = x^2
+            sum x:int y:int -> int = x + y
         "#,
         )
         .await
@@ -82,9 +82,9 @@ mod test {
 
         con.exec(
             r#"
-            a = 1;
-            b = 2;
-            c = sum (sq a) (sq b);
+            a = 1
+            b = 2
+            c = sum (sq a) (sq b)
         "#,
         )
         .await
