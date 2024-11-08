@@ -4,18 +4,18 @@ use std::{
     sync::Arc,
 };
 use types::{
+    core::Ident,
     core::{Value, ValueType},
     lang::FunctionSignature,
-    core::Ident,
 };
 
 use super::{FuncMap, Function, FunctionInner, FunctionInnerKind};
 use crate::cexpr::eval::{EvalError, EvalResult};
 
 mod cmp;
-mod ctors;
 mod logic;
 mod math;
+mod struct_ops;
 mod type_casts;
 
 impl Function {
@@ -111,7 +111,7 @@ static BUILT_IN_FUNCS: Lazy<FuncMap> = Lazy::new(|| {
     cmp::populate(&mut builtins);
     logic::populate(&mut builtins);
     type_casts::populate(&mut builtins);
-    ctors::populate(&mut builtins);
+    struct_ops::populate(&mut builtins);
 
     builtins
 });
