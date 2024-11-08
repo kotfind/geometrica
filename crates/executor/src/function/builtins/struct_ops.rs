@@ -32,8 +32,6 @@ pub(super) fn populate(builtins: &mut FuncMap) {
 mod test {
     use core::panic;
 
-    use types::api::eval;
-
     use super::*;
     use crate::cexpr::eval::eval;
 
