@@ -4,12 +4,12 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use reqwest::{Client, Url};
+use reqwest::Url;
 use smart_default::SmartDefault;
 use types::api::{self, Request};
 
 #[derive(SmartDefault)]
-pub struct ConnectionSettings {
+pub struct ClientSettings {
     #[default(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))]
     pub ip: IpAddr,
 
@@ -24,33 +24,14 @@ pub struct ConnectionSettings {
     // TODO: server args
 }
 
-#[cfg(test)]
-impl ConnectionSettings {
-    pub fn new_test() -> Self {
-        Self {
-            port: 0,
-            do_init_server: true,
-            kill_server_on_drop: true,
-            ..Default::default()
-        }
-    }
-}
-
-pub struct Connection {
+pub struct Client {
     pub(crate) server_url: Url,
-    pub(crate) client: Client,
+    pub(crate) client: reqwest::Client,
     pub(crate) server_process: Option<Child>,
     pub(crate) kill_server_on_drop: bool,
 }
 
-#[cfg(test)]
-impl Connection {
-    pub async fn new_test() -> anyhow::Result<Self> {
-        Self::from(ConnectionSettings::new_test()).await
-    }
-}
-
-impl Connection {
+impl Client {
     pub(crate) fn kill_server(&mut self) -> anyhow::Result<()> {
         if let Some(child) = &mut self.server_process {
             child.kill().context("failed to kill server process")?;
@@ -82,7 +63,7 @@ impl Connection {
     }
 }
 
-impl Drop for Connection {
+impl Drop for Client {
     fn drop(&mut self) {
         if self.kill_server_on_drop {
             self.kill_server().expect("failed to kill server");

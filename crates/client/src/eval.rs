@@ -1,8 +1,8 @@
-use crate::Connection;
+use crate::Client;
 use anyhow::Context;
 use types::{api, core::Value};
 
-impl Connection {
+impl Client {
     pub async fn eval(&self, expr: impl ToString) -> anyhow::Result<Value> {
         let expr = parser::expr(&expr.to_string()).context("failed to parse expr")?;
 
@@ -40,13 +40,13 @@ mod test {
 
     #[tokio::test]
     async fn eval() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
         assert_eq!(con.eval("1 + 1").await.unwrap(), 2.into());
     }
 
     #[tokio::test]
     async fn eval_multi() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
         let mut res = con
             .eval_multi(["1 + 1", "2 * 2", "x + 1"])
             .await

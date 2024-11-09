@@ -5,9 +5,9 @@ use types::{
     core::{Ident, Value},
 };
 
-use crate::Connection;
+use crate::Client;
 
-impl Connection {
+impl Client {
     pub async fn get_all_items(&self) -> anyhow::Result<HashMap<Ident, Value>> {
         let resp = self.req(api::items::get_all::Request).await?;
 
@@ -15,7 +15,7 @@ impl Connection {
     }
 }
 
-impl Connection {
+impl Client {
     pub async fn get_item(&self, name: impl Into<Ident>) -> anyhow::Result<Value> {
         let resp = self
             .req(api::items::get::Request { name: name.into() })
@@ -31,7 +31,7 @@ mod test {
 
     #[tokio::test]
     async fn get_all() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
 
         con.define(
             r#"
@@ -53,7 +53,7 @@ mod test {
 
     #[tokio::test]
     async fn get_item() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
 
         con.define(
             r#"

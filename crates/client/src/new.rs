@@ -4,23 +4,23 @@ use std::{
 };
 
 use anyhow::{bail, Context};
-use reqwest::{Client, Url};
+use reqwest::Url;
 
-use crate::{models::ConnectionSettings, Connection};
+use crate::{client::ClientSettings, Client};
 
-impl Connection {
+impl Client {
     const SCHEMA: &str = "http";
 
     pub async fn new() -> anyhow::Result<Self> {
         Self::from(Default::default()).await
     }
 
-    pub async fn from(settings: ConnectionSettings) -> anyhow::Result<Self> {
-        let client = Client::new();
+    pub async fn from(settings: ClientSettings) -> anyhow::Result<Self> {
+        let client = reqwest::Client::new();
 
         let (server_url, child) = Self::get_server_url_and_child(client.clone(), &settings).await?;
 
-        Ok(Connection {
+        Ok(Self {
             server_url,
             client,
             server_process: child,
@@ -29,10 +29,10 @@ impl Connection {
     }
 
     async fn get_server_url_and_child(
-        client: Client,
-        settings: &ConnectionSettings,
+        client: reqwest::Client,
+        settings: &ClientSettings,
     ) -> anyhow::Result<(Url, Option<Child>)> {
-        let ConnectionSettings {
+        let ClientSettings {
             ip,
             port,
             do_init_server,
@@ -112,7 +112,7 @@ impl Connection {
         Ok((addr.port(), child))
     }
 
-    async fn can_ping_server(client: Client, server_url: Url) -> bool {
+    async fn can_ping_server(client: reqwest::Client, server_url: Url) -> bool {
         client
             .post(server_url.join("ping").unwrap())
             .send()
@@ -123,11 +123,30 @@ impl Connection {
 }
 
 #[cfg(test)]
+impl Client {
+    pub async fn new_test() -> anyhow::Result<Self> {
+        Self::from(ClientSettings::new_test()).await
+    }
+}
+
+#[cfg(test)]
+impl ClientSettings {
+    pub fn new_test() -> Self {
+        Self {
+            port: 0,
+            do_init_server: true,
+            kill_server_on_drop: true,
+            ..Default::default()
+        }
+    }
+}
+
+#[cfg(test)]
 mod test {
     use super::*;
 
     #[tokio::test]
     async fn connect() {
-        Connection::new_test().await.unwrap();
+        Client::new_test().await.unwrap();
     }
 }

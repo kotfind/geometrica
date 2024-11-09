@@ -1,10 +1,10 @@
 use anyhow::Context;
-use client::Connection;
+use client::Client;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
 use crate::print_all_items;
 
-pub async fn run(con: Connection) -> anyhow::Result<()> {
+pub async fn run(con: Client) -> anyhow::Result<()> {
     let mut script = String::new();
     let mut reader = BufReader::new(tokio::io::stdin());
     while reader

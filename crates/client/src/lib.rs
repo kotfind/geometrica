@@ -1,7 +1,7 @@
-pub use models::{Connection, ConnectionSettings};
+pub use client::{Client, ClientSettings};
 
+mod client;
 mod define;
 mod eval;
 mod items;
-mod models;
 mod new;

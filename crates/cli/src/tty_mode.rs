@@ -1,8 +1,8 @@
 use anyhow::Context;
-use client::Connection;
+use client::Client;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-pub async fn run(con: Connection) -> anyhow::Result<()> {
+pub async fn run(con: Client) -> anyhow::Result<()> {
     let mut reader = BufReader::new(tokio::io::stdin());
     let mut script: Option<String> = None;
     loop {

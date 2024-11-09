@@ -1,9 +1,9 @@
 use anyhow::Context;
 use types::api;
 
-use crate::Connection;
+use crate::Client;
 
-impl Connection {
+impl Client {
     pub async fn define(&self, defs: impl ToString) -> anyhow::Result<()> {
         self.req(api::exec::Request {
             defs: parser::definitions(&defs.to_string()).context("failed to parse definitions")?,
@@ -22,7 +22,7 @@ mod test {
 
     #[tokio::test]
     async fn simple() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
 
         con.define(
             r#"
@@ -44,7 +44,7 @@ mod test {
 
     #[tokio::test]
     async fn with_funcs() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
 
         con.define(
             r#"
@@ -69,7 +69,7 @@ mod test {
 
     #[tokio::test]
     async fn multiple_requests() {
-        let con = Connection::new_test().await.unwrap();
+        let con = Client::new_test().await.unwrap();
 
         con.define(
             r#"

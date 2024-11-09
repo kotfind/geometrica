@@ -2,7 +2,7 @@ use std::{net::SocketAddr, path::PathBuf, str::FromStr};
 
 use anyhow::Context;
 use clap::Parser;
-use client::{Connection, ConnectionSettings};
+use client::{Client, ClientSettings};
 use tabled::{builder::Builder, settings::Style};
 
 mod script_file_mode;
@@ -27,7 +27,7 @@ struct Cli {
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    let con = Connection::from(ConnectionSettings {
+    let con = Client::from(ClientSettings {
         ip: cli.server_addr.ip(),
         port: cli.server_addr.port(),
         do_init_server: cli.do_init_server,
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn print_all_items(con: Connection) -> anyhow::Result<()> {
+async fn print_all_items(con: Client) -> anyhow::Result<()> {
     let mut items: Vec<_> = con
         .get_all_items()
         .await
