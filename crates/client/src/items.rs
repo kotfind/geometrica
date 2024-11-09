@@ -33,7 +33,7 @@ mod test {
     async fn get_all() {
         let con = Connection::new_test().await.unwrap();
 
-        con.exec(
+        con.define(
             r#"
             x = 1
             y = 2
@@ -55,7 +55,7 @@ mod test {
     async fn get_item() {
         let con = Connection::new_test().await.unwrap();
 
-        con.exec(
+        con.define(
             r#"
             x = 1
             y = 2

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::core::{Ident, Value, ValueType};
 
 macro_rules! enum_from_variant {
@@ -21,7 +23,7 @@ pub enum Statement {
 enum_from_variant!(Statement, Definition, Definition);
 enum_from_variant!(Statement, Command, Command);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Definition {
     ValueDefinition(ValueDefinition),
     FunctionDefinition(FunctionDefinition),
@@ -30,14 +32,14 @@ pub enum Definition {
 enum_from_variant!(Definition, ValueDefinition, ValueDefinition);
 enum_from_variant!(Definition, FunctionDefinition, FunctionDefinition);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ValueDefinition {
     pub name: Ident,
     pub value_type: Option<ValueType>,
     pub body: Expr,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FunctionDefinition {
     pub name: Ident,
     pub args: Vec<FunctionDefinitionArgument>,
@@ -45,7 +47,7 @@ pub struct FunctionDefinition {
     pub body: Expr,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FunctionDefinitionArgument {
     pub name: Ident,
     pub value_type: ValueType,
@@ -66,7 +68,7 @@ pub struct Command {
 //
 // Note: type checks (`is` operator) are represented as function calls.
 // E.g. `x is int` and `#is_int x` are the same
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Expr {
     Value(Value),
     Variable(Ident),
@@ -82,38 +84,38 @@ enum_from_variant!(Expr, If, IfExpr);
 enum_from_variant!(Expr, Let, LetExpr);
 
 // Note: fails if none of the cases matched and default_case_value is not provided
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IfExpr {
     pub cases: Vec<IfExprCase>,
     pub default_value: Option<Box<Expr>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IfExprCase {
     pub cond: Box<Expr>,
     pub value: Box<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LetExpr {
     pub defs: Vec<LetExprDefinition>,
     pub body: Box<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LetExprDefinition {
     pub name: Ident,
     pub value_type: Option<ValueType>,
     pub body: Box<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FuncCallExpr {
     pub name: Ident,
     pub args: Vec<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Hash, Eq)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
 pub struct FunctionSignature {
     pub name: Ident,
     pub arg_types: Vec<ValueType>,

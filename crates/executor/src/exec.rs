@@ -3,10 +3,7 @@ use std::collections::{hash_map, HashMap};
 use thiserror::Error;
 use types::{
     core::{Ident, Value, ValueType},
-    lang::{
-        Command, Definition, Expr, FunctionDefinition, FunctionSignature, Statement,
-        ValueDefinition,
-    },
+    lang::{Definition, Expr, FunctionDefinition, FunctionSignature, ValueDefinition},
 };
 
 use crate::{
@@ -130,28 +127,13 @@ pub trait Exec {
     fn exec(self, scope: &mut ExecScope) -> ExecResult;
 }
 
-impl Exec for Vec<Statement> {
+impl Exec for Vec<Definition> {
     fn exec(self, scope: &mut ExecScope) -> ExecResult {
         // TODO: nested scope; recover on error
-        for stmt in self {
-            stmt.exec(scope)?;
+        for def in self {
+            def.exec(scope)?;
         }
         Ok(())
-    }
-}
-
-impl Exec for Statement {
-    fn exec(self, scope: &mut ExecScope) -> ExecResult {
-        match self {
-            Statement::Definition(def) => def.exec(scope),
-            Statement::Command(cmd) => cmd.exec(scope),
-        }
-    }
-}
-
-impl Exec for Command {
-    fn exec(self, _scope: &mut ExecScope) -> ExecResult {
-        todo!()
     }
 }
 
@@ -185,7 +167,7 @@ mod test {
     #[test]
     fn definitions() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             sq x:int -> int = x^2
             sq x:real -> real = x^2
@@ -226,7 +208,7 @@ mod test {
     #[test]
     fn get_all_items() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             sq x:int -> int = x^2
             sq x:real -> real = x^2

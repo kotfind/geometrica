@@ -1,4 +1,7 @@
-use crate::{core::Ident, core::Value};
+use crate::{
+    core::{Ident, Value},
+    lang::{Definition, Expr},
+};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
 
@@ -44,15 +47,7 @@ pub mod eval {
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
     pub struct Request {
-        pub exprs: Vec<RequestExpr>,
-    }
-
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct RequestExpr {
-        pub expr: String,
-
-        #[serde(default)]
-        pub vars: HashMap<Ident, Value>,
+        pub exprs: Vec<Expr>,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -68,8 +63,7 @@ pub mod exec {
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
     pub struct Request {
-        pub script: String,
-        // TODO: bindings
+        pub defs: Vec<Definition>,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

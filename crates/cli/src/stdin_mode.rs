@@ -14,7 +14,9 @@ pub async fn run(con: Connection) -> anyhow::Result<()> {
         != 0
     {}
 
-    con.exec(script).await.context("failed to execute script")?;
+    con.define(script)
+        .await
+        .context("failed to execute script")?;
 
     print_all_items(con).await?;
 

@@ -288,6 +288,7 @@ name = "client"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "parser",
  "reqwest",
  "serde_json",
  "smart-default",
@@ -1408,7 +1409,6 @@ dependencies = [
  "axum",
  "clap",
  "executor",
- "parser",
  "reqwest",
  "serde",
  "serde_json",

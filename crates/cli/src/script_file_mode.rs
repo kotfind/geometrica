@@ -10,7 +10,9 @@ pub async fn run(con: Connection, script_file: PathBuf) -> anyhow::Result<()> {
         .await
         .context("failed to read script file")?;
 
-    con.exec(script).await.context("failed to execute script")?;
+    con.define(script)
+        .await
+        .context("failed to execute script")?;
 
     print_all_items(con).await?;
 

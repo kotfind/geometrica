@@ -199,7 +199,7 @@ mod test {
     #[test]
     fn simple() {
         let mut scope = ExecScope::new();
-        parser::statement("sq x:int -> int = x * x")
+        parser::definitions("sq x:int -> int = x * x")
             .unwrap()
             .exec(&mut scope)
             .unwrap();
@@ -218,7 +218,7 @@ mod test {
     #[test]
     fn recursion() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             fact x:int -> int = if
                 x == 0 then 1,

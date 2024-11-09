@@ -1,11 +1,12 @@
+use anyhow::Context;
 use types::api;
 
 use crate::Connection;
 
 impl Connection {
-    pub async fn exec(&self, script: impl ToString) -> anyhow::Result<()> {
+    pub async fn define(&self, defs: impl ToString) -> anyhow::Result<()> {
         self.req(api::exec::Request {
-            script: script.to_string(),
+            defs: parser::definitions(&defs.to_string()).context("failed to parse definitions")?,
         })
         .await?;
 
@@ -23,7 +24,7 @@ mod test {
     async fn simple() {
         let con = Connection::new_test().await.unwrap();
 
-        con.exec(
+        con.define(
             r#"
             x = 1
             y = 2
@@ -45,7 +46,7 @@ mod test {
     async fn with_funcs() {
         let con = Connection::new_test().await.unwrap();
 
-        con.exec(
+        con.define(
             r#"
                 sq x:int -> int = x^2
                 sq x:real -> real = x^2
@@ -70,7 +71,7 @@ mod test {
     async fn multiple_requests() {
         let con = Connection::new_test().await.unwrap();
 
-        con.exec(
+        con.define(
             r#"
             sq x:int -> int = x^2
             sq x:real -> real = x^2
@@ -80,7 +81,7 @@ mod test {
         .await
         .unwrap();
 
-        con.exec(
+        con.define(
             r#"
             a = 1
             b = 2

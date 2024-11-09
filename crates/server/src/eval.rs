@@ -1,12 +1,7 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use axum::{debug_handler, extract::State, routing::post, Json, Router};
-use executor::exec::ExecScope;
-use tokio::sync::Mutex;
-use types::{
-    api::{self},
-    core::{Ident, Value},
-};
+use types::api::{self};
 
 use crate::{
     result::{api_ok, ApiOk, IntoError},
@@ -22,24 +17,16 @@ async fn eval(
     State(App { scope, .. }): State<App>,
     Json(api::eval::Request { exprs }): Json<api::eval::Request>,
 ) -> ApiOk<api::eval::Response> {
-    async fn process_expr(
-        expr: String,
-        vars: HashMap<Ident, Value>,
-        scope: Arc<Mutex<ExecScope>>,
-    ) -> Result<Value, api::Error> {
-        let expr = parser::expr(&expr).map_err(IntoError::into_error)?;
-        let value = scope
-            .lock()
-            .await
-            .eval_expr(expr, vars)
-            .map_err(IntoError::into_error)?;
-        Ok(value)
-    }
-
     let mut values = Vec::with_capacity(exprs.len());
 
-    for api::eval::RequestExpr { expr, vars } in exprs {
-        values.push(process_expr(expr, vars, scope.clone()).await);
+    for expr in exprs {
+        values.push(
+            scope
+                .lock()
+                .await
+                .eval_expr(expr, HashMap::new())
+                .map_err(IntoError::into_error),
+        );
     }
 
     api_ok(api::eval::Response { values })

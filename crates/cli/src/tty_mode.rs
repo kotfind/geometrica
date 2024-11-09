@@ -24,7 +24,7 @@ pub async fn run(con: Connection) -> anyhow::Result<()> {
                 // ...
                 // ;; <- HERE
 
-                con.exec(script_)
+                con.define(script_)
                     .await
                     .context("failed to execute script")?;
 
@@ -47,7 +47,7 @@ pub async fn run(con: Connection) -> anyhow::Result<()> {
             None => {
                 // Not in ;;-block
 
-                con.exec(line).await.context("failed to execute line")?;
+                con.define(line).await.context("failed to execute line")?;
             }
         }
     }

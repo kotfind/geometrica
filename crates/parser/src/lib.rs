@@ -1,6 +1,6 @@
 // Note: this file is so big and ugly as peg won't allow splitting grammar in multiple files
 
-pub use lang::{expr, script, statement};
+pub use lang::{definition, definitions, expr, script, statement};
 
 use types::{core::*, lang::*};
 
@@ -24,11 +24,6 @@ fn binary(ident: impl Into<Ident>, lhs: impl Into<Expr>, rhs: impl Into<Expr>) -
 peg::parser! {
     grammar lang() for str {
         // -------------------- Statements --------------------
-        // pub rule script() -> Vec<Statement>
-        //     = _ stmts:(statement() ** (_ ";" _)) (_ ";")? _
-        // {
-        //     stmts
-        // }
         pub rule script() -> Vec<Statement>
             = _ stmts:(statement() ** __) _
         {
@@ -46,7 +41,13 @@ peg::parser! {
             Command { name, args }
         }
 
-        rule definition() -> Definition
+        pub rule definitions() -> Vec<Definition>
+            = _ defs:(definition() ** __) _
+        {
+            defs
+        }
+
+        pub rule definition() -> Definition
             = d:function_definition() { d.into() }
             / d:value_definition() { d.into() }
 

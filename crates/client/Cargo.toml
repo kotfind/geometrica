@@ -10,5 +10,6 @@ serde_json = "1.0.132"
 smart-default = "0.7.1"
 tokio = { version = "1.41.0", features = ["full"] }
 types = { path = "../types" }
+parser = { path = "../parser" }
 test_bin = "0.4.0"
 tempfile = "3.13.0"

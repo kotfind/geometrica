@@ -217,7 +217,7 @@ mod test {
     #[test]
     fn simple() {
         let mut scope = ExecScope::new();
-        parser::statement("x = 1")
+        parser::definition("x = 1")
             .unwrap()
             .exec(&mut scope)
             .unwrap();
@@ -231,7 +231,7 @@ mod test {
     fn type_assert() {
         let mut scope = ExecScope::new();
         assert!(matches!(
-            parser::statement("x:real = 1").unwrap().exec(&mut scope),
+            parser::definition("x:real = 1").unwrap().exec(&mut scope),
             Err(ExecError::UnexpectedType {
                 expected: ValueType::Real,
                 got: ValueType::Int
@@ -242,7 +242,7 @@ mod test {
     #[test]
     fn multiple_statements() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             x = 2
             y = 3
@@ -261,7 +261,7 @@ mod test {
     #[test]
     fn with_function() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             sqsum a:int b:int -> int = a^2 + b^2
             x = 2
@@ -281,7 +281,7 @@ mod test {
     #[test]
     fn with_set() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             sqsum a:int b:int -> int = a^2 + b^2
             x = 2
@@ -313,7 +313,7 @@ mod test {
     #[test]
     fn with_set_chain() {
         let mut scope = ExecScope::new();
-        parser::script(
+        parser::definitions(
             r#"
             x1 = 1
             x2 = 2 * x1

@@ -14,13 +14,11 @@ pub fn router() -> Router<App> {
 #[debug_handler(state = App)]
 async fn exec(
     State(App { scope, .. }): State<App>,
-    Json(api::exec::Request { script }): Json<api::exec::Request>,
+    Json(api::exec::Request { defs }): Json<api::exec::Request>,
 ) -> ApiResult<api::exec::Response> {
-    let script = parser::script(&script).map_err(api_err)?;
-
     let mut scope = scope.lock().await;
 
-    script.exec(&mut scope).map_err(api_err)?;
+    defs.exec(&mut scope).map_err(api_err)?;
 
     Ok(api_ok(api::exec::Response))
 }
