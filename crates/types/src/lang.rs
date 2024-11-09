@@ -57,9 +57,18 @@ pub struct FunctionDefinitionArgument {
 // save
 #[derive(Debug, Clone, PartialEq)]
 pub struct Command {
-    pub name: Ident, // TODO?: Or enum CommandKind
-    pub args: Vec<Expr>,
+    pub name: Ident,
+    pub args: Vec<CommandArg>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CommandArg {
+    Expr(Expr),
+    Ident(Ident),
+}
+
+enum_from_variant!(CommandArg, Expr, Expr);
+enum_from_variant!(CommandArg, Ident, Ident);
 
 // Note: operator calls are represented as function calls.
 // E.g. `1 + 2` and `#add 1 2` are the same

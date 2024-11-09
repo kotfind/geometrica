@@ -6,7 +6,7 @@ fn script() {
         lang::script(
             r#"
             p = pt 1 2
-            move! p 3 4
+            move! p (1 + 3) 4
         "#
         ),
         Ok(vec![
@@ -20,8 +20,8 @@ fn script() {
                 name: Ident::from("move"),
                 args: vec![
                     Ident::from("p").into(),
-                    Value::from(3).into(),
-                    Value::from(4).into(),
+                    lang::expr("1 + 3").unwrap().into(),
+                    Expr::from(Value::from(4)).into(),
                 ],
             }
             .into(),
@@ -47,8 +47,8 @@ fn statement() {
             name: Ident::from("move"),
             args: vec![
                 Ident::from("p").into(),
-                Value::from(3).into(),
-                Value::from(4).into()
+                Expr::from(Value::from(3)).into(),
+                Expr::from(Value::from(4)).into()
             ]
         }
         .into())
@@ -63,8 +63,8 @@ fn command() {
             name: Ident::from("move"),
             args: vec![
                 Ident::from("l").into(),
-                Value::from(1).into(),
-                Value::from(2).into()
+                Expr::from(Value::from(1)).into(),
+                Expr::from(Value::from(2)).into()
             ]
         })
     );
