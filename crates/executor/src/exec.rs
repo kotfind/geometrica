@@ -174,8 +174,7 @@ impl Exec for ValueDefinition {
 
 impl Exec for FunctionDefinition {
     fn exec(self, scope: &mut ExecScope) -> ExecResult {
-        scope.insert_func(Function::from_definition(self, scope)?)?;
-        Ok(())
+        Function::push_from_definition(self, scope)
     }
 }
 

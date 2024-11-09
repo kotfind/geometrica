@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 use std::{
     collections::{hash_map::Entry, HashMap},
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 use types::{
     core::Ident,
@@ -55,10 +55,8 @@ macro_rules! builtin {
                     $(ValueType::$arg_type),*
                 ]
             };
-            let func = Function(Arc::new(FunctionInner {
-                sign: sign.clone(),
-                return_type: ValueType::$ret_type,
-                kind: FunctionInnerKind::BuiltIn(Box::new(move |args: Vec<Value>| -> EvalResult {
+
+            let kind_inner = FunctionInnerKind::BuiltIn(Box::new(move |args: Vec<Value>| -> EvalResult {
                     let mut args_iter = args.into_iter();
                     $(
                         let $arg_name = match args_iter.next() {
@@ -72,7 +70,15 @@ macro_rules! builtin {
                     let res = Value::from({$body}?);
                     assert!(matches!(res, Value::$ret_type(_)));
                     Ok(res)
-                })),
+                }));
+
+            let kind = OnceLock::new();
+            kind.set(kind_inner).expect("initialization");
+
+            let func = Function(Arc::new(FunctionInner {
+                sign: sign.clone(),
+                return_type: ValueType::$ret_type,
+                kind,
             }));
 
             match $builtin_functions.entry(sign.clone()) {
