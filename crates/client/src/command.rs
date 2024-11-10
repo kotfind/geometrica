@@ -34,62 +34,68 @@ impl Client {
         let cmd = cmd.parse_into().context("failed to parse command")?;
 
         match &cmd.name.0 as &str {
-            "get" => {
-                let mut args = cmd.args.into_iter();
-                unwrap_cmd_arg!(IDENT name FROM args);
-                unwrap_cmd_arg!(END FROM args);
+            "get" => self.get_cmd(cmd.args).await,
 
-                let item = self.get_item(name.clone()).await?;
+            "get_all" => self.get_all_cmd(cmd.args).await,
 
-                Ok(Table::new_with_rows(
-                    ["Name", "Value"],
-                    [[name.to_string(), item.to_string()]],
-                ))
-            }
-
-            "get_all" => {
-                let items = self.get_all_items().await?;
-
-                Ok(Table::new_with_rows(
-                    ["Name", "Value"],
-                    items
-                        .into_iter()
-                        .map(|(name, value)| [name.to_string(), value.to_string()]),
-                ))
-            }
-
-            "eval" => {
-                let mut exprs = Vec::with_capacity(cmd.args.len());
-                let mut args = cmd.args.into_iter().peekable();
-                while args.peek().is_some() {
-                    unwrap_cmd_arg!(EXPR expr FROM args);
-                    exprs.push(expr);
-                }
-
-                let values = self.eval(exprs.clone()).await.context("failed to eval")?;
-
-                assert_eq!(exprs.len(), values.len());
-
-                // TODO: shorten value if too long
-                // TODO: print expr with Display, not Debug
-                Ok(Table::new_with_rows(
-                    ["Name", "Value"],
-                    exprs
-                        .into_iter()
-                        .zip(values.into_iter())
-                        .map(|(expr, value)| {
-                            [
-                                format!("{expr:?}"),
-                                match value {
-                                    Ok(value) => value.to_string(),
-                                    Err(_) => "error".to_string(),
-                                },
-                            ]
-                        }),
-                ))
-            }
+            "eval" => self.eval_cmd(cmd.args).await,
 
             _ => bail!("undefined command: {}", cmd.name),
         }
+    }
+
+    async fn get_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(IDENT name FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        let item = self.get_item(name.clone()).await?;
+
+        Ok(Table::new_with_rows(
+            ["Name", "Value"],
+            [[name.to_string(), item.to_string()]],
+        ))
+    }
+
+    async fn get_all_cmd(&self, _args: Vec<CommandArg>) -> anyhow::Result<Table> {
+        let items = self.get_all_items().await?;
+
+        Ok(Table::new_with_rows(
+            ["Name", "Value"],
+            items
+                .into_iter()
+                .map(|(name, value)| [name.to_string(), value.to_string()]),
+        ))
+    }
+
+    async fn eval_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {
+        let mut exprs = Vec::with_capacity(args.len());
+        let mut args = args.into_iter().peekable();
+        while args.peek().is_some() {
+            unwrap_cmd_arg!(EXPR expr FROM args);
+            exprs.push(expr);
+        }
+
+        let values = self.eval(exprs.clone()).await.context("failed to eval")?;
+
+        assert_eq!(exprs.len(), values.len());
+
+        // TODO: shorten value if too long
+        // TODO: print expr with Display, not Debug
+        Ok(Table::new_with_rows(
+            ["Name", "Value"],
+            exprs
+                .into_iter()
+                .zip(values.into_iter())
+                .map(|(expr, value)| {
+                    [
+                        format!("{expr:?}"),
+                        match value {
+                            Ok(value) => value.to_string(),
+                            Err(_) => "error".to_string(),
+                        },
+                    ]
+                }),
+        ))
     }
 }
