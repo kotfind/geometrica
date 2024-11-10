@@ -1,10 +1,11 @@
 use crate::Client;
 use anyhow::Context;
-use types::{api, core::Value};
+use parser::ParseInto;
+use types::{api, core::Value, lang::Expr};
 
 impl Client {
-    pub async fn eval(&self, expr: impl ToString) -> anyhow::Result<Value> {
-        let expr = parser::expr(&expr.to_string()).context("failed to parse expr")?;
+    pub async fn eval(&self, expr: impl ParseInto<Expr>) -> anyhow::Result<Value> {
+        let expr = expr.parse_into().context("failed to parse expr")?;
 
         let resp = self.req(api::eval::Request { exprs: vec![expr] }).await?;
         assert_eq!(resp.values.len(), 1);
@@ -14,15 +15,14 @@ impl Client {
 
     pub async fn eval_multi(
         &self,
-        exprs: impl IntoIterator<Item = impl ToString>,
+        exprs: impl IntoIterator<Item = impl ParseInto<Expr>>,
     ) -> anyhow::Result<Vec<anyhow::Result<Value>>> {
         let resp = self
             .req(api::eval::Request {
                 exprs: exprs
                     .into_iter()
-                    .map(|expr| parser::expr(&expr.to_string()))
-                    .collect::<Result<_, _>>()
-                    .context("failed to parse expr")?,
+                    .map(|expr| expr.parse_into().context("failed to parse expr"))
+                    .collect::<Result<_, _>>()?,
             })
             .await?;
         let res = resp

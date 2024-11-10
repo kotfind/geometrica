@@ -3,18 +3,14 @@ use std::path::PathBuf;
 use anyhow::Context;
 use client::Client;
 
-use crate::print_all_items;
+use crate::exec;
 
-pub async fn run(con: Client, script_file: PathBuf) -> anyhow::Result<()> {
+pub async fn run(client: Client, script_file: PathBuf) -> anyhow::Result<()> {
     let script = tokio::fs::read_to_string(script_file)
         .await
         .context("failed to read script file")?;
 
-    con.define(script)
-        .await
-        .context("failed to execute script")?;
-
-    print_all_items(con).await?;
+    exec(&client, script).await?;
 
     Ok(())
 }

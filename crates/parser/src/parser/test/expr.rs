@@ -3,7 +3,7 @@ use types::{
     lang::{FuncCallExpr, LetExpr, LetExprDefinition},
 };
 
-use crate::lang;
+use super::lang;
 
 use super::*;
 

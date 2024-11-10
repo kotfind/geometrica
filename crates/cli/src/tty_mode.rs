@@ -2,7 +2,9 @@ use anyhow::Context;
 use client::Client;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-pub async fn run(con: Client) -> anyhow::Result<()> {
+use crate::exec;
+
+pub async fn run(client: Client) -> anyhow::Result<()> {
     let mut reader = BufReader::new(tokio::io::stdin());
     let mut script: Option<String> = None;
     loop {
@@ -24,9 +26,7 @@ pub async fn run(con: Client) -> anyhow::Result<()> {
                 // ...
                 // ;; <- HERE
 
-                con.define(script_)
-                    .await
-                    .context("failed to execute script")?;
+                exec(&client, script_).await?;
 
                 script = None;
             }
@@ -47,7 +47,7 @@ pub async fn run(con: Client) -> anyhow::Result<()> {
             None => {
                 // Not in ;;-block
 
-                con.define(line).await.context("failed to execute line")?;
+                exec(&client, line).await?;
             }
         }
     }

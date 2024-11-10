@@ -33,7 +33,7 @@ mod test {
     async fn get_all() {
         let con = Client::new_test().await.unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
             x = 1
             y = 2
@@ -55,7 +55,7 @@ mod test {
     async fn get_item() {
         let con = Client::new_test().await.unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
             x = 1
             y = 2

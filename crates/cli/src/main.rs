@@ -1,9 +1,12 @@
-use std::{net::SocketAddr, path::PathBuf, str::FromStr};
+use std::{fmt::Display, net::SocketAddr, path::PathBuf, str::FromStr};
 
 use anyhow::Context;
 use clap::Parser;
 use client::{Client, ClientSettings};
-use tabled::{builder::Builder, settings::Style};
+use tabled::{
+    builder::Builder,
+    settings::{object::Columns, Modify, Span, Style},
+};
 
 mod script_file_mode;
 mod stdin_mode;
@@ -47,19 +50,38 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn print_all_items(con: Client) -> anyhow::Result<()> {
-    let mut items: Vec<_> = con
-        .get_all_items()
-        .await
-        .context("failed to get all items")?
-        .into_iter()
-        .collect();
-    items.sort_by(|a, b| a.0 .0.cmp(&b.0 .0));
-    let mut table = Builder::new();
-    table.push_record(["Name", "Value"]);
-    for (name, value) in items {
-        table.push_record([name.to_string(), value.to_string()]);
+fn table_to_printable(from: client::Table) -> impl Display {
+    let mut to = Builder::new();
+
+    to.push_record(from.header());
+
+    if !from.is_empty() {
+        for row in from.rows() {
+            to.push_record(row);
+        }
+    } else {
+        to.push_record::<[&str; 0]>([]);
     }
-    println!("{}", table.build().with(Style::sharp()));
+
+    let mut to = to.build();
+    to.with(Style::rounded());
+
+    if from.is_empty() {
+        to.with(Modify::new(Columns::single(1)).with(Span::column(from.width())));
+    }
+
+    to
+}
+
+async fn exec(client: &Client, script: impl ToString) -> anyhow::Result<()> {
+    let res = client
+        .exec(script.to_string())
+        .await
+        .context("failed to execute script")?;
+
+    for res_line in res {
+        println!("{}", table_to_printable(res_line));
+    }
+
     Ok(())
 }

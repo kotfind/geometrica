@@ -1,12 +1,22 @@
 use anyhow::Context;
-use types::api;
+use parser::ParseInto;
+use types::{api, lang::Definition};
 
 use crate::Client;
 
 impl Client {
-    pub async fn define(&self, defs: impl ToString) -> anyhow::Result<()> {
+    pub async fn define(&self, def: impl ParseInto<Definition>) -> anyhow::Result<()> {
         self.req(api::exec::Request {
-            defs: parser::definitions(&defs.to_string()).context("failed to parse definitions")?,
+            defs: vec![def.parse_into().context("failed to parse definition")?],
+        })
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn define_multi(&self, defs: impl ParseInto<Vec<Definition>>) -> anyhow::Result<()> {
+        self.req(api::exec::Request {
+            defs: defs.parse_into().context("failed to parse definitions")?,
         })
         .await?;
 
@@ -24,7 +34,7 @@ mod test {
     async fn simple() {
         let con = Client::new_test().await.unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
             x = 1
             y = 2
@@ -46,7 +56,7 @@ mod test {
     async fn with_funcs() {
         let con = Client::new_test().await.unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
                 sq x:int -> int = x^2
                 sq x:real -> real = x^2
@@ -71,7 +81,7 @@ mod test {
     async fn multiple_requests() {
         let con = Client::new_test().await.unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
             sq x:int -> int = x^2
             sq x:real -> real = x^2
@@ -81,7 +91,7 @@ mod test {
         .await
         .unwrap();
 
-        con.define(
+        con.define_multi(
             r#"
             a = 1
             b = 2
