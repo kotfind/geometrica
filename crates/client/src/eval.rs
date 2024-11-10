@@ -4,7 +4,7 @@ use parser::ParseInto;
 use types::{api, core::Value, lang::Expr};
 
 impl Client {
-    pub async fn eval(&self, expr: impl ParseInto<Expr>) -> anyhow::Result<Value> {
+    pub async fn eval_one(&self, expr: impl ParseInto<Expr>) -> anyhow::Result<Value> {
         let expr = expr.parse_into().context("failed to parse expr")?;
 
         let resp = self.req(api::eval::Request { exprs: vec![expr] }).await?;
@@ -13,7 +13,7 @@ impl Client {
         Ok(res)
     }
 
-    pub async fn eval_multi(
+    pub async fn eval(
         &self,
         exprs: impl IntoIterator<Item = impl ParseInto<Expr>>,
     ) -> anyhow::Result<Vec<anyhow::Result<Value>>> {
@@ -41,14 +41,14 @@ mod test {
     #[tokio::test]
     async fn eval() {
         let con = Client::new_test().await.unwrap();
-        assert_eq!(con.eval("1 + 1").await.unwrap(), 2.into());
+        assert_eq!(con.eval_one("1 + 1").await.unwrap(), 2.into());
     }
 
     #[tokio::test]
     async fn eval_multi() {
         let con = Client::new_test().await.unwrap();
         let mut res = con
-            .eval_multi(["1 + 1", "2 * 2", "x + 1"])
+            .eval(["1 + 1", "2 * 2", "x + 1"])
             .await
             .unwrap()
             .into_iter();

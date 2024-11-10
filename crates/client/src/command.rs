@@ -66,10 +66,7 @@ impl Client {
                     exprs.push(expr);
                 }
 
-                let values = self
-                    .eval_multi(exprs.clone())
-                    .await
-                    .context("failed to eval")?;
+                let values = self.eval(exprs.clone()).await.context("failed to eval")?;
 
                 assert_eq!(exprs.len(), values.len());
 
