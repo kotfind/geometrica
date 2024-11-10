@@ -26,8 +26,11 @@ peg::parser! {
         }
 
         pub rule command_arg() -> CommandArg
-            = ident:ident() { ident.into() }
-            / expr:expr() { expr.into() }
+            = !statement()
+            arg:(
+                ident:ident() { ident.into() }
+                / expr:expr() { expr.into() }
+            ) { arg }
 
         pub rule definitions() -> Vec<Definition>
             = _ defs:(definition() ** __) _
