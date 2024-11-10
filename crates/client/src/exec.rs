@@ -2,11 +2,14 @@ use anyhow::Context;
 use parser::ParseInto;
 use types::lang::Statement;
 
-use crate::{table::Table, Client};
+use crate::{Client, CommandResult};
 
 impl Client {
     /// Parses and executes script. Returns a table-result for each command.
-    pub async fn exec(&self, script: impl ParseInto<Vec<Statement>>) -> anyhow::Result<Vec<Table>> {
+    pub async fn exec(
+        &self,
+        script: impl ParseInto<Vec<Statement>>,
+    ) -> anyhow::Result<Vec<CommandResult>> {
         let script = script.parse_into().context("failed to parse script")?;
         let mut ans = Vec::new();
 
@@ -23,7 +26,7 @@ impl Client {
     pub async fn exec_one(
         &self,
         script: impl ParseInto<Statement>,
-    ) -> anyhow::Result<Option<Table>> {
+    ) -> anyhow::Result<Option<CommandResult>> {
         let stmt = script.parse_into().context("failed to parse script")?;
 
         Ok(match stmt {

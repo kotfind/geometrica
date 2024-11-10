@@ -1,4 +1,5 @@
 pub use client::{Client, ClientSettings};
+pub use command::CommandResult;
 pub use table::Table;
 
 mod client;

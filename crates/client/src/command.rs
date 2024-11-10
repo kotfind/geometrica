@@ -27,21 +27,22 @@ macro_rules! unwrap_cmd_arg {
     };
 }
 
+pub enum CommandResult {
+    Table(Table),
+    Ok,
+}
+
 impl Client {
     /// Parses and executes `cmd`. Returns output of command in a form of a table of strings.
     /// Parsing output table is not recommended as it may change. Use output for printing only.
-    pub async fn command(&self, cmd: impl ParseInto<Command>) -> anyhow::Result<Table> {
+    pub async fn command(&self, cmd: impl ParseInto<Command>) -> anyhow::Result<CommandResult> {
         let cmd = cmd.parse_into().context("failed to parse command")?;
 
         match &cmd.name.0 as &str {
-            "get" => self.get_cmd(cmd.args).await,
-            "get_all" => self.get_all_cmd(cmd.args).await,
-            "eval" => self.eval_cmd(cmd.args).await,
-            "set" => {
-                self.set_cmd(cmd.args).await?;
-                // TODO: return None
-                Ok(Table::new(["None"]))
-            }
+            "get" => self.get_cmd(cmd.args).await.map(CommandResult::Table),
+            "get_all" => self.get_all_cmd(cmd.args).await.map(CommandResult::Table),
+            "eval" => self.eval_cmd(cmd.args).await.map(CommandResult::Table),
+            "set" => self.set_cmd(cmd.args).await.map(|()| CommandResult::Ok),
             _ => bail!("undefined command: {}", cmd.name),
         }
     }
