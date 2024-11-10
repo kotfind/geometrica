@@ -80,7 +80,7 @@ fn print_table(from: client::Table) {
     }
 
     if let Some(width) = termsize::get().map(|size| size.cols) {
-        to.with(Modify::new(Segment::all()).with(Width::wrap(width as usize)));
+        to.with(Modify::new(Segment::all()).with(Width::wrap(width as usize - from.width() * 6 /* XXX: magic constant that works for whatever reason */)));
     }
 
     // Print
