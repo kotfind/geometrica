@@ -33,6 +33,16 @@ pub enum ExecError {
 
     #[error("unexpected type: expected {expected}, got {got}")]
     UnexpectedType { expected: ValueType, got: ValueType },
+
+    #[error("cannot set! variable '{0}' as it is not defined")]
+    SetUndefinedVariable(Ident),
+
+    #[error("cannot set! {old_type} variable '{name}' with {new_type} value")]
+    SetDifferentType {
+        name: Ident,
+        old_type: ValueType,
+        new_type: ValueType,
+    },
 }
 
 pub struct ExecScope {
@@ -52,6 +62,24 @@ impl ExecScope {
             funcs: FuncMap::new(),
             nodes: HashMap::new(),
         }
+    }
+
+    pub fn set(&self, name: Ident, value: Value) -> Result<(), ExecError> {
+        let node = self
+            .get_node(&name)
+            .ok_or(ExecError::SetUndefinedVariable(name.clone()))?;
+
+        if node.value_type() != value.value_type() {
+            return Err(ExecError::SetDifferentType {
+                name,
+                old_type: node.value_type(),
+                new_type: value.value_type(),
+            });
+        }
+
+        node.set(value)?;
+
+        Ok(())
     }
 
     pub fn eval_expr(

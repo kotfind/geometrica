@@ -105,3 +105,18 @@ pub mod items {
         query!("/items/get", Request, Response);
     }
 }
+
+pub mod set {
+    use super::*;
+
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub struct Request {
+        pub name: Ident,
+        pub expr: Expr,
+    }
+
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub struct Response;
+
+    query!("/set", Request, Response);
+}

@@ -35,11 +35,13 @@ impl Client {
 
         match &cmd.name.0 as &str {
             "get" => self.get_cmd(cmd.args).await,
-
             "get_all" => self.get_all_cmd(cmd.args).await,
-
             "eval" => self.eval_cmd(cmd.args).await,
-
+            "set" => {
+                self.set_cmd(cmd.args).await?;
+                // TODO: return None
+                Ok(Table::new(["None"]))
+            }
             _ => bail!("undefined command: {}", cmd.name),
         }
     }
@@ -97,5 +99,16 @@ impl Client {
                     ]
                 }),
         ))
+    }
+
+    async fn set_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<()> {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(IDENT name FROM args);
+        unwrap_cmd_arg!(EXPR expr FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        self.set(name, expr).await.context("failed to set value")?;
+
+        Ok(())
     }
 }

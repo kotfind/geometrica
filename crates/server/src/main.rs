@@ -14,6 +14,7 @@ mod exec;
 mod items;
 mod ping;
 mod result;
+mod set;
 
 #[derive(clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -94,6 +95,7 @@ fn router() -> Router {
         .nest("/exec", exec::router())
         .nest("/items", items::router())
         .nest("/ping", ping::router())
+        .nest("/set", set::router())
         .with_state(app)
 }
 

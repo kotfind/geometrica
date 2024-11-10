@@ -8,4 +8,5 @@ mod eval;
 mod exec;
 mod items;
 mod new;
+mod set;
 mod table;
