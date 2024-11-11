@@ -43,6 +43,7 @@ impl Client {
             "get_all" => self.get_all_cmd(cmd.args).await.map(CommandResult::Table),
             "eval" => self.eval_cmd(cmd.args).await.map(CommandResult::Table),
             "set" => self.set_cmd(cmd.args).await.map(|()| CommandResult::Ok),
+            "delete" => self.delete_cmd(cmd.args).await.map(|()| CommandResult::Ok),
             _ => bail!("undefined command: {}", cmd.name),
         }
     }
@@ -109,6 +110,16 @@ impl Client {
         unwrap_cmd_arg!(END FROM args);
 
         self.set(name, expr).await.context("failed to set value")?;
+
+        Ok(())
+    }
+
+    async fn delete_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<()> {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(IDENT name FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        self.delete(name).await.context("failed to delete")?;
 
         Ok(())
     }

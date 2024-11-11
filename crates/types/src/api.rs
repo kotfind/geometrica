@@ -120,3 +120,17 @@ pub mod set {
 
     query!("/set", Request, Response);
 }
+
+pub mod delete {
+    use super::*;
+
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub struct Request {
+        pub name: Ident,
+    }
+
+    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    pub struct Response;
+
+    query!("/delete", Request, Response);
+}

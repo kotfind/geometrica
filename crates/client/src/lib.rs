@@ -5,6 +5,7 @@ pub use table::Table;
 mod client;
 mod command;
 mod define;
+mod delete;
 mod eval;
 mod exec;
 mod items;

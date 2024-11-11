@@ -1,5 +1,6 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
+    hash::Hash,
     sync::{Arc, Mutex, Weak},
 };
 
@@ -29,9 +30,60 @@ impl WeakNode {
 #[derive(Clone, Debug)]
 pub(crate) struct Node(Arc<NodeInner>);
 
+impl Hash for Node {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        (Arc::as_ptr(&self.0) as usize).hash(state);
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl Eq for Node {}
+
+impl From<NodeInnerKind> for Node {
+    fn from(kind: NodeInnerKind) -> Self {
+        Node(Arc::new(NodeInner {
+            required_by: Mutex::new(Vec::new()),
+            kind,
+        }))
+    }
+}
+
 impl Node {
     fn from_value(value: Value) -> Self {
         Node::from(NodeInnerKind::Value(Mutex::new(value)))
+    }
+
+    #[allow(clippy::mutable_key_type)]
+    pub(crate) fn get_nodes_to_delete(self) -> HashSet<Node> {
+        #[allow(clippy::mutable_key_type)]
+        fn inner(nodes_to_delete: &mut HashSet<Node>, node: Node) {
+            if nodes_to_delete.contains(&node) {
+                return;
+            }
+            nodes_to_delete.insert(node.clone());
+
+            let required_by = {
+                let required_by = &mut node.0.required_by.lock().unwrap();
+                required_by.retain(|node| node.upgrade().is_some());
+                required_by.clone()
+            };
+
+            for other_node in required_by {
+                if let Some(other_node) = other_node.upgrade() {
+                    inner(nodes_to_delete, other_node);
+                }
+            }
+        }
+
+        #[allow(clippy::mutable_key_type)]
+        let mut nodes_to_delete: HashSet<Node> = HashSet::new();
+        inner(&mut nodes_to_delete, self);
+        nodes_to_delete
     }
 
     fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
@@ -170,21 +222,6 @@ impl Node {
         }
 
         Ok(())
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
-
-impl From<NodeInnerKind> for Node {
-    fn from(kind: NodeInnerKind) -> Self {
-        Node(Arc::new(NodeInner {
-            required_by: Mutex::new(Vec::new()),
-            kind,
-        }))
     }
 }
 

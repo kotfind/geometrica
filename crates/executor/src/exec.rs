@@ -34,8 +34,8 @@ pub enum ExecError {
     #[error("unexpected type: expected {expected}, got {got}")]
     UnexpectedType { expected: ValueType, got: ValueType },
 
-    #[error("cannot set! variable '{0}' as it is not defined")]
-    SetUndefinedVariable(Ident),
+    #[error("variable '{0}' is not defined")]
+    UndefinedVariable(Ident),
 
     #[error("cannot set! {old_type} variable '{name}' with {new_type} value")]
     SetDifferentType {
@@ -64,10 +64,24 @@ impl ExecScope {
         }
     }
 
+    pub fn delete(&mut self, name: Ident) -> Result<(), ExecError> {
+        let node = self
+            .get_node(&name)
+            .ok_or(ExecError::UndefinedVariable(name.clone()))?;
+
+        #[allow(clippy::mutable_key_type)]
+        let nodes_to_delete = node.get_nodes_to_delete();
+
+        self.nodes
+            .retain(|_name, node| !nodes_to_delete.contains(node));
+
+        Ok(())
+    }
+
     pub fn set(&self, name: Ident, value: Value) -> Result<(), ExecError> {
         let node = self
             .get_node(&name)
-            .ok_or(ExecError::SetUndefinedVariable(name.clone()))?;
+            .ok_or(ExecError::UndefinedVariable(name.clone()))?;
 
         if node.value_type() != value.value_type() {
             return Err(ExecError::SetDifferentType {
