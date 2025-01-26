@@ -1,6 +1,4 @@
-{
-    pkgs ? import <nixpkgs> {},
-}:
+{ pkgs, ... }:
 pkgs.mkShell {
     name = "geometrica";
 
@@ -15,4 +13,6 @@ pkgs.mkShell {
     nativeBuildInputs = with pkgs; [
         pkg-config
     ];
+
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.openssl ];
 }
