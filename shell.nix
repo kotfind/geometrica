@@ -1,20 +1,34 @@
 { pkgs, ... }:
-pkgs.mkShell {
+let
+    # Source: https://github.com/iced-rs/iced/blob/master/DEPENDENCIES.md
+    icedDeps = with pkgs; [
+        expat
+        fontconfig
+        freetype
+        freetype.dev
+        libGL
+        pkg-config
+        xorg.libX11
+        xorg.libXcursor
+        xorg.libXi
+        xorg.libXrandr
+        wayland
+        libxkbcommon
+        openssl
+    ];
+in
+pkgs.mkShell rec {
     name = "geometrica";
 
-    buildInputs = with pkgs; [
+    nativeBuildInputs = with pkgs; [
         cargo
         rustc
+        rustfmt
+        clippy
+
         gcc
         pkg-config
-        openssl
-        clippy
-        rustfmt
-    ];
+    ] ++ icedDeps;
 
-    nativeBuildInputs = with pkgs; [
-        pkg-config
-    ];
-
-    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.openssl ];
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath nativeBuildInputs;
 }
