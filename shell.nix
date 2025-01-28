@@ -8,6 +8,8 @@ pkgs.mkShell {
         gcc
         pkg-config
         openssl
+        clippy
+        rustfmt
     ];
 
     nativeBuildInputs = with pkgs; [
