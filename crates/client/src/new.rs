@@ -1,12 +1,14 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    process::{Child, Stdio},
+    process::{Child, Command, Stdio},
 };
 
 use anyhow::{bail, Context};
 use reqwest::Url;
 
 use crate::{client::ClientSettings, Client};
+
+static SERVER_BINARY_NAME: &str = "server";
 
 impl Client {
     const SCHEMA: &str = "http";
@@ -77,22 +79,18 @@ impl Client {
         let tmpdir = tempfile::tempdir().unwrap();
         let addr_file = tmpdir.path().join("addr");
 
-        let child = if cfg!(debug_assertions) {
-            test_bin::get_test_bin("server")
-        } else {
-            todo!()
-        }
-        .args([
-            "--bind",
-            &format!("127.0.0.1:{port}"),
-            "--write-addr",
-            &addr_file.to_string_lossy(),
-        ])
-        .stderr(Stdio::null())
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .spawn()
-        .context("failed to spawn server process")?;
+        let child = Command::new(SERVER_BINARY_NAME)
+            .args([
+                "--bind",
+                &format!("127.0.0.1:{port}"),
+                "--write-addr",
+                &addr_file.to_string_lossy(),
+            ])
+            .stderr(Stdio::null())
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .spawn()
+            .context("failed to spawn server process")?;
 
         // TODO: wait in async
         while !addr_file.exists() { /* BLOCK */ }
