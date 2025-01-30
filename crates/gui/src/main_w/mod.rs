@@ -1,4 +1,3 @@
-use client::Client;
 use iced::{Element, Task};
 
 mod connected_w;
@@ -25,15 +24,6 @@ pub enum Msg {
 impl State {
     pub const TITLE: &str = "Geometrica GUI";
 
-    pub fn run_with() -> (Self, Task<Msg>) {
-        (
-            Default::default(),
-            Task::perform(State::connect(), |client| {
-                Msg::DisconnectedMsg(disconnected_w::Msg::Connected(client))
-            } /* FIXME */),
-        )
-    }
-
     pub fn view(&self) -> Element<Msg> {
         match self {
             State::Connected(state) => state.view().map(Msg::ConnectedMsg),
@@ -41,7 +31,7 @@ impl State {
         }
     }
 
-    pub fn update(&mut self, msg: Msg) {
+    pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match (&mut *self, msg) {
             (State::Connected(state), Msg::ConnectedMsg(msg)) => {
                 state.update(msg);
@@ -52,18 +42,14 @@ impl State {
                 if let disconnected_w::Msg::Connected(client) = msg {
                     *self = State::Connected(connected_w::State::new(client));
                 } else {
-                    state.update(msg);
+                    return state.update(msg).map(Msg::DisconnectedMsg);
                 }
             }
             _ => {
                 println!("WARN: Unexpected message type for current state");
             }
-        }
-    }
+        };
 
-    async fn connect() -> Client {
-        // TODO: settings
-        // TODO: fix unwrap
-        Client::from(Default::default()).await.unwrap()
+        Task::none()
     }
 }
