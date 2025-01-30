@@ -1,6 +1,8 @@
 use iced::{
+    font::Weight,
     widget::{button, column, horizontal_rule, row, scrollable, text, text_input, Column},
-    Element,
+    Alignment::Center,
+    Element, Font,
     Length::Fill,
 };
 
@@ -35,12 +37,22 @@ impl State {
 
         let cmd_button = button(">").on_press(Msg::SendCommand);
 
-        column![messages, row![cmd_input, cmd_button].padding(5).spacing(5)]
-            .padding(5)
-            .spacing(5)
-            .width(Fill)
-            .height(Fill)
-            .into()
+        let tilte = text("Commands").font(Font {
+            weight: Weight::Bold,
+            ..Default::default()
+        });
+
+        column![
+            tilte,
+            messages,
+            row![cmd_input, cmd_button].padding(5).spacing(5)
+        ]
+        .padding(5)
+        .spacing(5)
+        .width(Fill)
+        .height(Fill)
+        .align_x(Center)
+        .into()
     }
 
     fn view_messages(&self) -> Element<Msg> {
