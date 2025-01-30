@@ -7,6 +7,6 @@ edition = "2021"
 anyhow = "1.0.95"
 client = { path = "../client" }
 types = { path = "../types" }
-iced = { version = "0.13.1", features = ["canvas"] }
+iced = { version = "0.13.1", features = ["canvas", "tokio"] }
 iced_aw = { version = "0.11.0", default-features = false, features = ["grid"] }
 itertools = "0.14.0"

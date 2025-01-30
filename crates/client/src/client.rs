@@ -1,6 +1,7 @@
 use std::{
     net::{IpAddr, Ipv4Addr},
     process::Child,
+    sync::{Arc, Mutex},
 };
 
 use anyhow::{anyhow, Context};
@@ -24,16 +25,19 @@ pub struct ClientSettings {
     // TODO: server args
 }
 
+#[derive(Debug, Clone)]
 pub struct Client {
     pub(crate) server_url: Url,
     pub(crate) client: reqwest::Client,
-    pub(crate) server_process: Option<Child>,
+    // FIXME
+    // Arc<Mutex<...>> is a workarround to make client Clone-able
+    pub(crate) server_process: Arc<Mutex<Option<Child>>>,
     pub(crate) kill_server_on_drop: bool,
 }
 
 impl Client {
     pub(crate) fn kill_server(&mut self) -> anyhow::Result<()> {
-        if let Some(child) = &mut self.server_process {
+        if let Some(child) = &mut *self.server_process.lock().unwrap() {
             child.kill().context("failed to kill server process")?;
         }
         Ok(())

@@ -1,6 +1,7 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     process::{Child, Command, Stdio},
+    sync::{Arc, Mutex},
 };
 
 use anyhow::{bail, Context};
@@ -25,7 +26,7 @@ impl Client {
         Ok(Self {
             server_url,
             client,
-            server_process: child,
+            server_process: Arc::new(Mutex::new(child)),
             kill_server_on_drop: settings.kill_server_on_drop,
         })
     }

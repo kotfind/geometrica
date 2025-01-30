@@ -1,35 +1,28 @@
 use std::collections::HashMap;
 
-use iced::{widget::row, Element, Length::Fill};
-use types::core::{Pt, Value};
+use client::Client;
+use iced::{widget::row, Element, Length::Fill, Task};
+use types::core::Value;
 
 mod command_w;
 mod variable_w;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct State {
     command_w: command_w::State,
     vars: HashMap<String, Value>,
+
+    // Would be None if not connected
+    client: Option<Client>,
 }
 
 #[derive(Debug, Clone)]
 enum Msg {
     CommandWMsg(command_w::Msg),
+    Connected(Client),
 }
 
 impl State {
-    fn new() -> Self {
-        Self {
-            command_w: Default::default(),
-            vars: HashMap::from([
-                // FIXME: Dummy
-                ("x".to_string(), 1.0.into()),
-                ("y".to_string(), 2.0.into()),
-                ("z".to_string(), Pt { x: 3.0, y: 4.0 }.into()),
-            ]),
-        }
-    }
-
     fn view(&self) -> Element<Msg> {
         row![
             variable_w::view(&self.vars),
@@ -43,17 +36,26 @@ impl State {
     fn update(&mut self, msg: Msg) {
         match msg {
             Msg::CommandWMsg(msg) => self.command_w.update(msg),
+            Msg::Connected(client) => {
+                self.client = Some(client);
+            }
         }
     }
-}
 
-impl Default for State {
-    fn default() -> Self {
-        Self::new()
+    async fn connect() -> Client {
+        // TODO: settings
+        // TODO: fix unwrap
+        Client::from(Default::default()).await.unwrap()
     }
 }
 
 fn main() -> anyhow::Result<()> {
-    iced::run("Geometrica Gui", State::update, State::view)?;
+    iced::application("Geometrica Gui", State::update, State::view).run_with(|| {
+        (
+            Default::default(),
+            Task::perform(State::connect(), Msg::Connected),
+        )
+    })?;
+
     Ok(())
 }
