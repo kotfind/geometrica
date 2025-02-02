@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context};
 use parser::ParseInto;
 use types::lang::{Command, CommandArg};
 
-use crate::{table::Table, Client};
+use crate::{table::Table, Client, ScriptResult};
 
 macro_rules! unwrap_cmd_arg {
     (END FROM $args:ident) => {
@@ -27,25 +27,38 @@ macro_rules! unwrap_cmd_arg {
     };
 }
 
-pub enum CommandResult {
-    Table(Table),
-    Ok,
-}
-
 impl Client {
     /// Parses and executes `cmd`. Returns output of command in a form of a table of strings.
-    /// Parsing output table is not recommended as it may change. Use output for printing only.
-    pub async fn command(&self, cmd: impl ParseInto<Command>) -> anyhow::Result<CommandResult> {
-        let cmd = cmd.parse_into().context("failed to parse command")?;
+    /// Parsing output table is not recommended as the format. Use output for printing only.
+    pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
+        let cmd = match cmd.parse_into().context("failed to parse command") {
+            Ok(cmd) => cmd,
+            Err(e) => return ScriptResult::error(e),
+        };
 
         match &cmd.name.0 as &str {
-            "get" => self.get_cmd(cmd.args).await.map(CommandResult::Table),
-            "get_all" => self.get_all_cmd(cmd.args).await.map(CommandResult::Table),
-            "eval" => self.eval_cmd(cmd.args).await.map(CommandResult::Table),
-            "set" => self.set_cmd(cmd.args).await.map(|()| CommandResult::Ok),
-            "delete" => self.delete_cmd(cmd.args).await.map(|()| CommandResult::Ok),
-            _ => bail!("undefined command: {}", cmd.name),
+            "get" => self
+                .get_cmd(cmd.args)
+                .await
+                .map(|_| ScriptResult::ok_none()),
+
+            "get_all" => self.get_all_cmd(cmd.args).await.map(ScriptResult::ok_one),
+
+            "eval" => self.eval_cmd(cmd.args).await.map(ScriptResult::ok_one),
+
+            "set" => self
+                .set_cmd(cmd.args)
+                .await
+                .map(|_| ScriptResult::ok_none()),
+
+            "delete" => self
+                .delete_cmd(cmd.args)
+                .await
+                .map(|_| ScriptResult::ok_none()),
+
+            _ => Err(anyhow!("undefined command: {}", cmd.name)),
         }
+        .unwrap_or_else(|e| ScriptResult::error(e))
     }
 
     async fn get_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {
@@ -124,3 +137,5 @@ impl Client {
         Ok(())
     }
 }
+
+// TODO: add tests

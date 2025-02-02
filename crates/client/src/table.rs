@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Table<T = String, H = String> {
     header: Vec<H>,
     rows: Vec<Vec<T>>,

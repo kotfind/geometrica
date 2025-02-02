@@ -2,46 +2,48 @@ use anyhow::Context;
 use parser::ParseInto;
 use types::lang::Statement;
 
-use crate::{Client, CommandResult};
+use crate::{Client, ScriptResult};
 
 impl Client {
     /// Parses and executes script. Returns a table-result for each command.
-    pub async fn exec(
-        &self,
-        script: impl ParseInto<Vec<Statement>>,
-    ) -> anyhow::Result<Vec<CommandResult>> {
-        let script = script.parse_into().context("failed to parse script")?;
+    pub async fn exec(&self, script: impl ParseInto<Vec<Statement>>) -> ScriptResult {
+        let script = match script.parse_into().context("failed to parse script") {
+            Ok(x) => x,
+            Err(e) => return ScriptResult::error(e),
+        };
+
         let mut ans = Vec::new();
 
         for stmt in script {
-            if let Some(res) = self.exec_one(stmt).await? {
-                ans.push(res);
+            let res = self.exec_one(stmt).await;
+            ans.extend(res.results);
+
+            if let Some(err) = res.error {
+                return ScriptResult::partail_error(ans, err);
             }
         }
 
-        Ok(ans)
+        ScriptResult::ok(ans)
     }
 
     /// Parses and executes a statement. Returns a table-result if statement was a command.
-    pub async fn exec_one(
-        &self,
-        script: impl ParseInto<Statement>,
-    ) -> anyhow::Result<Option<CommandResult>> {
-        let stmt = script.parse_into().context("failed to parse script")?;
+    pub async fn exec_one(&self, script: impl ParseInto<Statement>) -> ScriptResult {
+        let stmt = match script.parse_into().context("failed to parse script") {
+            Ok(x) => x,
+            Err(e) => return ScriptResult::error(e),
+        };
 
-        Ok(match stmt {
+        match stmt {
             Statement::Definition(def) => {
-                self.define_one(def).await.context("define failed")?;
-                None
+                match self.define_one(def).await.context("define failed") {
+                    Ok(()) => ScriptResult::ok_none(),
+                    Err(err) => ScriptResult::error(err),
+                }
             }
 
-            Statement::Command(cmd) => {
-                let res = self
-                    .command(cmd)
-                    .await
-                    .context("failed to execute command")?;
-                Some(res)
-            }
-        })
+            Statement::Command(cmd) => self.command(cmd).await.context("failed to execute command"),
+        }
     }
 }
+
+// TODO: add tests

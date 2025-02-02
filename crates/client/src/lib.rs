@@ -1,5 +1,5 @@
 pub use client::{Client, ClientSettings};
-pub use command::CommandResult;
+pub use script_result::ScriptResult;
 pub use table::Table;
 
 mod client;
@@ -10,5 +10,6 @@ mod eval;
 mod exec;
 mod items;
 mod new;
+mod script_result;
 mod set;
 mod table;
