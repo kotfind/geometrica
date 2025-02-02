@@ -58,7 +58,7 @@ impl Client {
 
             _ => Err(anyhow!("undefined command: {}", cmd.name)),
         }
-        .unwrap_or_else(|e| ScriptResult::error(e))
+        .unwrap_or_else(ScriptResult::error)
     }
 
     async fn get_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {

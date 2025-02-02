@@ -2,15 +2,10 @@ use std::{net::SocketAddr, path::PathBuf, str::FromStr};
 
 use anyhow::Context;
 use clap::Parser;
-use client::{Client, ClientSettings, CommandResult};
-use tabled::{
-    builder::Builder,
-    settings::{
-        object::{Cell, Segment},
-        Alignment, Modify, Span, Style, Width,
-    },
-};
+use client::{Client, ClientSettings};
+use printing::ScriptResultPrinter;
 
+mod printing;
 mod script_file_mode;
 mod stdin_mode;
 mod tty_mode;
@@ -53,56 +48,16 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn print_table(from: client::Table) {
-    // Create and fill table
-    let mut to = Builder::new();
-
-    to.push_record(from.header());
-
-    if !from.is_empty() {
-        for row in from.rows() {
-            to.push_record(row);
-        }
-    } else {
-        to.push_record(["*empty*"]);
-    }
-
-    // Apply styles
-    let mut to = to.build();
-    to.with(Style::rounded());
-
-    if from.is_empty() {
-        to.with(
-            Modify::new(Cell::new(1, 0))
-                .with(Span::column(from.width()))
-                .with(Alignment::center()),
-        );
-    }
-
-    if let Some(width) = termsize::get().map(|size| size.cols) {
-        to.with(Modify::new(Segment::all()).with(Width::wrap(width as usize - from.width() * 6 /* XXX: magic constant that works for whatever reason */)));
-    }
-
-    // Print
-    println!("{}", to)
-}
-
-fn print_command_res(res: CommandResult) {
-    match res {
-        CommandResult::Table(table) => print_table(table),
-        CommandResult::Ok => println!("Ok"),
-    }
-}
-
 async fn exec(client: &Client, script: impl ToString) -> anyhow::Result<()> {
     let res = client
         .exec(script.to_string())
         .await
-        .context("failed to execute script")?;
+        .context("failed to execute script");
 
-    for res_line in res {
-        print_command_res(res_line);
+    print!("{}", ScriptResultPrinter(&res));
+
+    match res.error {
+        Some(err) => Err(err),
+        None => Ok(()),
     }
-
-    Ok(())
 }

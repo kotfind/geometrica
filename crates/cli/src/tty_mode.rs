@@ -4,6 +4,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 use crate::exec;
 
+/// Note: won't fail if some of commands failed
 pub async fn run(client: Client) -> anyhow::Result<()> {
     let mut reader = BufReader::new(tokio::io::stdin());
     let mut script: Option<String> = None;
@@ -26,7 +27,7 @@ pub async fn run(client: Client) -> anyhow::Result<()> {
                 // ...
                 // ;; <- HERE
 
-                exec(&client, script_).await?;
+                let _ = exec(&client, script_).await;
 
                 script = None;
             }
@@ -47,7 +48,7 @@ pub async fn run(client: Client) -> anyhow::Result<()> {
             None => {
                 // Not in ;;-block
 
-                exec(&client, line).await?;
+                let _ = exec(&client, line).await;
             }
         }
     }
