@@ -34,7 +34,7 @@ impl State {
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match (&mut *self, msg) {
             (State::Connected(state), Msg::ConnectedMsg(msg)) => {
-                state.update(msg);
+                return state.update(msg).map(Msg::ConnectedMsg);
             }
             (State::Disconnected(state), Msg::DisconnectedMsg(msg)) =>
             {

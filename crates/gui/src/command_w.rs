@@ -1,41 +1,52 @@
+use std::{iter, sync::Arc};
+
+use client::{Client, ScriptResult, Table};
 use iced::{
     font::Weight,
-    widget::{button, column, horizontal_rule, row, scrollable, text, text_input, Column},
+    widget::{button, column, row, scrollable, text, text_input, Column, Text},
     Alignment::Center,
     Element, Font,
     Length::Fill,
+    Task, Theme,
 };
+use iced_aw::{grid_row, Grid, GridRow};
+use itertools::Itertools;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct State {
-    messages: Vec<Message>,
-    cmd_input: String,
-}
-
-// A message from client to server (Request)
-// or from server to client (Response).
-#[derive(Clone, Debug)]
-enum Message {
-    Command(String),
-    Response(String),
+    scripts_and_results: Vec<ScriptOrResult>,
+    script_input: String,
+    client: Client,
 }
 
 #[derive(Debug, Clone)]
 pub enum Msg {
-    CommandInputChanged(String),
-    SendCommand,
+    ScriptInputChanged(String),
+    SendScript,
+    // Arc-ing ScriptResult to make in Clonable
+    GotScriptResult(Arc<ScriptResult>),
 }
 
 impl State {
-    pub fn view(&self) -> Element<Msg> {
-        let messages = scrollable(self.view_messages()).width(Fill).height(Fill);
+    pub fn new(client: Client) -> Self {
+        Self {
+            scripts_and_results: Default::default(),
+            script_input: Default::default(),
+            client,
+        }
+    }
 
-        let cmd_input = text_input("Command", &self.cmd_input)
-            .on_input(Msg::CommandInputChanged)
-            .on_submit(Msg::SendCommand)
+    pub fn view(&self) -> Element<Msg> {
+        let scripts_and_results = scrollable(self.view_scripts_and_results())
+            .width(Fill)
+            .height(Fill);
+
+        let script_input = text_input("Script", &self.script_input)
+            .on_input(Msg::ScriptInputChanged)
+            .on_submit(Msg::SendScript)
             .width(Fill);
 
-        let cmd_button = button(">").on_press(Msg::SendCommand);
+        let submit_button = button(">").on_press(Msg::SendScript);
 
         let tilte = text("Commands").font(Font {
             weight: Weight::Bold,
@@ -44,8 +55,8 @@ impl State {
 
         column![
             tilte,
-            messages,
-            row![cmd_input, cmd_button].padding(5).spacing(5)
+            scripts_and_results,
+            row![script_input, submit_button].padding(5).spacing(5)
         ]
         .padding(5)
         .spacing(5)
@@ -55,43 +66,107 @@ impl State {
         .into()
     }
 
-    fn view_messages(&self) -> Element<Msg> {
-        let mut col = Column::new();
+    fn view_scripts_and_results(&self) -> Element<Msg> {
+        let mut grd = Grid::new();
 
-        let mut is_first = true;
-        for message in &self.messages {
-            let (sender, txt) = match message {
-                Message::Command(txt) => ("CLIENT", txt),
-                Message::Response(txt) => ("SERVER", txt),
-            };
-
-            if is_first {
-                is_first = false;
-            } else {
-                col = col.push(horizontal_rule(2));
-            }
-
-            col = col.push(text(format!("[{}]: {}", sender, txt)).width(Fill));
+        for script_or_result in &self.scripts_and_results {
+            grd = script_or_result.push_to_grid(grd);
         }
 
-        col.width(Fill).spacing(1).into()
+        grd.into()
     }
 
-    pub fn update(&mut self, msg: Msg) {
+    pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match msg {
-            Msg::CommandInputChanged(cmd) => self.cmd_input = cmd,
-            Msg::SendCommand => {
-                let cmd = self.cmd_input.clone();
-                if cmd.is_empty() {
-                    return;
+            Msg::ScriptInputChanged(script) => self.script_input = script,
+
+            Msg::SendScript => {
+                let script = self.script_input.clone();
+                if script.is_empty() {
+                    return Task::none();
                 }
-                self.cmd_input.clear();
-                self.messages.push(Message::Command(cmd.clone()));
-                // TODO: actually send command
-                // TODO: delete dummy (next line):
-                self.messages
-                    .push(Message::Response(format!("Response to cmd: {cmd}")));
+                self.script_input.clear();
+                self.scripts_and_results
+                    .push(ScriptOrResult::Script(script.clone()));
+                return Task::perform(Self::send_script(self.client.clone(), script), |res| {
+                    Msg::GotScriptResult(Arc::new(res))
+                });
+            }
+
+            Msg::GotScriptResult(script_result) => {
+                self.scripts_and_results
+                    .push(ScriptOrResult::Result(script_result));
             }
         }
+
+        Task::none()
+    }
+
+    async fn send_script(client: Client, script: String) -> ScriptResult {
+        client.exec(script).await
+    }
+}
+
+#[derive(Clone, Debug)]
+enum ScriptOrResult {
+    Script(String),
+
+    // Note: Arc-ing ScriptResult to make it Clonable
+    Result(Arc<ScriptResult>),
+}
+
+impl ScriptOrResult {
+    fn push_to_grid<'a, MSG: 'static>(&'a self, grd: Grid<'a, MSG>) -> Grid<'a, MSG> {
+        let row = match self {
+            ScriptOrResult::Script(script) => {
+                let sender: Text<Theme> = text("ME");
+
+                let body: Text<Theme> = text(script);
+
+                grid_row![sender, body]
+            }
+            ScriptOrResult::Result(res) => {
+                let sender: Text<Theme> = text("SERVER");
+
+                let mut body = Column::new();
+
+                for table in &res.results {
+                    body = body.push(Self::table_to_grid(table));
+                }
+
+                if let Some(err) = &res.error {
+                    body = body.push(text!("{:?}", err));
+                }
+
+                grid_row![sender, body]
+            }
+        };
+
+        grd.push(row)
+    }
+
+    fn table_to_grid<MSG>(table: &Table) -> Grid<'_, MSG> {
+        let header = table
+            .header()
+            .iter()
+            .map(|txt| {
+                text(txt).font(Font {
+                    weight: Weight::Bold,
+                    ..Default::default()
+                })
+            })
+            .collect_vec();
+
+        let body = table
+            .rows()
+            .iter()
+            .map(|row| row.iter().map(text).collect_vec())
+            .collect_vec();
+
+        let rows = iter::once(header)
+            .chain(body)
+            .map(|row| GridRow::with_elements(row));
+
+        Grid::with_rows(rows.collect_vec())
     }
 }

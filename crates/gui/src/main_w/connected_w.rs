@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use client::Client;
-use iced::{widget::row, Element, Length::Fill};
+use iced::{widget::row, Element, Length::Fill, Task};
 use types::core::Value;
 
 use crate::{command_w, variable_w};
@@ -10,14 +10,12 @@ use crate::{command_w, variable_w};
 pub struct State {
     command_w: command_w::State,
     vars: HashMap<String, Value>,
-    client: Client,
 }
 
 impl State {
     pub fn new(client: Client) -> Self {
         Self {
-            client,
-            command_w: Default::default(),
+            command_w: command_w::State::new(client),
             vars: Default::default(),
         }
     }
@@ -39,9 +37,9 @@ impl State {
         .into()
     }
 
-    pub fn update(&mut self, msg: Msg) {
+    pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match msg {
-            Msg::CommandWMsg(msg) => self.command_w.update(msg),
+            Msg::CommandWMsg(msg) => self.command_w.update(msg).map(Msg::CommandWMsg),
         }
     }
 }
