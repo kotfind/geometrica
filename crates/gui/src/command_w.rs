@@ -2,11 +2,12 @@ use std::{iter, sync::Arc};
 
 use client::{Client, ScriptResult, Table};
 use iced::{
+    alignment::Vertical,
     font::Weight,
     widget::{button, column, row, scrollable, text, text_input, Column, Text},
     Alignment::Center,
     Element, Font,
-    Length::Fill,
+    Length::{Fill, Shrink},
     Task, Theme,
 };
 use iced_aw::{grid_row, Grid, GridRow};
@@ -37,9 +38,21 @@ impl State {
     }
 
     pub fn view(&self) -> Element<Msg> {
-        let scripts_and_results = scrollable(self.view_scripts_and_results())
-            .width(Fill)
-            .height(Fill);
+        let scripts_and_results = {
+            let mut grd = Grid::new();
+
+            for script_or_result in &self.scripts_and_results {
+                grd = script_or_result.push_to_grid(grd);
+            }
+
+            grd = grd
+                .row_height(Shrink)
+                .vertical_alignment(Vertical::Top)
+                .column_spacing(5)
+                .row_spacing(10);
+
+            scrollable(grd).width(Fill).height(Fill)
+        };
 
         let script_input = text_input("Script", &self.script_input)
             .on_input(Msg::ScriptInputChanged)
@@ -64,16 +77,6 @@ impl State {
         .height(Fill)
         .align_x(Center)
         .into()
-    }
-
-    fn view_scripts_and_results(&self) -> Element<Msg> {
-        let mut grd = Grid::new();
-
-        for script_or_result in &self.scripts_and_results {
-            grd = script_or_result.push_to_grid(grd);
-        }
-
-        grd.into()
     }
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
@@ -119,23 +122,30 @@ impl ScriptOrResult {
     fn push_to_grid<'a, MSG: 'static>(&'a self, grd: Grid<'a, MSG>) -> Grid<'a, MSG> {
         let row = match self {
             ScriptOrResult::Script(script) => {
-                let sender: Text<Theme> = text("ME");
+                let sender: Text<Theme> = text("ME:");
 
                 let body: Text<Theme> = text(script);
 
                 grid_row![sender, body]
             }
             ScriptOrResult::Result(res) => {
-                let sender: Text<Theme> = text("SERVER");
+                let sender: Text<Theme> = text("SERVER:");
 
                 let mut body = Column::new();
+                let mut printed_something = false;
 
                 for table in &res.results {
                     body = body.push(Self::table_to_grid(table));
+                    printed_something = true;
                 }
 
                 if let Some(err) = &res.error {
                     body = body.push(text!("{:?}", err));
+                    printed_something = true;
+                }
+
+                if !printed_something {
+                    body = body.push(text("Ok"));
                 }
 
                 grid_row![sender, body]
@@ -145,7 +155,7 @@ impl ScriptOrResult {
         grd.push(row)
     }
 
-    fn table_to_grid<MSG>(table: &Table) -> Grid<'_, MSG> {
+    fn table_to_grid<MSG: 'static>(table: &Table) -> Grid<'_, MSG> {
         let header = table
             .header()
             .iter()
@@ -160,13 +170,12 @@ impl ScriptOrResult {
         let body = table
             .rows()
             .iter()
-            .map(|row| row.iter().map(text).collect_vec())
-            .collect_vec();
+            .map(|row| row.iter().map(text).collect_vec());
 
         let rows = iter::once(header)
             .chain(body)
             .map(|row| GridRow::with_elements(row));
 
-        Grid::with_rows(rows.collect_vec())
+        Grid::with_rows(rows.collect_vec()).spacing(5)
     }
 }
