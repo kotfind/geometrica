@@ -40,7 +40,9 @@ impl State {
             {
                 #[allow(irrefutable_let_patterns)]
                 if let disconnected_w::Msg::Connected(client) = msg {
-                    *self = State::Connected(connected_w::State::new(client));
+                    let (connected, task) = connected_w::State::run_with(client);
+                    *self = State::Connected(connected);
+                    return task.map(Msg::ConnectedMsg);
                 } else {
                     return state.update(msg).map(Msg::DisconnectedMsg);
                 }

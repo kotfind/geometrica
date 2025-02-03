@@ -9,9 +9,9 @@ use iced::{
 };
 use iced_aw::{grid, grid_row};
 use itertools::Itertools;
-use types::core::Value;
+use types::core::{Ident, Value};
 
-pub fn view<MSG: 'static>(vars: &HashMap<String, Value>) -> Element<MSG> {
+pub fn view<MSG: 'static>(vars: &HashMap<Ident, Value>) -> Element<MSG> {
     let bold = Font {
         weight: Weight::Bold,
         ..Default::default()
@@ -25,8 +25,8 @@ pub fn view<MSG: 'static>(vars: &HashMap<String, Value>) -> Element<MSG> {
 
     let body = vars
         .iter()
-        .sorted_by(|(var_name_1, _), (var_name_2, _)| Ord::cmp(var_name_1, var_name_2))
-        .map(|(var_name, var_val)| grid_row![text(var_name), text(var_val.to_string())]);
+        .sorted_by(|(var_name_1, _), (var_name_2, _)| Ord::cmp(&var_name_1.0, &var_name_2.0))
+        .map(|(var_name, var_val)| grid_row![text(&var_name.0), text(var_val.to_string())]);
 
     let rows = std::iter::once(header).chain(body).collect_vec();
 
