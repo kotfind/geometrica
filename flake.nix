@@ -1,17 +1,42 @@
 {
     description = "Geometrica";
 
-    inputs = {
-        flake-utils.url = "github:numtide/flake-utils";
-    };
-
-    outputs = { nixpkgs, flake-utils, ... }: flake-utils.lib.eachDefaultSystem
-        (system:
-            let
-                pkgs = nixpkgs.legacyPackages.${system};
+    outputs = { nixpkgs, ... }:
+        let
+            system = "x86_64-linux";
+            pkgs = import nixpkgs { inherit system; };
+        in
+        {
+            devShells.${system}.default = let
+                # Source: https://github.com/iced-rs/iced/blob/master/DEPENDENCIES.md
+                icedDeps = with pkgs; [
+                    expat
+                    fontconfig
+                    freetype
+                    freetype.dev
+                    libGL
+                    pkg-config
+                    xorg.libX11
+                    xorg.libXcursor
+                    xorg.libXi
+                    xorg.libXrandr
+                    wayland
+                    libxkbcommon
+                    openssl
+                ];
             in
-            {
-                devShells.default = import ./shell.nix { inherit pkgs; };
-            }
-        );
+            pkgs.mkShell rec {
+                nativeBuildInputs = with pkgs; [
+                    cargo
+                    rustc
+                    rustfmt
+                    clippy
+
+                    gcc
+                    pkg-config
+                ] ++ icedDeps;
+
+                LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath nativeBuildInputs;
+            };
+        };
 }
