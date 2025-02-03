@@ -1,5 +1,3 @@
-// Note: this file is so big and ugly as peg won't allow splitting grammar in multiple files
-
 pub use parse_into::ParseInto;
 pub use parser::lang::{command, definition, definitions, expr, script, statement};
 

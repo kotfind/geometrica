@@ -1,3 +1,5 @@
+// Note: this file is so big and ugly as peg won't allow splitting grammar in multiple files
+
 use types::{core::*, lang::*};
 
 use super::{binary, unary};
@@ -20,7 +22,7 @@ peg::parser! {
 
         pub rule command() -> Command
             = name:ident() "!"
-            __ args:(command_arg() ** __)
+            args:(__ arg:command_arg() { arg })*
         {
             Command { name, args }
         }
@@ -272,7 +274,10 @@ peg::parser! {
         }
 
         // -------------------- Whitespace & Comments --------------------
+        // Optional whitespace
         rule _ = quiet!{(comment() / whitespace())*}
+
+        // Mandatory whitespace
         rule __ = quiet!{(comment() / whitespace())+}
 
         // Just for testing `_` rule as it cannot be `pub`
