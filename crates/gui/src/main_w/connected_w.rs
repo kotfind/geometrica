@@ -4,7 +4,7 @@ use client::Client;
 use iced::{widget::row, Element, Length::Fill, Task};
 use types::core::{Ident, Value};
 
-use crate::{command_w, variable_w};
+use crate::{canvas_w, command_w, variable_w};
 
 #[derive(Debug)]
 pub struct State {
@@ -16,6 +16,7 @@ pub struct State {
 #[derive(Debug, Clone)]
 pub enum Msg {
     CommandWMsg(command_w::Msg),
+    CanvasWMsg(canvas_w::Msg),
     GotVars(HashMap<Ident, Value>),
 }
 
@@ -34,6 +35,7 @@ impl State {
     pub fn view(&self) -> Element<Msg> {
         row![
             variable_w::view(&self.vars),
+            canvas_w::view(&self.vars).map(Msg::CanvasWMsg),
             self.command_w.view().map(Msg::CommandWMsg)
         ]
         .width(Fill)
