@@ -12,9 +12,6 @@ use types::core::{Circ, Ident, Line, Pt, Value};
 #[derive(Debug, Clone)]
 pub enum Msg {}
 
-#[derive(Debug, Default)]
-pub struct State {}
-
 pub fn view(vars: &HashMap<Ident, Value>) -> Element<Msg> {
     canvas::Canvas::new(Program { vars })
         .width(Fill)

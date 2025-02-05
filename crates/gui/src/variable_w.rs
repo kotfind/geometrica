@@ -1,12 +1,6 @@
 use std::collections::HashMap;
 
-use iced::{
-    font::Weight,
-    widget::{column, text},
-    Alignment::Center,
-    Element, Font,
-    Length::Fill,
-};
+use iced::{font::Weight, widget::text, Element, Font, Length::Fill};
 use iced_aw::{grid, grid_row};
 use itertools::Itertools;
 use types::core::{Ident, Value};
@@ -30,14 +24,9 @@ pub fn view<MSG: 'static>(vars: &HashMap<Ident, Value>) -> Element<MSG> {
 
     let rows = std::iter::once(header).chain(body).collect_vec();
 
-    let grd = grid(rows).column_width(Fill).width(Fill);
-
-    let title = text("Variables").font(bold);
-
-    column![title, grd]
+    grid(rows)
+        .column_width(Fill)
         .width(Fill)
-        .height(Fill)
-        .align_x(Center)
         .padding(5)
         .spacing(5)
         .into()

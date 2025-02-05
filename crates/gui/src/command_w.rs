@@ -61,13 +61,7 @@ impl State {
 
         let submit_button = button(">").on_press(Msg::SendScript);
 
-        let tilte = text("Commands").font(Font {
-            weight: Weight::Bold,
-            ..Default::default()
-        });
-
         column![
-            tilte,
             scripts_and_results,
             row![script_input, submit_button].padding(5).spacing(5)
         ]
