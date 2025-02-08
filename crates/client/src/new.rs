@@ -1,11 +1,8 @@
-use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr},
-    process::{Child, Command, Stdio},
-    sync::{Arc, Mutex},
-};
+use std::process::{Child, Command, Stdio};
 
 use anyhow::{bail, Context};
 use reqwest::Url;
+use url::Host;
 
 use crate::{client::ClientSettings, Client};
 
@@ -18,74 +15,89 @@ impl Client {
         Self::from(Default::default()).await
     }
 
+    /// Same as [Self::from_with_child] but won't return [Child].
     pub async fn from(settings: ClientSettings) -> anyhow::Result<Self> {
-        let client = reqwest::Client::new();
-
-        let (server_url, child) = Self::get_server_url_and_child(client.clone(), &settings).await?;
-
-        Ok(Self {
-            server_url,
-            client,
-            server_process: Arc::new(Mutex::new(child)),
-            kill_server_on_drop: settings.kill_server_on_drop,
-        })
+        Self::from_with_child(settings)
+            .await
+            .map(|(client, _child)| client)
     }
 
-    async fn get_server_url_and_child(
-        client: reqwest::Client,
-        settings: &ClientSettings,
-    ) -> anyhow::Result<(Url, Option<Child>)> {
-        let ClientSettings {
-            ip,
-            port,
-            do_init_server,
-            ..
-        } = settings;
+    /// Tries to create a client, and returns the client and optionaly server's process.
+    /// Process provided if and only if server was spawned by this client.
+    pub async fn from_with_child(
+        settings: ClientSettings,
+    ) -> anyhow::Result<(Self, Option<Child>)> {
+        let client = reqwest::Client::new();
+        let server_url = settings.server_url;
 
-        let server_url = Self::url_from_ip_port(settings.ip, settings.port);
-
-        if Self::can_ping_server(client.clone(), server_url.clone()).await {
-            return Ok((server_url, None));
+        if server_url.fragment().is_some() {
+            bail!("server_url shouldn't have a fragment");
         }
 
-        if !do_init_server || !ip.is_loopback() {
-            bail!(
-                "failed to connect to server at {server_url}; won't try to spawn as {reason}",
-                reason = if !do_init_server {
-                    "do_init_server is false"
-                } else {
-                    "server address is not localhost"
-                }
-            );
+        if Self::ping_server_with_url(client.clone(), server_url.clone()).await {
+            return Ok((Client { server_url, client }, None));
         }
 
-        let (port, child) = Self::spawn_server(*port)
+        let server_to_spawn_port =
+            Self::is_spawnable(server_url.clone(), settings.try_spawn_server)
+                .context("won's try spawning a server")
+                .context("failed to connect to server")?;
+
+        let (server_port, server_child) = Self::spawn_server(server_to_spawn_port)
             .await
             .context("failed to spawn server")?;
 
-        Ok((
-            Self::url_from_ip_port(Ipv4Addr::LOCALHOST.into(), port),
-            Some(child),
-        ))
+        let server_url = Url::parse(&format!("http://127.0.0.1:{server_port}"))
+            .expect("failed to parse server url");
+
+        Ok((Client { server_url, client }, Some(server_child)))
     }
 
-    fn url_from_ip_port(ip: IpAddr, port: u16) -> Url {
-        format!("{SCHEMA}://{ip}:{port}", SCHEMA = Self::SCHEMA)
-            .parse()
-            .unwrap()
+    /// Return Err if NOT spawnable and a port for server to listen on otherwise.
+    fn is_spawnable(server_url: Url, try_spawn_server: bool) -> anyhow::Result<u16> {
+        if !try_spawn_server {
+            bail!("settings.try_spawn_server = false");
+        }
+
+        if server_url.scheme() != Self::SCHEMA {
+            bail!("unsupported schema in server_url");
+        }
+
+        {
+            let path = server_url.path();
+            if path != "/" && !path.is_empty() {
+                bail!("server_url path is not empty: '{path}'");
+            }
+        }
+
+        match server_url.host() {
+            None => {
+                bail!("host not provided");
+            }
+            Some(Host::Domain("localhost")) => {}
+            Some(Host::Ipv4(ip)) if ip.is_loopback() => {}
+            Some(Host::Ipv6(ip)) if ip.is_loopback() => {}
+            _ => {
+                bail!("host is not a loopback");
+            }
+        }
+
+        Ok(server_url.port().unwrap_or(4242))
     }
 
+    /// Spawns a new server and returns a number of server's port (useful if port argument was 0)
+    /// and server's process.
     async fn spawn_server(port: u16) -> anyhow::Result<(u16, Child)> {
         // TODO: delete tempdir
         let tmpdir = tempfile::tempdir().unwrap();
-        let addr_file = tmpdir.path().join("addr");
+        let port_file = tmpdir.path().join("port");
 
-        let child = Command::new(SERVER_BINARY_NAME)
+        let mut child = Command::new(SERVER_BINARY_NAME)
             .args([
                 "--bind",
                 &format!("127.0.0.1:{port}"),
-                "--write-addr",
-                &addr_file.to_string_lossy(),
+                "--port-file",
+                &port_file.to_string_lossy(),
             ])
             .stderr(Stdio::null())
             .stdin(Stdio::null())
@@ -94,24 +106,27 @@ impl Client {
             .context("failed to spawn server process")?;
 
         // TODO: wait in async
-        while !addr_file.exists() { /* BLOCK */ }
+        while !port_file.exists() {
+            // BLOCK
+            if let Some(code) = child.try_wait().context("failed to read server status")? {
+                bail!("server failed with code {code}");
+            }
+        }
 
-        let addr = tokio::fs::read_to_string(addr_file.clone())
+        let port = tokio::fs::read_to_string(port_file.clone())
             .await
             .with_context(|| {
-                format!("failed to read addr_file '{}'", addr_file.to_string_lossy())
+                format!("failed to read port_file '{}'", port_file.to_string_lossy())
             })?;
 
-        let addr: SocketAddr = addr
+        let port: u16 = port
             .parse()
-            .with_context(|| format!("failed to parse {addr} as address"))?;
+            .with_context(|| format!("failed to parse {port} as port"))?;
 
-        assert_eq!(addr.ip(), Ipv4Addr::LOCALHOST);
-
-        Ok((addr.port(), child))
+        Ok((port, child))
     }
 
-    async fn can_ping_server(client: reqwest::Client, server_url: Url) -> bool {
+    async fn ping_server_with_url(client: reqwest::Client, server_url: Url) -> bool {
         client
             .post(server_url.join("ping").unwrap())
             .send()
@@ -122,30 +137,11 @@ impl Client {
 }
 
 #[cfg(test)]
-impl Client {
-    pub async fn new_test() -> anyhow::Result<Self> {
-        Self::from(ClientSettings::new_test()).await
-    }
-}
-
-#[cfg(test)]
-impl ClientSettings {
-    pub fn new_test() -> Self {
-        Self {
-            port: 0,
-            do_init_server: true,
-            kill_server_on_drop: true,
-            ..Default::default()
-        }
-    }
-}
-
-#[cfg(test)]
 mod test {
-    use super::*;
+    use crate::test_utils::TestClient;
 
     #[tokio::test]
     async fn connect() {
-        Client::new_test().await.unwrap();
+        TestClient::new().await;
     }
 }

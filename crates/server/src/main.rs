@@ -24,9 +24,9 @@ struct Cli {
     #[arg(long, default_value_t = SocketAddr::from_str("127.0.0.1:4242").unwrap())]
     bind: SocketAddr,
 
-    /// Writes listener address to <FILE> in format '{IP}:{PORT}'.
+    /// Write listener port to <FILE>. Is usefull when binding to port 0.
     #[arg(long, value_name = "FILE")]
-    write_addr: Option<PathBuf>,
+    port_file: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -46,8 +46,8 @@ async fn main() -> anyhow::Result<()> {
 
     let listener = TcpListener::bind(cli.bind).await?;
     let local_addr = listener.local_addr()?;
-    if let Some(write_addr_file) = cli.write_addr {
-        write_addr(local_addr, write_addr_file)?;
+    if let Some(port_file) = cli.port_file {
+        write_port(local_addr, port_file)?;
     }
     info!("Listening on {}...", local_addr);
 
@@ -57,30 +57,24 @@ async fn main() -> anyhow::Result<()> {
 }
 
 // TODO: delete file on close
-fn write_addr(local_addr: SocketAddr, write_addr_file: PathBuf) -> anyhow::Result<()> {
+fn write_port(local_addr: SocketAddr, port_file: PathBuf) -> anyhow::Result<()> {
     let tempfile = NamedTempFile::new_in({
-        let mut dir = write_addr_file.clone();
+        let mut dir = port_file.clone();
         dir.pop();
         dir
     })
     .context("failed to create tempfile")?;
-    write!(
-        tempfile.as_file(),
-        "{}:{}",
-        local_addr.ip(),
-        local_addr.port()
-    )
-    .with_context(|| {
+    write!(tempfile.as_file(), "{}", local_addr.port()).with_context(|| {
         format!(
-            "failed to write addr to {}",
+            "failed to write port to {}",
             tempfile.path().to_string_lossy()
         )
     })?;
-    std::fs::rename(tempfile.path(), write_addr_file.clone()).with_context(|| {
+    std::fs::rename(tempfile.path(), port_file.clone()).with_context(|| {
         format!(
             "failed to move {} to {}",
             tempfile.path().to_string_lossy(),
-            write_addr_file.to_string_lossy()
+            port_file.to_string_lossy()
         )
     })?;
     Ok(())

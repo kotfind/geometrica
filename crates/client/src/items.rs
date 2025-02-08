@@ -27,11 +27,13 @@ impl Client {
 
 #[cfg(test)]
 mod test {
+    use crate::test_utils::TestClient;
+
     use super::*;
 
     #[tokio::test]
     async fn get_all() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
 
         con.define(
             r#"
@@ -53,7 +55,7 @@ mod test {
 
     #[tokio::test]
     async fn get_item() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
 
         con.define(
             r#"

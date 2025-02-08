@@ -20,11 +20,11 @@ impl Client {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::test_utils::TestClient;
 
     #[tokio::test]
     async fn set() {
-        let client = Client::new_test().await.unwrap();
+        let client = TestClient::new().await;
 
         client
             .define(

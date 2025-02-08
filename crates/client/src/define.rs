@@ -28,11 +28,11 @@ impl Client {
 mod test {
     use types::core::Ident;
 
-    use super::*;
+    use crate::test_utils::TestClient;
 
     #[tokio::test]
     async fn simple() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
 
         con.define(
             r#"
@@ -54,7 +54,7 @@ mod test {
 
     #[tokio::test]
     async fn with_funcs() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
 
         con.define(
             r#"
@@ -79,7 +79,7 @@ mod test {
 
     #[tokio::test]
     async fn multiple_requests() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
 
         con.define(
             r#"

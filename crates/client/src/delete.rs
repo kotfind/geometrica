@@ -14,9 +14,11 @@ impl Client {
 mod test {
     use super::*;
 
+    use crate::test_utils::TestClient;
+
     #[tokio::test]
     async fn delete() {
-        let client = Client::new_test().await.unwrap();
+        let client = TestClient::new().await;
 
         client
             .define(

@@ -12,3 +12,4 @@ tokio = { version = "1.41.0", features = ["full"] }
 types = { path = "../types" }
 parser = { path = "../parser" }
 tempfile = "3.13.0"
+url = "2.5.4"

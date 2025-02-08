@@ -13,3 +13,6 @@ mod new;
 mod script_result;
 mod set;
 mod table;
+
+#[cfg(test)]
+mod test_utils;

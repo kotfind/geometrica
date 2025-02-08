@@ -36,17 +36,17 @@ impl Client {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::test_utils::TestClient;
 
     #[tokio::test]
     async fn eval() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
         assert_eq!(con.eval_one("1 + 1").await.unwrap(), 2.into());
     }
 
     #[tokio::test]
     async fn eval_multi() {
-        let con = Client::new_test().await.unwrap();
+        let con = TestClient::new().await;
         let mut res = con
             .eval(["1 + 1", "2 * 2", "x + 1"])
             .await

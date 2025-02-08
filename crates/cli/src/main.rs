@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
     let con = Client::from(ClientSettings {
         ip: cli.server_addr.ip(),
         port: cli.server_addr.port(),
-        do_init_server: cli.do_init_server,
+        try_spawn_server: cli.do_init_server,
         ..Default::default()
     })
     .await
