@@ -1,5 +1,3 @@
-use std::{net::SocketAddr, str::FromStr};
-
 use client::{Client, ClientSettings};
 use iced::{
     font::Weight,
@@ -18,7 +16,9 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         Self {
-            server_url_input: "127.0.0.1:4242".to_string(),
+            server_url_input: ClientSettings::DEFAULT_URL
+                .parse()
+                .expect("DEFAULT_URL can be parsed to url"),
         }
     }
 }
@@ -71,14 +71,10 @@ impl State {
     }
 
     async fn connect(server_url: String) -> Client {
-        // TODO: fix unwrap
-        let addr = SocketAddr::from_str(&server_url).unwrap();
-
         // TODO: more settings
-        // TODO: fix unwrap
+        // TODO: fix unwrap (x2)
         Client::from(ClientSettings {
-            ip: addr.ip(),
-            port: addr.port(),
+            server_url: server_url.parse().unwrap(),
             ..Default::default()
         })
         .await

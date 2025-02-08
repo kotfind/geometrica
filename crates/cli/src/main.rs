@@ -1,9 +1,10 @@
-use std::{net::SocketAddr, path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::Parser;
 use client::{Client, ClientSettings};
 use printing::ScriptResultPrinter;
+use reqwest::Url;
 
 mod printing;
 mod script_file_mode;
@@ -15,13 +16,12 @@ mod tty_mode;
 struct Cli {
     script_file: Option<PathBuf>,
 
-    // TODO: SocketAddr -> Url
-    /// Server address
-    #[arg(long, default_value_t = SocketAddr::from_str("127.0.0.1:4242").unwrap())]
-    server_addr: SocketAddr,
+    #[arg(long, default_value_t = Url::parse("http://127.0.0.1:4242").unwrap())]
+    server_url: Url,
 
     #[arg(long, default_value_t = true)]
     do_init_server: bool,
+    // TODO: server args
 }
 
 #[tokio::main]
@@ -29,10 +29,8 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     let con = Client::from(ClientSettings {
-        ip: cli.server_addr.ip(),
-        port: cli.server_addr.port(),
+        server_url: cli.server_url,
         try_spawn_server: cli.do_init_server,
-        ..Default::default()
     })
     .await
     .context("failed to connect to server")?;

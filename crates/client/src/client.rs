@@ -5,13 +5,18 @@ use types::api::{self, Request};
 
 #[derive(SmartDefault)]
 pub struct ClientSettings {
-    #[default(Url::parse(&format!("127.0.0.1:{}", Client::DEFAULT_PORT)).unwrap())]
+    #[default(Url::parse(ClientSettings::DEFAULT_URL).unwrap())]
     pub server_url: Url,
 
     /// Try to spawn a server if connection failed and server_url is a loopback ip.
     #[default(true)]
     pub try_spawn_server: bool,
     // TODO: server args
+}
+
+impl ClientSettings {
+    /// Default url for server. Can be safely parsed to [Url].
+    pub const DEFAULT_URL: &str = "http://127.0.0.1:4242";
 }
 
 #[derive(Debug, Clone)]
@@ -21,8 +26,6 @@ pub struct Client {
 }
 
 impl Client {
-    pub const DEFAULT_PORT: u16 = 4242;
-
     pub(crate) async fn req<REQ: Request>(&self, req: REQ) -> anyhow::Result<REQ::Response> {
         let resp = self
             .client
