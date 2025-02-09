@@ -6,8 +6,8 @@ use std::{
 use crate::{
     core::{Circ, Line, Pt, Value, ValueType},
     lang::{
-        AsExpr, DotExpr, Expr, FuncCallExpr, IfExpr, IfExprCase, InfixExpr, InfixOp, LetExpr,
-        LetExprDefinition, UnaryExpr, UnaryOp,
+        AsExpr, DotExpr, Expr, FuncCallExpr, FunctionSignature, IfExpr, IfExprCase, InfixExpr,
+        InfixOp, LetExpr, LetExprDefinition, UnaryExpr, UnaryOp,
     },
 };
 
@@ -231,5 +231,21 @@ impl Display for DotExpr {
         let DotExpr { name, body } = self;
 
         write!(f, "({body}).{name}")
+    }
+}
+
+impl Display for FunctionSignature {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let FunctionSignature { name, arg_types } = self;
+
+        let mut parts = Vec::new();
+
+        parts.push(name.0.clone());
+
+        for arg_type in arg_types {
+            parts.push(arg_type.to_string());
+        }
+
+        write!(f, "{}", parts.join(" "))
     }
 }
