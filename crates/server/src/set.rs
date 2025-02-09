@@ -22,5 +22,5 @@ async fn set(
     let value = scope.eval_expr(expr, HashMap::new()).map_err(api_err)?;
     scope.set(name, value).map_err(api_err)?;
 
-    Ok(api_ok(api::set::Response))
+    Ok(api_ok(api::set::Response {}))
 }

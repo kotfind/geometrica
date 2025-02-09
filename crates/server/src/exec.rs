@@ -20,5 +20,5 @@ async fn exec(
 
     defs.exec(&mut scope).map_err(api_err)?;
 
-    Ok(api_ok(api::exec::Response))
+    Ok(api_ok(api::exec::Response {}))
 }

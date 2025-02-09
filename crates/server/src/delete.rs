@@ -19,5 +19,5 @@ async fn delete(
 
     scope.delete(name).map_err(api_err)?;
 
-    Ok(api_ok(api::delete::Response))
+    Ok(api_ok(api::delete::Response {}))
 }

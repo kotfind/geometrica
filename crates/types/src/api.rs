@@ -28,15 +28,35 @@ pub trait Response: Serialize + DeserializeOwned {
     type Request: Request;
 }
 
-macro_rules! query {
-    ($route:literal, $req:ident, $resp:ident) => {
-        impl crate::api::Request for $req {
-            type Response = $resp;
+macro_rules! route {
+    (
+        ROUTE $route:literal
+        REQUEST {
+            $($req_field_name:ident: $req_field_type:ty),*
+            $(,)?
+        }
+        RESPONSE {
+            $($resp_field_name:ident: $resp_field_type:ty),*
+            $(,)?
+        }
+    ) => {
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        pub struct Request {
+            $(pub $req_field_name: $req_field_type),*
+        }
+
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        pub struct Response {
+            $(pub $resp_field_name: $resp_field_type),*
+        }
+
+        impl crate::api::Request for Request {
+            type Response = Response;
             const ROUTE: &str = $route;
         }
 
-        impl crate::api::Response for $resp {
-            type Request = $req;
+        impl crate::api::Response for Response {
+            type Request = Request;
             const ROUTE: &str = $route;
         }
     };
@@ -45,31 +65,27 @@ macro_rules! query {
 pub mod eval {
     use super::*;
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Request {
-        pub exprs: Vec<Expr>,
+    route! {
+        ROUTE "/eval"
+        REQUEST {
+            exprs: Vec<Expr>,
+        }
+        RESPONSE {
+            values: Vec<Result<Value, Error>>,
+        }
     }
-
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Response {
-        pub values: Vec<Result<Value, Error>>,
-    }
-
-    query!("/eval", Request, Response);
 }
 
 pub mod exec {
     use super::*;
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Request {
-        pub defs: Vec<Definition>,
+    route! {
+        ROUTE "/exec"
+        REQUEST {
+            defs: Vec<Definition>,
+        }
+        RESPONSE {}
     }
-
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Response;
-
-    query!("/exec", Request, Response);
 }
 
 pub mod items {
@@ -78,59 +94,51 @@ pub mod items {
     pub mod get_all {
         use super::*;
 
-        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-        pub struct Request;
-
-        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-        pub struct Response {
-            pub items: HashMap<Ident, Value>,
+        route! {
+            ROUTE "/items/get_all"
+            REQUEST {}
+            RESPONSE {
+                items: HashMap<Ident, Value>,
+            }
         }
-
-        query!("/items/get_all", Request, Response);
     }
 
     pub mod get {
         use super::*;
 
-        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-        pub struct Request {
-            pub name: Ident,
+        route! {
+            ROUTE "/items/get"
+            REQUEST {
+                name: Ident
+            }
+            RESPONSE {
+                value: Value
+            }
         }
-
-        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-        pub struct Response {
-            pub value: Value,
-        }
-
-        query!("/items/get", Request, Response);
     }
 }
 
 pub mod set {
     use super::*;
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Request {
-        pub name: Ident,
-        pub expr: Expr,
+    route! {
+        ROUTE "/set"
+        REQUEST {
+            name: Ident,
+            expr: Expr,
+        }
+        RESPONSE {}
     }
-
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Response;
-
-    query!("/set", Request, Response);
 }
 
 pub mod delete {
     use super::*;
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Request {
-        pub name: Ident,
+    route! {
+        ROUTE "/delete"
+        REQUEST {
+            name: Ident,
+        }
+        RESPONSE {}
     }
-
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct Response;
-
-    query!("/delete", Request, Response);
 }
