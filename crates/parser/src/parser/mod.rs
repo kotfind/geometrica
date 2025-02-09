@@ -144,7 +144,7 @@ peg::parser! {
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)
         {
-            FuncCallExpr { name, args: args.into_iter().map(|arg| Box::new(arg)).collect() }
+            FuncCallExpr { name, args: args.into_iter().map(Box::new).collect() }
         }
 
         pub rule if_expr() -> IfExpr

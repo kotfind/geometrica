@@ -3,8 +3,9 @@ name = "types"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+serde = ["dep:serde"]
+display = []
+
 [dependencies]
 serde = { version = "1.0.214", features = ["derive"], optional = true }
-
-[features]
-serde = [ "dep:serde" ]

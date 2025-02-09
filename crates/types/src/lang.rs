@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -179,29 +177,6 @@ pub enum InfixOp {
     POW, // ** or ^
 }
 
-impl Display for InfixOp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            InfixOp::OR => "|",
-            InfixOp::AND => "&",
-            InfixOp::GR => ">",
-            InfixOp::LE => "<",
-            InfixOp::GEQ => ">=",
-            InfixOp::LEQ => "<=",
-            InfixOp::EQ => "==",
-            InfixOp::NEQ => "!=",
-            InfixOp::ADD => "+",
-            InfixOp::SUB => "-",
-            InfixOp::MUL => "*",
-            InfixOp::DIV => "/",
-            InfixOp::MOD => "%",
-            InfixOp::POW => "^",
-        };
-
-        write!(f, "{s}")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UnaryExpr {
@@ -214,17 +189,6 @@ pub struct UnaryExpr {
 pub enum UnaryOp {
     NOT, // !
     NEG, // -
-}
-
-impl Display for UnaryOp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            UnaryOp::NOT => "!",
-            UnaryOp::NEG => "-",
-        };
-
-        write!(f, "{s}")
-    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

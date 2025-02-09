@@ -33,40 +33,6 @@ pub enum Value {
     Circ(Option<Circ>),
 }
 
-impl Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Value::Bool(Some(v)) => write!(f, "{}", v),
-            Value::Int(Some(v)) => write!(f, "{}", v),
-            Value::Real(Some(v)) => write!(f, "{:?}", v),
-            Value::Str(Some(v)) => write!(f, r#""{}""#, v),
-            Value::Array(Some(v)) => {
-                write!(
-                    f,
-                    "({})",
-                    v.iter()
-                        .map(|item| item.to_string())
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            }
-            Value::Pt(Some(v)) => write!(f, "{}", v),
-            Value::Line(Some(v)) => write!(f, "{}", v),
-            Value::Circ(Some(v)) => write!(f, "{}", v),
-            Value::Bool(None)
-            | Value::Int(None)
-            | Value::Real(None)
-            | Value::Str(None)
-            | Value::Array(None)
-            | Value::Pt(None)
-            | Value::Line(None)
-            | Value::Circ(None) => {
-                write!(f, "none {}", self.value_type())
-            }
-        }
-    }
-}
-
 macro_rules! value_from {
     ($variant:ident, $inner_type:ty) => {
         // T -> Value
@@ -148,33 +114,11 @@ pub enum ValueType {
     Circ,
 }
 
-impl Display for ValueType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            ValueType::Bool => "bool",
-            ValueType::Int => "int",
-            ValueType::Real => "real",
-            ValueType::Str => "str",
-            ValueType::Array => "array",
-            ValueType::Pt => "pt",
-            ValueType::Line => "line",
-            ValueType::Circ => "circ",
-        };
-        write!(f, "{}", s)
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pt {
     pub x: f64,
     pub y: f64,
-}
-
-impl Display for Pt {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "pt {x} {y}", x = self.x, y = self.y)
-    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -184,12 +128,6 @@ pub struct Line {
     pub p2: Pt,
 }
 
-impl Display for Line {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "line ({p1}) ({p2})", p1 = self.p1, p2 = self.p2)
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Circ {
@@ -197,12 +135,6 @@ pub struct Circ {
     pub o: Pt,
     /// Radius
     pub r: f64,
-}
-
-impl Display for Circ {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "circ ({o}) {r}", o = self.o, r = self.r)
-    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
