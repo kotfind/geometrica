@@ -9,7 +9,7 @@ tokio = { version = "1.41.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 executor = { path = "../executor" }
-types = { path = "../types" }
+types = { path = "../types", features = ["serde"] }
 axum = { version = "0.7.7", features = ["macros"] }
 clap = { version = "4.5.20", features = ["derive"] }
 tempfile = "3.13.0"

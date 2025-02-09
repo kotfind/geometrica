@@ -1,9 +1,11 @@
 use std::fmt::Display;
 
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Clone, Hash, Eq, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Ident(pub String);
 
 impl Display for Ident {
@@ -18,7 +20,8 @@ impl From<&str> for Ident {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Value {
     Bool(Option<bool>),
     Int(Option<i64>),
@@ -132,7 +135,8 @@ impl Value {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ValueType {
     Bool,
     Int,
@@ -160,7 +164,8 @@ impl Display for ValueType {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pt {
     pub x: f64,
     pub y: f64,
@@ -172,7 +177,8 @@ impl Display for Pt {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Line {
     pub p1: Pt,
     pub p2: Pt,
@@ -184,7 +190,8 @@ impl Display for Line {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Circ {
     /// Center
     pub o: Pt,
@@ -198,7 +205,8 @@ impl Display for Circ {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Transformation {
     pub offset: (f64, f64),
     pub zoom: f64,
