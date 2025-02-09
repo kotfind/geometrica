@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -90,6 +92,10 @@ pub enum Expr {
     FuncCall(FuncCallExpr),
     If(IfExpr),
     Let(LetExpr),
+    Infix(InfixExpr),
+    Unary(UnaryExpr),
+    As(AsExpr),
+    Dot(DotExpr),
 }
 
 enum_from_variant!(Expr, Value, Value);
@@ -97,6 +103,10 @@ enum_from_variant!(Expr, Variable, Ident);
 enum_from_variant!(Expr, FuncCall, FuncCallExpr);
 enum_from_variant!(Expr, If, IfExpr);
 enum_from_variant!(Expr, Let, LetExpr);
+enum_from_variant!(Expr, Infix, InfixExpr);
+enum_from_variant!(Expr, Unary, UnaryExpr);
+enum_from_variant!(Expr, As, AsExpr);
+enum_from_variant!(Expr, Dot, DotExpr);
 
 // Note: fails if none of the cases matched and default_case_value is not provided
 #[derive(Debug, Clone, PartialEq)]
@@ -132,7 +142,7 @@ pub struct LetExprDefinition {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FuncCallExpr {
     pub name: Ident,
-    pub args: Vec<Expr>,
+    pub args: Vec<Box<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -140,4 +150,93 @@ pub struct FuncCallExpr {
 pub struct FunctionSignature {
     pub name: Ident,
     pub arg_types: Vec<ValueType>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct InfixExpr {
+    pub lhs: Box<Expr>,
+    pub op: InfixOp,
+    pub rhs: Box<Expr>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum InfixOp {
+    OR,  // |
+    AND, // &
+    GR,  // >
+    LE,  // <
+    GEQ, // >=
+    LEQ, // <=
+    EQ,  // ==
+    NEQ, // !=
+    ADD, // +
+    SUB, // -
+    MUL, // *
+    DIV, // /
+    MOD, // %
+    POW, // ** or ^
+}
+
+impl Display for InfixOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            InfixOp::OR => "|",
+            InfixOp::AND => "&",
+            InfixOp::GR => ">",
+            InfixOp::LE => "<",
+            InfixOp::GEQ => ">=",
+            InfixOp::LEQ => "<=",
+            InfixOp::EQ => "==",
+            InfixOp::NEQ => "!=",
+            InfixOp::ADD => "+",
+            InfixOp::SUB => "-",
+            InfixOp::MUL => "*",
+            InfixOp::DIV => "/",
+            InfixOp::MOD => "%",
+            InfixOp::POW => "^",
+        };
+
+        write!(f, "{s}")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct UnaryExpr {
+    pub op: UnaryOp,
+    pub body: Box<Expr>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum UnaryOp {
+    NOT, // !
+    NEG, // -
+}
+
+impl Display for UnaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            UnaryOp::NOT => "!",
+            UnaryOp::NEG => "-",
+        };
+
+        write!(f, "{s}")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct AsExpr {
+    pub body: Box<Expr>,
+    pub value_type: ValueType,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct DotExpr {
+    pub name: Ident,
+    pub body: Box<Expr>,
 }

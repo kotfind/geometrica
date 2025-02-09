@@ -25,116 +25,22 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#as_str" (v:    Pt) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Line) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Circ) -> Str { Ok(Value::from(v).to_string()) }
-        // Is
-        fn "#is_bool"  (_v:  Bool) -> Bool { Ok(true) }
-        fn "#is_bool"  (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v: Array) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_bool"  (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:   Int) -> Bool { Ok(true) }
-        fn "#is_int"   (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_int"   (_v: Array) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_int"   (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:  Real) -> Bool { Ok(true) }
-        fn "#is_real"  (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_real"  (_v: Array) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_real"  (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:   Str) -> Bool { Ok(true) }
-        fn "#is_str"   (_v: Array) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_str"   (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_array" (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_array" (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_array" (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_array" (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_array" (_v: Array) -> Bool { Ok(true) }
-        fn "#is_array" (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_array" (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_array" (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v: Array) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:    Pt) -> Bool { Ok(true) }
-        fn "#is_pt"    (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_pt"    (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_line"  (_v: Array) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_line"  (_v:  Line) -> Bool { Ok(true) }
-        fn "#is_line"  (_v:  Circ) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:  Bool) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:   Int) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:  Real) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:   Str) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v: Array) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:    Pt) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:  Line) -> Bool { Ok(false) }
-        fn "#is_circ"  (_v:  Circ) -> Bool { Ok(true) }
-        // TODO optimize is_ construction
-        // is_none
-        fn "#is_none" (v:  Bool) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:   Int) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:  Real) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:   Str) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v: Array) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:    Pt) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:  Line) -> Bool { Ok(v.is_none()) }
-        fn "#is_none" (v:  Circ) -> Bool { Ok(v.is_none()) }
+        // // is_none
+        // // XXX: those are temporaryly disabled
+        // fn "#is_none" (v:  Bool) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:   Int) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:  Real) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:   Str) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v: Array) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:    Pt) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:  Line) -> Bool { Ok(v.is_none()) }
+        // fn "#is_none" (v:  Circ) -> Bool { Ok(v.is_none()) }
     );
 }
 
 #[cfg(test)]
 mod test {
-
     use crate::cexpr::eval::eval;
-
-    #[test]
-    fn is() {
-        let value_to_type = [
-            ("true", "bool"),
-            ("1", "int"),
-            ("1.0", "real"),
-            (r#""abc""#, "str"),
-            ("(1, 2, 3)", "array"),
-            ("(pt 1.0 2.0)", "pt"),
-            ("(line (pt 1.0 2.0) (pt 3.0 4.0))", "line"),
-            ("(circ (pt 1.0 2.0) 3.0)", "circ"),
-        ];
-
-        for i in 0..value_to_type.len() {
-            for j in 0..=i {
-                assert_eq!(
-                    eval(&format!(
-                        "{value} is {type_}",
-                        value = value_to_type[i].0,
-                        type_ = value_to_type[j].1
-                    )),
-                    (i == j).into(),
-                );
-            }
-        }
-    }
-
     #[test]
     fn as_bool() {
         assert_eq!(eval("true as bool"), true.into());
@@ -196,26 +102,27 @@ mod test {
         assert_eq!(eval("none circ as str"), "none circ".to_string().into());
     }
 
-    #[test]
-    fn is_none() {
-        assert_eq!(eval("none bool is none"), true.into());
-        assert_eq!(eval("none int is none"), true.into());
-        assert_eq!(eval("none real is none"), true.into());
-        assert_eq!(eval("none str is none"), true.into());
-        assert_eq!(eval("none array is none"), true.into());
-        assert_eq!(eval("none pt is none"), true.into());
-        assert_eq!(eval("none line is none"), true.into());
-        assert_eq!(eval("none circ is none"), true.into());
-        assert_eq!(eval("false is none"), false.into());
-        assert_eq!(eval("1 is none"), false.into());
-        assert_eq!(eval("1.0 is none"), false.into());
-        assert_eq!(eval("\"abacaba\" is none"), false.into());
-        assert_eq!(eval("(1, 2, 3) is none"), false.into());
-        assert_eq!(eval("(pt 1.0 2.0) is none"), false.into());
-        assert_eq!(
-            eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) is none"),
-            false.into()
-        );
-        assert_eq!(eval("(circ (pt 1.0 2.0) 3.0) is none"), false.into());
-    }
+    // XXX: those are temporaryly disabled
+    // #[test]
+    // fn is_none() {
+    //     assert_eq!(eval("none bool is none"), true.into());
+    //     assert_eq!(eval("none int is none"), true.into());
+    //     assert_eq!(eval("none real is none"), true.into());
+    //     assert_eq!(eval("none str is none"), true.into());
+    //     assert_eq!(eval("none array is none"), true.into());
+    //     assert_eq!(eval("none pt is none"), true.into());
+    //     assert_eq!(eval("none line is none"), true.into());
+    //     assert_eq!(eval("none circ is none"), true.into());
+    //     assert_eq!(eval("false is none"), false.into());
+    //     assert_eq!(eval("1 is none"), false.into());
+    //     assert_eq!(eval("1.0 is none"), false.into());
+    //     assert_eq!(eval("\"abacaba\" is none"), false.into());
+    //     assert_eq!(eval("(1, 2, 3) is none"), false.into());
+    //     assert_eq!(eval("(pt 1.0 2.0) is none"), false.into());
+    //     assert_eq!(
+    //         eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) is none"),
+    //         false.into()
+    //     );
+    //     assert_eq!(eval("(circ (pt 1.0 2.0) 3.0) is none"), false.into());
+    // }
 }

@@ -2,7 +2,7 @@
 
 use types::{core::*, lang::*};
 
-use super::{binary, unary};
+use super::{infix, unary};
 
 #[cfg(test)]
 mod test;
@@ -71,56 +71,64 @@ peg::parser! {
         // -------------------- Expr --------------------
         pub rule expr() -> Expr
             =  !statement() e:precedence! {
-                lhs:(@) _ "|" _ rhs:@ { binary("#or", lhs, rhs).into() }
+                lhs:(@) _ "|" _ rhs:@ { infix(lhs, InfixOp::OR, rhs).into() }
 
                 --
 
-                lhs:(@) _ "&" _ rhs:@ { binary("#and", lhs, rhs).into() }
+                lhs:(@) _ "&" _ rhs:@ { infix(lhs, InfixOp::AND, rhs).into() }
 
                 --
 
-                lhs:(@) _ ">" _ rhs:@ { binary("#gr", lhs, rhs).into() }
-                lhs:(@) _ "<" _ rhs:@ { binary("#le", lhs, rhs).into() }
-                lhs:(@) _ ">=" _ rhs:@ { binary("#geq", lhs, rhs).into() }
-                lhs:(@) _ "<=" _ rhs:@ { binary("#leq", lhs, rhs).into() }
-                lhs:(@) _ "==" _ rhs:@ { binary("#eq", lhs, rhs).into() }
-                lhs:(@) _ "!=" _ rhs:@ { binary("#neq", lhs, rhs).into() }
-                lhs:@ _ "is" _ rhs:value_type() { unary(&format!("#is_{}", rhs) as &str, lhs).into() }
-                lhs:@ _ "is" _ "none" { unary("#is_none", lhs).into() }
+                // TODO: is none
+                lhs:(@) _ ">"  _ rhs:@ { infix(lhs, InfixOp::GR , rhs).into() }
+                lhs:(@) _ "<"  _ rhs:@ { infix(lhs, InfixOp::LE , rhs).into() }
+                lhs:(@) _ ">=" _ rhs:@ { infix(lhs, InfixOp::GEQ, rhs).into() }
+                lhs:(@) _ "<=" _ rhs:@ { infix(lhs, InfixOp::LEQ, rhs).into() }
+                lhs:(@) _ "==" _ rhs:@ { infix(lhs, InfixOp::EQ , rhs).into() }
+                lhs:(@) _ "!=" _ rhs:@ { infix(lhs, InfixOp::NEQ, rhs).into() }
 
                 --
 
-                lhs:(@) _ "+" _ rhs:@ { binary("#add", lhs, rhs).into() }
-                lhs:(@) _ "-" _ rhs:@ { binary("#sub", lhs, rhs).into() }
+                lhs:(@) _ "+" _ rhs:@ { infix(lhs, InfixOp::ADD, rhs).into() }
+                lhs:(@) _ "-" _ rhs:@ { infix(lhs, InfixOp::SUB, rhs).into() }
 
                 --
 
-                lhs:(@) _ "*" _ rhs:@ { binary("#mul", lhs, rhs).into() }
-                lhs:(@) _ "/" _ rhs:@ { binary("#div", lhs, rhs).into() }
-                lhs:(@) _ "%" _ rhs:@ { binary("#rem", lhs, rhs).into() }
+                lhs:(@) _ "*" _ rhs:@ { infix(lhs, InfixOp::MUL, rhs).into() }
+                lhs:(@) _ "/" _ rhs:@ { infix(lhs, InfixOp::DIV, rhs).into() }
+                lhs:(@) _ "%" _ rhs:@ { infix(lhs, InfixOp::MOD, rhs).into() }
 
                 --
 
-                lhs:@ _ "^" _ rhs:(@) { binary("#pow", lhs, rhs).into() }
+                lhs:@ _ ("^" / "**") _ rhs:(@) { infix(lhs, InfixOp::POW, rhs).into() }
 
                 --
 
-                "-" _ rhs:@ { unary("#minus", rhs).into() }
-                "!" _ rhs:@ { unary("#not", rhs).into() }
+                "-" _ rhs:@ { unary(UnaryOp::NEG, rhs).into() }
+                "!" _ rhs:@ { unary(UnaryOp::NOT, rhs).into() }
 
                 --
 
-                lhs:@ _ "." _ ident:ident() { unary(ident, lhs).into() }
+                body:@ _ "." _ name:ident() { DotExpr { name, body: Box::new(body) }.into() }
 
                 --
 
-                e:(@) __ "as" __ value_type:value_type() { unary(&format!("#as_{}", value_type) as &str, e).into() }
+                body:(@) __ "as" __ value_type:value_type() {
+                    AsExpr { body: Box::new(body), value_type }.into()
+                }
+
                 array:array() { array.into() } // array
+
                 "(" _ e:expr() _ ")" { e } // braced
+
                 func_call:func_call_expr() { func_call.into() } // function call
+
                 let_expr:let_expr() { let_expr.into() } // let expr
+
                 if_expr:if_expr() { if_expr.into() } // if expr
+
                 val:value() { val.into() } // value
+
                 var:ident() { var.into() } // variable
         } { e }
 
@@ -136,7 +144,7 @@ peg::parser! {
         pub rule func_call_expr() -> FuncCallExpr
             = name:ident() _ args:(simple_expr() ++ __)
         {
-            FuncCallExpr { name, args }
+            FuncCallExpr { name, args: args.into_iter().map(|arg| Box::new(arg)).collect() }
         }
 
         pub rule if_expr() -> IfExpr

@@ -13,7 +13,7 @@ fn script() {
             Definition::ValueDefinition(ValueDefinition {
                 name: Ident::from("p"),
                 value_type: None,
-                body: binary("pt", Value::from(1), Value::from(2)).into(),
+                body: binary_call("pt", Value::from(1), Value::from(2)).into(),
             })
             .into(),
             Command {
@@ -36,7 +36,7 @@ fn statement() {
         Ok(Definition::ValueDefinition(ValueDefinition {
             name: Ident::from("p"),
             value_type: None,
-            body: binary("pt", Value::from(1), Value::from(2)).into()
+            body: binary_call("pt", Value::from(1), Value::from(2)).into()
         })
         .into())
     );
@@ -87,10 +87,10 @@ fn function_definition() {
                 },
             ],
             return_type: ValueType::Int,
-            body: binary(
-                Ident::from("#add"),
-                binary(Ident::from("#pow"), Ident::from("x"), Value::from(2)),
-                binary(Ident::from("#pow"), Ident::from("y"), Value::from(2))
+            body: infix(
+                infix(Ident::from("x"), InfixOp::POW, Value::from(2)),
+                InfixOp::ADD,
+                infix(Ident::from("y"), InfixOp::POW, Value::from(2)),
             )
             .into()
         })

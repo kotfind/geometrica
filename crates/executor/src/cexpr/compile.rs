@@ -6,7 +6,10 @@ use std::{
 use thiserror::Error;
 use types::{
     core::{Ident, Value, ValueType},
-    lang::{Expr, FuncCallExpr, FunctionSignature, IfExpr, LetExpr, LetExprDefinition},
+    lang::{
+        AsExpr, DotExpr, Expr, FuncCallExpr, FunctionSignature, IfExpr, InfixExpr, InfixOp,
+        LetExpr, LetExprDefinition, UnaryExpr, UnaryOp,
+    },
 };
 
 use crate::{
@@ -23,7 +26,7 @@ pub(crate) struct CScope<'a, 'b> {
     parent: Option<&'b CScope<'a, 'b>>,
 }
 
-impl<'a, 'b> CScope<'a, 'b> {
+impl<'a> CScope<'a, '_> {
     pub(crate) fn new(exec_scope: &'a ExecScope) -> Self {
         Self {
             exec_scope,
@@ -138,6 +141,10 @@ impl Compile for Expr {
             Expr::FuncCall(func_call) => func_call.compile(cscope),
             Expr::If(if_expr) => if_expr.compile(cscope),
             Expr::Let(let_expr) => let_expr.compile(cscope),
+            Expr::Infix(infix_expr) => infix_expr.compile(cscope),
+            Expr::Unary(unary_expr) => unary_expr.compile(cscope),
+            Expr::As(as_expr) => as_expr.compile(cscope),
+            Expr::Dot(dot_expr) => dot_expr.compile(cscope),
         }
     }
 }
@@ -282,5 +289,79 @@ impl Compile for LetExpr {
             new_cscope.insert_binding(name, body)?;
         }
         body.compile(&new_cscope)
+    }
+}
+
+/// InfixExpr is represented as a call to a builtin function.
+impl Compile for InfixExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let InfixExpr { lhs, op, rhs } = self;
+
+        let func_name = match op {
+            InfixOp::OR => "#or",
+            InfixOp::AND => "#and",
+            InfixOp::GR => "#gr",
+            InfixOp::LE => "#le",
+            InfixOp::GEQ => "#geq",
+            InfixOp::LEQ => "#leq",
+            InfixOp::EQ => "#eq",
+            InfixOp::NEQ => "#neq",
+            InfixOp::ADD => "#add",
+            InfixOp::SUB => "#sub",
+            InfixOp::MUL => "#mul",
+            InfixOp::DIV => "#div",
+            InfixOp::MOD => "#mod",
+            InfixOp::POW => "#pow",
+        };
+
+        FuncCallExpr {
+            name: Ident::from(func_name),
+            args: vec![lhs, rhs],
+        }
+        .compile(cscope)
+    }
+}
+
+/// UnaryExpr is represented as a call to a builtin function.
+impl Compile for UnaryExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let UnaryExpr { op, body } = self;
+
+        let func_name = match op {
+            UnaryOp::NOT => "#not",
+            UnaryOp::NEG => "#neg",
+        };
+
+        FuncCallExpr {
+            name: Ident::from(func_name),
+            args: vec![body],
+        }
+        .compile(cscope)
+    }
+}
+
+/// AsExpr is represented as a call to a builtin function with the name '#as_{type}'.
+impl Compile for AsExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let AsExpr { body, value_type } = self;
+
+        FuncCallExpr {
+            name: Ident(format!("#as_{value_type}")),
+            args: vec![body],
+        }
+        .compile(cscope)
+    }
+}
+
+/// DotExpr is represented as a call to a function call.
+impl Compile for DotExpr {
+    fn compile(self, cscope: &CScope) -> CResult {
+        let DotExpr { name, body } = self;
+
+        FuncCallExpr {
+            name,
+            args: vec![body],
+        }
+        .compile(cscope)
     }
 }

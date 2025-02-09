@@ -3,27 +3,25 @@ use types::{
     lang::{FuncCallExpr, LetExpr, LetExprDefinition},
 };
 
-use super::lang;
-
 use super::*;
 
 #[test]
 fn precedence() {
     assert_eq!(
         lang::expr("1 + 2 * 3"),
-        Ok(binary(
-            "#add",
+        Ok(infix(
             Value::from(1),
-            binary("#mul", Value::from(2), Value::from(3))
+            InfixOp::ADD,
+            infix(Value::from(2), InfixOp::MUL, Value::from(3))
         )
         .into())
     );
 
     assert_eq!(
         lang::expr("(1 + 2) * 3"),
-        Ok(binary(
-            "#mul",
-            binary("#add", Value::from(1), Value::from(2)),
+        Ok(infix(
+            infix(Value::from(1), InfixOp::ADD, Value::from(2)),
+            InfixOp::MUL,
             Value::from(3)
         )
         .into())
@@ -31,39 +29,45 @@ fn precedence() {
 
     assert_eq!(
         lang::expr("x + 1 < y * 2"),
-        Ok(binary(
-            "#le",
-            binary("#add", Ident::from("x"), Value::from(1)),
-            binary("#mul", Ident::from("y"), Value::from(2)),
+        Ok(infix(
+            infix(Ident::from("x"), InfixOp::ADD, Value::from(1)),
+            InfixOp::LE,
+            infix(Ident::from("y"), InfixOp::MUL, Value::from(2))
         )
         .into())
     );
 
     assert_eq!(
         lang::expr("x + 1 < y * 2 | both flag1 flag2"),
-        Ok(binary(
-            "#or",
-            binary(
-                "#le",
-                binary("#add", Ident::from("x"), Value::from(1)),
-                binary("#mul", Ident::from("y"), Value::from(2)),
+        Ok(infix(
+            infix(
+                infix(Ident::from("x"), InfixOp::ADD, Value::from(1)),
+                InfixOp::LE,
+                infix(Ident::from("y"), InfixOp::MUL, Value::from(2))
             ),
-            binary("both", Ident::from("flag1"), Ident::from("flag2"))
+            InfixOp::OR,
+            binary_call(
+                Ident::from("both"),
+                Ident::from("flag1"),
+                Ident::from("flag2")
+            )
         )
         .into())
     );
-}
-
-#[test]
-fn type_check() {
-    assert_eq!(
-        lang::expr("x is bool"),
-        Ok(unary("#is_bool", Ident::from("x")).into())
-    );
 
     assert_eq!(
-        lang::expr("x + 1 is int"),
-        Ok(unary("#is_int", binary("#add", Ident::from("x"), Value::from(1))).into())
+        lang::expr("p.x as int"),
+        Ok(AsExpr {
+            body: Box::new(
+                DotExpr {
+                    name: Ident::from("x"),
+                    body: Box::new(Ident::from("p").into())
+                }
+                .into()
+            ),
+            value_type: ValueType::Int
+        }
+        .into())
     );
 }
 
@@ -71,20 +75,66 @@ fn type_check() {
 fn type_cast() {
     assert_eq!(
         lang::expr("x as bool"),
-        Ok(unary("#as_bool", Ident::from("x")).into())
+        Ok(AsExpr {
+            body: Box::new(Ident::from("x").into()),
+            value_type: ValueType::Bool
+        }
+        .into())
     );
 
     assert_eq!(
         lang::expr("x + 1.0 as int"),
-        Ok(binary("#add", Ident::from("x"), unary("#as_int", Value::from(1.0))).into())
+        Ok(infix(
+            Ident::from("x"),
+            InfixOp::ADD,
+            AsExpr {
+                body: Box::new(Value::from(1.0).into()),
+                value_type: ValueType::Int
+            }
+        )
+        .into())
     );
 }
 
 #[test]
 fn dot_notation() {
-    assert_eq!(lang::expr("l.p1.x"), lang::expr("x (p1 l)"));
-    assert_eq!(lang::expr("1 + l.p1.x"), lang::expr("1 + x (p1 l)"));
-    assert_eq!(lang::expr("1 + l.p1.x + 1"), lang::expr("1 + x (p1 l) + 1"));
+    assert_eq!(
+        lang::expr("l.p1.x"),
+        Ok(DotExpr {
+            name: Ident::from("x"),
+            body: Box::new(
+                DotExpr {
+                    name: Ident::from("p1"),
+                    body: Box::new(Ident::from("l").into())
+                }
+                .into()
+            )
+        }
+        .into())
+    );
+
+    assert_eq!(
+        lang::expr("1 + l.p1.x * 2"),
+        Ok(infix(
+            Value::from(1),
+            InfixOp::ADD,
+            infix(
+                DotExpr {
+                    name: Ident::from("x"),
+                    body: Box::new(
+                        DotExpr {
+                            name: Ident::from("p1"),
+                            body: Box::new(Ident::from("l").into())
+                        }
+                        .into()
+                    )
+                },
+                InfixOp::MUL,
+                Value::from(2)
+            )
+        )
+        .into())
+    );
 }
 
 #[test]
@@ -97,7 +147,7 @@ fn _if() {
                 cond: Box::new(
                     FuncCallExpr {
                         name: "is_odd".into(),
-                        args: vec![Ident::from("x").into()]
+                        args: vec![Box::new(Ident::from("x").into())]
                     }
                     .into()
                 ),
@@ -120,7 +170,7 @@ fn _if() {
                     cond: Box::new(
                         FuncCallExpr {
                             name: "is_odd".into(),
-                            args: vec![Ident::from("x").into()]
+                            args: vec![Box::new(Ident::from("x").into())]
                         }
                         .into()
                     ),
@@ -130,7 +180,7 @@ fn _if() {
                     cond: Box::new(
                         FuncCallExpr {
                             name: "is_even".into(),
-                            args: vec![Ident::from("x").into()]
+                            args: vec![Box::new(Ident::from("x").into())]
                         }
                         .into()
                     ),
@@ -155,7 +205,7 @@ fn _if() {
                     cond: Box::new(
                         FuncCallExpr {
                             name: "is_odd".into(),
-                            args: vec![Ident::from("x").into()]
+                            args: vec![Box::new(Ident::from("x").into())]
                         }
                         .into()
                     ),
@@ -165,7 +215,7 @@ fn _if() {
                     cond: Box::new(
                         FuncCallExpr {
                             name: "is_even".into(),
-                            args: vec![Ident::from("x").into()]
+                            args: vec![Box::new(Ident::from("x").into())]
                         }
                         .into()
                     ),
@@ -175,7 +225,7 @@ fn _if() {
             default_value: Some(Box::new(
                 FuncCallExpr {
                     name: "unreachable".into(),
-                    args: vec![Value::from("".to_string()).into()]
+                    args: vec![Box::new(Value::from("".to_string()).into())]
                 }
                 .into()
             ))
@@ -190,7 +240,7 @@ fn func_call() {
         lang::func_call_expr("fact 5"),
         Ok(FuncCallExpr {
             name: "fact".into(),
-            args: vec![Value::from(5).into()]
+            args: vec![Box::new(Value::from(5).into())]
         })
     );
 
@@ -199,7 +249,10 @@ fn func_call() {
         lang::func_call_expr("add 1 2"),
         Ok(FuncCallExpr {
             name: "add".into(),
-            args: vec![Value::from(1).into(), Value::from(2).into()]
+            args: vec![
+                Box::new(Value::from(1).into()),
+                Box::new(Value::from(2).into())
+            ]
         })
     );
 
@@ -208,7 +261,10 @@ fn func_call() {
         lang::func_call_expr("add x y"),
         Ok(FuncCallExpr {
             name: "add".into(),
-            args: vec![Ident::from("x").into(), Ident::from("y").into()]
+            args: vec![
+                Box::new(Ident::from("x").into()),
+                Box::new(Ident::from("y").into())
+            ]
         })
     );
 
@@ -218,12 +274,17 @@ fn func_call() {
         Ok(FuncCallExpr {
             name: "add".into(),
             args: vec![
-                Value::from(1).into(),
-                FuncCallExpr {
-                    name: "sub".into(),
-                    args: vec![Value::from(2).into(), Value::from(3).into()]
-                }
-                .into()
+                Box::new(Value::from(1).into()),
+                Box::new(
+                    FuncCallExpr {
+                        name: "sub".into(),
+                        args: vec![
+                            Box::new(Value::from(2).into()),
+                            Box::new(Value::from(3).into())
+                        ]
+                    }
+                    .into()
+                )
             ]
         })
     );
@@ -243,7 +304,7 @@ fn _let() {
             body: Box::new(
                 FuncCallExpr {
                     name: Ident::from("fact"),
-                    args: vec![Ident::from("x").into()]
+                    args: vec![Box::new(Ident::from("x").into())]
                 }
                 .into()
             )
@@ -269,7 +330,10 @@ fn _let() {
             body: Box::new(
                 FuncCallExpr {
                     name: Ident::from("add"),
-                    args: vec![Ident::from("x").into(), Ident::from("y").into()]
+                    args: vec![
+                        Box::new(Ident::from("x").into()),
+                        Box::new(Ident::from("y").into())
+                    ]
                 }
                 .into()
             )
@@ -295,7 +359,10 @@ fn _let() {
             body: Box::new(
                 FuncCallExpr {
                     name: Ident::from("add"),
-                    args: vec![Ident::from("x").into(), Ident::from("y").into()]
+                    args: vec![
+                        Box::new(Ident::from("x").into()),
+                        Box::new(Ident::from("y").into())
+                    ]
                 }
                 .into()
             )

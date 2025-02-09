@@ -44,15 +44,15 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#pow" (lhs: Real, rhs: Real) -> Real { lhs         .powf(rhs) }
         fn "#pow" (lhs:  Int, rhs: Real) -> Real { (lhs as f64).powf(rhs) }
         fn "#pow" (lhs: Real, rhs:  Int) -> Real { lhs         .powi(rhs as i32 /* TODO: check if cast fails */) }
-        // Rem
-        fn "#rem" (lhs:  Int, rhs:  Int) -> Int  { lhs        % rhs }
-        fn "#rem" (lhs: Real, rhs: Real) -> Real { lhs        % rhs }
-        fn "#rem" (lhs:  Int, rhs: Real) -> Real { lhs as f64 % rhs }
-        fn "#rem" (lhs: Real, rhs:  Int) -> Real { lhs        % rhs as f64 }
-        // Minus
-        fn "#minus" (v:  Int) -> Int  { -v }
-        fn "#minus" (v: Real) -> Real { -v }
-        fn "#minus" (pt:  Pt) -> Pt   { Pt { x: -pt.x, y: -pt.y } }
+        // Mod
+        fn "#mod" (lhs:  Int, rhs:  Int) -> Int  { lhs        % rhs }
+        fn "#mod" (lhs: Real, rhs: Real) -> Real { lhs        % rhs }
+        fn "#mod" (lhs:  Int, rhs: Real) -> Real { lhs as f64 % rhs }
+        fn "#mod" (lhs: Real, rhs:  Int) -> Real { lhs        % rhs as f64 }
+        // Neg
+        fn "#neg" (v:  Int) -> Int  { -v }
+        fn "#neg" (v: Real) -> Real { -v }
+        fn "#neg" (pt:  Pt) -> Pt   { Pt { x: -pt.x, y: -pt.y } }
         // Dot & cross
         fn "dot"   (p1: Pt, p2: Pt) -> Real { p1.x * p2.x + p1.y * p2.y }
         fn "cross" (p1: Pt, p2: Pt) -> Real { p1.x * p2.y - p1.y * p2.x }
@@ -124,7 +124,7 @@ mod test {
     }
 
     #[test]
-    fn rem() {
+    fn r#mod() {
         assert_eq!(eval("9   % 7"), 2.into());
         assert_eq!(eval("9.0 % 7"), 2.0.into());
         assert_eq!(eval("9   % 7.0"), 2.0.into());
@@ -132,7 +132,7 @@ mod test {
     }
 
     #[test]
-    fn minus() {
+    fn neg() {
         assert_eq!(eval("-1"), (-1).into());
         assert_eq!(eval("-1.0"), (-1.0).into());
     }
