@@ -6,3 +6,6 @@ pub mod api;
 
 #[cfg(feature = "display")]
 mod display;
+
+#[cfg(feature = "math")]
+mod math;
