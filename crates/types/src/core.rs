@@ -114,21 +114,21 @@ pub enum ValueType {
     Circ,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pt {
     pub x: f64,
     pub y: f64,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Line {
     pub p1: Pt,
     pub p2: Pt,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Circ {
     /// Center
@@ -186,7 +186,7 @@ mod text {
     #[test]
     fn value_from_pt() {
         let pt = Pt { x: 1., y: 2. };
-        assert_eq!(Value::Pt(Some(pt.clone())), pt.into());
+        assert_eq!(Value::Pt(Some(pt)), pt.into());
     }
 
     #[test]
@@ -194,14 +194,14 @@ mod text {
         let p1 = Pt { x: 1., y: 2. };
         let p2 = Pt { x: 3., y: 4. };
         let l = Line { p1, p2 };
-        assert_eq!(Value::Line(Some(l.clone())), l.into());
+        assert_eq!(Value::Line(Some(l)), l.into());
     }
 
     #[test]
     fn value_from_circ() {
         let p = Pt { x: 1., y: 2. };
         let c = Circ { o: p, r: 3. };
-        assert_eq!(Value::Circ(Some(c.clone())), c.into());
+        assert_eq!(Value::Circ(Some(c)), c.into());
     }
 
     #[test]

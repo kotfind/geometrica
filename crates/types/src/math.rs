@@ -75,14 +75,14 @@ impl Neg for Pt {
 }
 
 impl Pt {
-    pub fn len(&self) -> f64 {
+    pub fn len(self) -> f64 {
         let Pt { x, y } = self;
 
         (x * x + y * y).sqrt()
     }
 
-    pub fn dist(&self, rhs: &Pt) -> f64 {
-        (self.clone() - rhs.clone()).len()
+    pub fn dist(self, rhs: Pt) -> f64 {
+        (self - rhs).len()
     }
 }
 
@@ -129,6 +129,6 @@ mod test {
 
     #[test]
     fn dist() {
-        assert_eq!(Pt { x: 7.0, y: 9.0 }.dist(&Pt { x: 12.0, y: 21.0 }), 13.0);
+        assert_eq!(Pt { x: 7.0, y: 9.0 }.dist(Pt { x: 12.0, y: 21.0 }), 13.0);
     }
 }

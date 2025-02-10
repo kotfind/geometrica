@@ -38,7 +38,7 @@ mod test {
     #[test]
     fn pt() {
         let pt = Pt { x: 1.0, y: 2.0 };
-        assert_eq!(eval("pt 1.0 2.0"), pt.clone().into());
+        assert_eq!(eval("pt 1.0 2.0"), pt.into());
         assert_eq!(eval("x (pt 1.0 2.0)"), pt.x.into());
         assert_eq!(eval("y (pt 1.0 2.0)"), pt.y.into());
     }
@@ -48,7 +48,7 @@ mod test {
         let p1 = Pt { x: 1.0, y: 2.0 };
         let p2 = Pt { x: 3.0, y: 4.0 };
         let l = Line { p1, p2 };
-        assert_eq!(eval("line (pt 1.0 2.0) (pt 3.0 4.0)"), l.clone().into());
+        assert_eq!(eval("line (pt 1.0 2.0) (pt 3.0 4.0)"), l.into());
         assert_eq!(eval("p1 (line (pt 1.0 2.0) (pt 3.0 4.0))"), l.p1.into());
         assert_eq!(eval("p2 (line (pt 1.0 2.0) (pt 3.0 4.0))"), l.p2.into());
     }
@@ -77,7 +77,7 @@ mod test {
         let o = Pt { x: 1.0, y: 2.0 };
         let r = 3.0;
         let c = Circ { o, r };
-        assert_eq!(eval("circ (pt 1.0 2.0) 3.0"), c.clone().into());
+        assert_eq!(eval("circ (pt 1.0 2.0) 3.0"), c.into());
         assert_eq!(eval("o (circ (pt 1.0 2.0) 3.0)"), c.o.into());
         assert_eq!(eval("r (circ (pt 1.0 2.0) 3.0)"), c.r.into());
     }
