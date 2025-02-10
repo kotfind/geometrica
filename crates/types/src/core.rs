@@ -137,10 +137,10 @@ pub struct Circ {
     pub r: f64,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Transformation {
-    pub offset: (f64, f64),
+    pub offset: Pt,
     pub zoom: f64,
 }
 

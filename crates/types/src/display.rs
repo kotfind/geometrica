@@ -47,9 +47,9 @@ impl Display for Value {
                         .join(", ")
                 )
             }
-            Value::Pt(Some(v)) => write!(f, "{}", v),
-            Value::Line(Some(v)) => write!(f, "{}", v),
-            Value::Circ(Some(v)) => write!(f, "{}", v),
+            Value::Pt(Some(v)) => write!(f, "{v}"),
+            Value::Line(Some(v)) => write!(f, "{v}"),
+            Value::Circ(Some(v)) => write!(f, "{v}"),
             Value::Bool(None)
             | Value::Int(None)
             | Value::Real(None)
@@ -80,7 +80,7 @@ impl Display for ValueType {
 
 impl Display for Pt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "pt ({x}) ({y})", x = self.x, y = self.y)
+        write!(f, "pt {x} {y}", x = self.x, y = self.y)
     }
 }
 

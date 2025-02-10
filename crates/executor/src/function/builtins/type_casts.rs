@@ -73,7 +73,7 @@ mod test {
         assert_eq!(eval("true as str"), "true".to_string().into());
         assert_eq!(eval("false as str"), "false".to_string().into());
         assert_eq!(eval("1 as str"), "1".to_string().into());
-        assert_eq!(eval("1.0 as str"), "1.0".to_string().into());
+        assert_eq!(eval("1.0 as str"), "1.000".to_string().into());
         assert_eq!(
             eval(r#""abacaba" as str"#),
             r#""abacaba""#.to_string().into()
