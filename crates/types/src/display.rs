@@ -132,7 +132,7 @@ impl Display for IfExpr {
             parts.push(format!("else ({default_value})"));
         }
 
-        write!(f, "{}", parts.join(""))
+        write!(f, "{}", parts.join(" "))
     }
 }
 
@@ -165,7 +165,7 @@ impl Display for LetExpr {
 
         parts.push(format!("{body}"));
 
-        write!(f, "{}", parts.join(""))
+        write!(f, "{}", parts.join(" "))
     }
 }
 

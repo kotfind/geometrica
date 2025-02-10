@@ -98,7 +98,6 @@ impl Client {
         assert_eq!(exprs.len(), values.len());
 
         // TODO: shorten value if too long
-        // TODO: print expr with Display, not Debug
         Ok(Table::new_with_rows(
             ["Name", "Value"],
             exprs
@@ -106,7 +105,7 @@ impl Client {
                 .zip(values.into_iter())
                 .map(|(expr, value)| {
                     [
-                        format!("{expr:?}"),
+                        format!("{expr}"),
                         match value {
                             Ok(value) => value.to_string(),
                             Err(_) => "error".to_string(),

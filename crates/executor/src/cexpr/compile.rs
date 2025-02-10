@@ -104,7 +104,7 @@ pub enum CError {
     #[error("variable undefined: {0}")]
     UndefinedVariable(Ident),
 
-    #[error("function undefined: {0:?}")]
+    #[error("function undefined: {0}")]
     UndefinedFunction(FunctionSignature),
 
     #[error("different branches of if has different types: {0} and {1}")]

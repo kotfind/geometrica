@@ -9,7 +9,7 @@ reqwest = { version = "0.12.9", features = ["json"] }
 serde_json = "1.0.132"
 smart-default = "0.7.1"
 tokio = { version = "1.41.0", features = ["full"] }
-types = { path = "../types", features = ["serde"] }
+types = { path = "../types", features = ["serde", "display"] }
 parser = { path = "../parser" }
 tempfile = "3.13.0"
 url = "2.5.4"

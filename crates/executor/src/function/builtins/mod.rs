@@ -82,7 +82,7 @@ macro_rules! builtin {
             }));
 
             match $builtin_functions.entry(sign.clone()) {
-                Entry::Occupied(_) => panic!("redefinition of {sign:?}"),
+                Entry::Occupied(_) => panic!("redefinition of {sign}"),
                 Entry::Vacant(e) => e.insert(func),
             };
 

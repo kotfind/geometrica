@@ -22,10 +22,10 @@ pub enum ExecError {
     #[error("eval error")]
     EvalError(#[from] EvalError),
 
-    #[error("undefined variable '{var}' in function '{func:?}'")]
+    #[error("undefined variable '{var}' in function '{func}'")]
     UndefinedVariableInFunction { var: Ident, func: FunctionSignature },
 
-    #[error("function redefinition: {0:?}")]
+    #[error("function redefinition: {0}")]
     FunctionRedefinition(FunctionSignature),
 
     #[error("variable redefinition: {0}")]
