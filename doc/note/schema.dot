@@ -1,0 +1,51 @@
+digraph {
+    node [
+        shape = square
+        style = filled
+        fillcolor = white
+    ]
+
+    // -------------------- Client Group --------------------
+    subgraph cluster_client {
+		style = filled
+		fillcolor = lightyellow
+
+        label = "Client Side"
+
+        parser [ label = <<i>Parser</i>> ]
+        client [ label = <<i>Client</i>> ]
+        cli    [ label = <<b>CLI</b>> ]
+        gui    [ label = <<b>GUI</b>> ]
+
+        parser -> client
+        client -> cli
+        client -> gui
+    }
+
+    // -------------------- Server Group --------------------
+    subgraph cluster_server {
+		style = filled
+		fillcolor = lightyellow
+
+        label = "Server Side"
+
+        executor [ label = <<i>Executor</i>> ]
+        server   [ label = <<b>Server</b>> ]
+
+        executor -> server
+    }
+
+    // -------------------- Types Group --------------------
+    types [ label = <<i>Types*</i>> ]
+
+    // -------------------- Server to Client --------------------
+    server -> client [
+        label = "REST Api"
+
+        style = dashed
+        dir = both
+
+        constraint = false
+        minlen = 3
+    ]
+}
