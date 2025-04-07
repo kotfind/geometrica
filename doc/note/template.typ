@@ -249,7 +249,10 @@
         set par(
             justify: true,
             leading: 1em,
-            spacing: 2em,
+            first-line-indent: (
+                amount: 1cm,
+                all: true,
+            ),
         )
 
         set heading(numbering: "1.")
@@ -257,6 +260,7 @@
         show heading.where(level: 1): h => {
             set align(center)
             set text(weight: "bold", size: 12pt)
+            set par(first-line-indent: 0cm)
 
             pagebreak(weak: true)
             [#counter(heading).display() #h.body]
@@ -264,18 +268,21 @@
 
         show heading.where(level: 2): h => {
             set text(weight: "bold", size: 12pt)
+            set par(first-line-indent: 0cm)
 
             [#counter(heading).display() #h.body]
         }
 
         show heading.where(level: 3): h => {
             set text(weight: "bold", size: 12pt)
+            set par(first-line-indent: 0cm)
 
             [#counter(heading).display() #h.body]
         }
 
         show heading.where(level: 4): h => {
             set text(weight: "bold", size: 12pt)
+            set par(first-line-indent: 0cm)
 
             [#counter(heading).display() #h.body]
         }
