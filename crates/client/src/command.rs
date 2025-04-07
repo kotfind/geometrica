@@ -28,8 +28,6 @@ macro_rules! unwrap_cmd_arg {
 }
 
 impl Client {
-    /// Parses and executes `cmd`. Returns output of command in a form of a table of strings.
-    /// Parsing output table is not recommended as the format. Use output for printing only.
     pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
         let cmd = match cmd.parse_into().context("failed to parse command") {
             Ok(cmd) => cmd,
