@@ -1,0 +1,46 @@
+digraph {
+    node [
+        shape = square
+        style = filled
+        fillcolor = white
+    ]
+
+    subgraph cluster_server {
+		style = filled
+		fillcolor = lightyellow
+        label = "Server Side"
+    }
+
+    // ----------------------------------------
+
+    string [ label = <String<br/>(Code)>, shape = ellipse ]
+
+    string -> parse
+    parse [ label = <Parse>, shape = box ]
+
+    parse -> statement
+    statement [ label = <Statement>, shape = ellipse ]
+
+    statement -> def_or_cmd
+    def_or_cmd [ label = <Is the statement<br/>a definition<br/>or a command?>, shape = diamond ]
+
+    def_or_cmd -> process_cmd [ label = <It's a command.> ]
+    process_cmd [ label = <Process the command;<br/>Send request to the server>, shape = box ]
+
+    process_cmd -> process_request
+    subgraph cluster_server {
+        process_request [ label = <Process the request;<br/>Send a response back>, shape = box ]
+    }
+
+    process_request -> cmd_output
+    cmd_output [ label = <Command's output>, shape = ellipse ]
+
+    def_or_cmd -> compile_def_body [ label = <It's a definition.> ]
+    compile_def_body -> node_output
+    subgraph cluster_server {
+        compile_def_body [ label = <Compile the definition's body<br/>(Expr to CExpr)>, shape = box ]
+
+        node_output [ label = <Node or Function>, shape = ellipse ]
+    }
+
+}

@@ -9,7 +9,6 @@ digraph {
     subgraph cluster_client {
 		style = filled
 		fillcolor = lightyellow
-
         label = "Client Side"
 
         parser [ label = <<i>Parser</i>> ]
@@ -26,7 +25,6 @@ digraph {
     subgraph cluster_server {
 		style = filled
 		fillcolor = lightyellow
-
         label = "Server Side"
 
         executor [ label = <<i>Executor</i>> ]
@@ -40,7 +38,7 @@ digraph {
 
     // -------------------- Server to Client --------------------
     server -> client [
-        label = "REST Api"
+        label = <REST Api>
 
         style = dashed
         dir = both

@@ -92,7 +92,7 @@
 
             #par(spacing: 0.65em, cfg.project.name)
 
-            Техническое задание
+            Пояснительная записка
 
             ЛИСТ УТВЕРЖДЕНИЯ
 
@@ -160,7 +160,7 @@
 
             #par(spacing: 0.65em, cfg.project.name)
 
-            Техническое задание
+            Пояснительная записка
 
             #cfg.project.code
 
@@ -249,6 +249,7 @@
         set par(
             justify: true,
             leading: 1em,
+            spacing: 2em,
         )
 
         set heading(numbering: "1.")
