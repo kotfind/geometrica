@@ -55,7 +55,7 @@ peg::parser! {
         }
 
         rule function_definition_argument() -> FunctionDefinitionArgument
-            = name:ident() ":" value_type:value_type()
+            = name:ident() _ ":" _ value_type:value_type()
         {
             FunctionDefinitionArgument { name, value_type }
         }
