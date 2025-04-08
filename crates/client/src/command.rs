@@ -35,10 +35,7 @@ impl Client {
         };
 
         match &cmd.name.0 as &str {
-            "get" => self
-                .get_cmd(cmd.args)
-                .await
-                .map(|_| ScriptResult::ok_none()),
+            "get" => self.get_cmd(cmd.args).await.map(ScriptResult::ok_one),
 
             "get_all" => self.get_all_cmd(cmd.args).await.map(ScriptResult::ok_one),
 
