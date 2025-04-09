@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
+
+cd "$(dirname "$0")"
 
 output_file="Пояснительная_записка.pdf"
 
