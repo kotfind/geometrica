@@ -249,10 +249,10 @@
         set par(
             justify: true,
             leading: 1em,
-            first-line-indent: (
-                amount: 1cm,
-                all: true,
-            ),
+            // first-line-indent: (
+            //     amount: 1cm,
+            //     all: true,
+            // ),
         )
 
         set heading(numbering: "1.")
