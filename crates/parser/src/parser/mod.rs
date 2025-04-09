@@ -292,7 +292,7 @@ peg::parser! {
         pub rule empty() = _
 
         pub rule comment()
-            = "/*" [^ '*']* "*/"
+            = "/*" (!"*/" [_])* "*/"
             / "//" [^ '\n']* "\n"
 
         pub rule whitespace()
