@@ -6,10 +6,8 @@ pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Add
         fn "#add" (lhs:   Pt, rhs:   Pt) -> Pt   { Pt { x: lhs.x + rhs.x, y: lhs.y + rhs.y } }
-        fn "#add" (lhs:  Int, rhs:  Int) ->  Int { lhs        + rhs }
-        fn "#add" (lhs: Real, rhs: Real) -> Real { lhs        + rhs }
-        fn "#add" (lhs:  Int, rhs: Real) -> Real { lhs as f64 + rhs }
-        fn "#add" (lhs: Real, rhs:  Int) -> Real { lhs        + rhs as f64 }
+        fn "#add" (lhs:  Int, rhs:  Int) ->  Int { lhs + rhs }
+        fn "#add" (lhs: Real, rhs: Real) -> Real { lhs + rhs }
         fn "#add" (lhs:  Str, rhs:  Str) -> Str  { lhs + &rhs }
         fn "#add" (lhs: Array, rhs: Array) -> Array {
                 let mut lhs = lhs;
@@ -19,36 +17,23 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         }
         // Sub
         fn "#sub" (lhs:   Pt, rhs:   Pt) -> Pt   { Pt { x: lhs.x - rhs.x, y: lhs.y - rhs.y } }
-        fn "#sub" (lhs:  Int, rhs:  Int) -> Int  { lhs        - rhs }
-        fn "#sub" (lhs: Real, rhs: Real) -> Real { lhs        - rhs }
-        fn "#sub" (lhs:  Int, rhs: Real) -> Real { lhs as f64 - rhs }
-        fn "#sub" (lhs: Real, rhs:  Int) -> Real { lhs        - rhs as f64 }
+        fn "#sub" (lhs:  Int, rhs:  Int) -> Int  { lhs - rhs }
+        fn "#sub" (lhs: Real, rhs: Real) -> Real { lhs - rhs }
         // Mul
-        fn "#mul" (lhs: Real, rhs:   Pt) -> Pt   { Pt { x: rhs.x * lhs,        y: lhs        * rhs.y } }
-        fn "#mul" (lhs:  Int, rhs:   Pt) -> Pt   { Pt { x: rhs.x * lhs as f64, y: lhs as f64 * rhs.y } }
-        fn "#mul" (lhs:   Pt, rhs: Real) -> Pt   { Pt { x: lhs.x * rhs,        y: rhs        * lhs.y } }
-        fn "#mul" (lhs:   Pt, rhs:  Int) -> Pt   { Pt { x: lhs.x * rhs as f64, y: rhs as f64 * lhs.y } }
-        fn "#mul" (rhs:  Int, lhs:  Int) -> Int  { lhs        * rhs }
-        fn "#mul" (lhs: Real, rhs: Real) -> Real { lhs        * rhs }
-        fn "#mul" (lhs:  Int, rhs: Real) -> Real { lhs as f64 * rhs }
-        fn "#mul" (lhs: Real, rhs:  Int) -> Real { lhs        * rhs as f64 }
+        fn "#mul" (lhs: Real, rhs:   Pt) -> Pt   { Pt { x: rhs.x * lhs, y: lhs * rhs.y } }
+        fn "#mul" (lhs:   Pt, rhs: Real) -> Pt   { Pt { x: lhs.x * rhs, y: rhs * lhs.y } }
+        fn "#mul" (rhs:  Int, lhs:  Int) -> Int  { lhs * rhs }
+        fn "#mul" (lhs: Real, rhs: Real) -> Real { lhs * rhs }
         // Div
         fn "#div" (lhs:   Pt, rhs: Real) -> Pt   { Pt { x: lhs.x / rhs,        y: lhs.y / rhs        } }
-        fn "#div" (lhs:   Pt, rhs:  Int) -> Pt   { Pt { x: lhs.x / rhs as f64, y: lhs.y / rhs as f64 } }
-        fn "#div" (lhs:  Int, rhs:  Int) -> Int  { lhs        / rhs }
-        fn "#div" (lhs: Real, rhs: Real) -> Real { lhs        / rhs }
-        fn "#div" (lhs:  Int, rhs: Real) -> Real { lhs as f64 / rhs }
-        fn "#div" (lhs: Real, rhs:  Int) -> Real { lhs        / rhs as f64 }
+        fn "#div" (lhs:  Int, rhs:  Int) -> Int  { lhs / rhs }
+        fn "#div" (lhs: Real, rhs: Real) -> Real { lhs / rhs }
         // Pow
-        fn "#pow" (lhs:  Int, rhs:  Int) -> Int  { lhs         .pow(rhs as u32 /* TODO: check if cast fails */) }
-        fn "#pow" (lhs: Real, rhs: Real) -> Real { lhs         .powf(rhs) }
-        fn "#pow" (lhs:  Int, rhs: Real) -> Real { (lhs as f64).powf(rhs) }
-        fn "#pow" (lhs: Real, rhs:  Int) -> Real { lhs         .powi(rhs as i32 /* TODO: check if cast fails */) }
+        fn "#pow" (lhs:  Int, rhs:  Int) -> Int  { lhs.pow(rhs as u32 /* TODO: check if cast fails */) }
+        fn "#pow" (lhs: Real, rhs: Real) -> Real { lhs.powf(rhs) }
         // Mod
-        fn "#mod" (lhs:  Int, rhs:  Int) -> Int  { lhs        % rhs }
-        fn "#mod" (lhs: Real, rhs: Real) -> Real { lhs        % rhs }
-        fn "#mod" (lhs:  Int, rhs: Real) -> Real { lhs as f64 % rhs }
-        fn "#mod" (lhs: Real, rhs:  Int) -> Real { lhs        % rhs as f64 }
+        fn "#mod" (lhs:  Int, rhs:  Int) -> Int  { lhs % rhs }
+        fn "#mod" (lhs: Real, rhs: Real) -> Real { lhs % rhs }
         // Neg
         fn "#neg" (v:  Int) -> Int  { -v }
         fn "#neg" (v: Real) -> Real { -v }
