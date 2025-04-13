@@ -7,17 +7,17 @@ use crate::{
 };
 
 pub fn router() -> Router<App> {
-    Router::new().route("/", post(delete))
+    Router::new().route("/", post(rm))
 }
 
 #[debug_handler(state = App)]
-async fn delete(
+async fn rm(
     State(App { scope, .. }): State<App>,
-    Json(api::delete::Request { name }): Json<api::delete::Request>,
-) -> ApiResult<api::delete::Response> {
+    Json(api::rm::Request { name }): Json<api::rm::Request>,
+) -> ApiResult<api::rm::Response> {
     let mut scope = scope.lock().await;
 
-    scope.delete(name).map_err(api_err)?;
+    scope.rm(name).map_err(api_err)?;
 
-    Ok(api_ok(api::delete::Response {}))
+    Ok(api_ok(api::rm::Response {}))
 }

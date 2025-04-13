@@ -3,8 +3,8 @@ use types::{api, core::Ident};
 use crate::Client;
 
 impl Client {
-    pub async fn delete(&self, name: impl Into<Ident>) -> anyhow::Result<()> {
-        self.req(api::delete::Request { name: name.into() }).await?;
+    pub async fn rm(&self, name: impl Into<Ident>) -> anyhow::Result<()> {
+        self.req(api::rm::Request { name: name.into() }).await?;
 
         Ok(())
     }
@@ -17,7 +17,7 @@ mod test {
     use crate::test_utils::TestClient;
 
     #[tokio::test]
-    async fn delete() {
+    async fn rm() {
         let client = TestClient::new().await;
 
         client
@@ -33,7 +33,7 @@ mod test {
             .await
             .unwrap();
 
-        client.delete("x").await.unwrap();
+        client.rm("x").await.unwrap();
 
         let items = client.get_all_items().await.unwrap();
 

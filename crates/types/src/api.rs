@@ -131,11 +131,11 @@ pub mod set {
     }
 }
 
-pub mod delete {
+pub mod rm {
     use super::*;
 
     route! {
-        ROUTE "/delete"
+        ROUTE "/rm"
         REQUEST {
             name: Ident,
         }

@@ -59,13 +59,13 @@ impl Node {
     }
 
     #[allow(clippy::mutable_key_type)]
-    pub(crate) fn get_nodes_to_delete(self) -> HashSet<Node> {
+    pub(crate) fn get_nodes_to_rm(self) -> HashSet<Node> {
         #[allow(clippy::mutable_key_type)]
-        fn inner(nodes_to_delete: &mut HashSet<Node>, node: Node) {
-            if nodes_to_delete.contains(&node) {
+        fn inner(nodes_to_rm: &mut HashSet<Node>, node: Node) {
+            if nodes_to_rm.contains(&node) {
                 return;
             }
-            nodes_to_delete.insert(node.clone());
+            nodes_to_rm.insert(node.clone());
 
             let required_by = {
                 let required_by = &mut node.0.required_by.lock().unwrap();
@@ -75,15 +75,15 @@ impl Node {
 
             for other_node in required_by {
                 if let Some(other_node) = other_node.upgrade() {
-                    inner(nodes_to_delete, other_node);
+                    inner(nodes_to_rm, other_node);
                 }
             }
         }
 
         #[allow(clippy::mutable_key_type)]
-        let mut nodes_to_delete: HashSet<Node> = HashSet::new();
-        inner(&mut nodes_to_delete, self);
-        nodes_to_delete
+        let mut nodes_to_rm: HashSet<Node> = HashSet::new();
+        inner(&mut nodes_to_rm, self);
+        nodes_to_rm
     }
 
     fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {

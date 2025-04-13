@@ -58,8 +58,7 @@ pub struct FunctionDefinitionArgument {
     pub value_type: ValueType,
 }
 
-// Non-declarative style commands like move, pin, delete, set_transform, load,
-// save
+// Imperative commands like get!, set!, ...
 #[derive(Debug, Clone, PartialEq)]
 pub struct Command {
     pub name: Ident,

@@ -64,16 +64,15 @@ impl ExecScope {
         }
     }
 
-    pub fn delete(&mut self, name: Ident) -> Result<(), ExecError> {
+    pub fn rm(&mut self, name: Ident) -> Result<(), ExecError> {
         let node = self
             .get_node(&name)
             .ok_or(ExecError::UndefinedVariable(name.clone()))?;
 
         #[allow(clippy::mutable_key_type)]
-        let nodes_to_delete = node.get_nodes_to_delete();
+        let nodes_to_rm = node.get_nodes_to_rm();
 
-        self.nodes
-            .retain(|_name, node| !nodes_to_delete.contains(node));
+        self.nodes.retain(|_name, node| !nodes_to_rm.contains(node));
 
         Ok(())
     }

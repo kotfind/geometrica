@@ -46,10 +46,7 @@ impl Client {
                 .await
                 .map(|_| ScriptResult::ok_none()),
 
-            "delete" => self
-                .delete_cmd(cmd.args)
-                .await
-                .map(|_| ScriptResult::ok_none()),
+            "rm" => self.rm_cmd(cmd.args).await.map(|_| ScriptResult::ok_none()),
 
             _ => Err(anyhow!("undefined command: {}", cmd.name)),
         }
@@ -69,7 +66,10 @@ impl Client {
         ))
     }
 
-    async fn get_all_cmd(&self, _args: Vec<CommandArg>) -> anyhow::Result<Table> {
+    async fn get_all_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(END FROM args);
+
         let items = self.get_all_items().await?;
 
         Ok(Table::new_with_rows(
@@ -121,12 +121,12 @@ impl Client {
         Ok(())
     }
 
-    async fn delete_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<()> {
+    async fn rm_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<()> {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(IDENT name FROM args);
         unwrap_cmd_arg!(END FROM args);
 
-        self.delete(name).await.context("failed to delete")?;
+        self.rm(name).await.context("failed to rm")?;
 
         Ok(())
     }
