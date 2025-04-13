@@ -28,6 +28,9 @@ pub enum ExecError {
     #[error("function redefinition: {0}")]
     FunctionRedefinition(FunctionSignature),
 
+    #[error("builtin redefinition: {0}")]
+    BuiltinRedefinition(FunctionSignature),
+
     #[error("variable redefinition: {0}")]
     VariableRedefinition(Ident),
 
@@ -137,7 +140,21 @@ impl ExecScope {
         self.funcs.get(sign).cloned()
     }
 
+    // Returns a pair of two `Vec<FunctionSignature>`.
+    // The first one contains built-in functions,
+    // the second one contains user-defined functions.
+    pub fn list_funcs(&self) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
+        (
+            Function::list_builtins(),
+            self.funcs.keys().cloned().collect(),
+        )
+    }
+
     pub(crate) fn insert_func(&mut self, func: Function) -> ExecResult {
+        if Function::get_builtin(&func.sign()).is_some() {
+            return Err(ExecError::BuiltinRedefinition(func.sign()));
+        }
+
         match self.funcs.entry(func.sign()) {
             hash_map::Entry::Occupied(_) => Err(ExecError::FunctionRedefinition(func.sign())),
             hash_map::Entry::Vacant(e) => {

@@ -13,3 +13,4 @@ types = { path = "../types", features = ["serde", "display"] }
 parser = { path = "../parser" }
 tempfile = "3.13.0"
 url = "2.5.4"
+itertools = "0.14.0"

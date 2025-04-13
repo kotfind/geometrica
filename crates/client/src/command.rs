@@ -1,4 +1,5 @@
 use anyhow::{anyhow, bail, Context};
+use itertools::Itertools;
 use parser::ParseInto;
 use types::lang::{Command, CommandArg};
 
@@ -48,6 +49,8 @@ impl Client {
 
             "rm" => self.rm_cmd(cmd.args).await.map(|_| ScriptResult::ok_none()),
 
+            "list_func" => self.list_func_cmd(cmd.args).await.map(ScriptResult::ok_one),
+
             _ => Err(anyhow!("undefined command: {}", cmd.name)),
         }
         .unwrap_or_else(ScriptResult::error)
@@ -78,6 +81,27 @@ impl Client {
                 .into_iter()
                 .map(|(name, value)| [name.to_string(), value.to_string()]),
         ))
+    }
+
+    async fn list_func_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(END FROM args);
+
+        let (builtins, user_defined) = self.list_funcs().await?;
+
+        let builtins = builtins
+            .into_iter()
+            .map(|sign| [sign.to_string(), "builtin".to_string()]);
+
+        let user_defined = user_defined
+            .into_iter()
+            .map(|sign| [sign.to_string(), "user-defined".to_string()]);
+
+        let funcs = builtins
+            .chain(user_defined)
+            .sorted_by(|lhs, rhs| (&lhs[1], &lhs[0]).cmp(&(&rhs[1], &rhs[0])));
+
+        Ok(Table::new_with_rows(["Signature", "Type"], funcs))
     }
 
     async fn eval_cmd(&self, args: Vec<CommandArg>) -> anyhow::Result<Table> {

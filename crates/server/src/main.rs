@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod eval;
 mod exec;
+mod func;
 mod items;
 mod ping;
 mod result;
@@ -86,11 +87,12 @@ fn router() -> Router {
     };
 
     Router::new()
-        .nest("/rm", rm::router())
         .nest("/eval", eval::router())
         .nest("/exec", exec::router())
         .nest("/items", items::router())
+        .nest("/func", func::router())
         .nest("/ping", ping::router())
+        .nest("/rm", rm::router())
         .nest("/set", set::router())
         .with_state(app)
 }

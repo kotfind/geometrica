@@ -13,9 +13,7 @@ impl Client {
 
         Ok(resp.items)
     }
-}
 
-impl Client {
     pub async fn get_item(&self, name: impl Into<Ident>) -> anyhow::Result<Value> {
         let resp = self
             .req(api::items::get::Request { name: name.into() })

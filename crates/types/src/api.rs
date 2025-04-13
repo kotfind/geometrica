@@ -1,6 +1,6 @@
 use crate::{
     core::{Ident, Value},
-    lang::{Definition, Expr},
+    lang::{Definition, Expr, FunctionSignature},
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
@@ -140,5 +140,22 @@ pub mod rm {
             name: Ident,
         }
         RESPONSE {}
+    }
+}
+
+pub mod func {
+    use super::*;
+
+    pub mod list {
+        use super::*;
+
+        route! {
+            ROUTE "/func/list"
+            REQUEST {}
+            RESPONSE {
+                builtins: Vec<FunctionSignature>,
+                user_defined: Vec<FunctionSignature>,
+            }
+        }
     }
 }

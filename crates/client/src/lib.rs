@@ -7,6 +7,7 @@ mod command;
 mod define;
 mod eval;
 mod exec;
+mod func;
 mod items;
 mod new;
 mod rm;

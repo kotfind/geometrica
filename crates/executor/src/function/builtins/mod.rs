@@ -22,6 +22,10 @@ impl Function {
     pub(crate) fn get_builtin(sign: &FunctionSignature) -> Option<Function> {
         BUILT_IN_FUNCS.get(sign).cloned()
     }
+
+    pub(crate) fn list_builtins() -> Vec<FunctionSignature> {
+        BUILT_IN_FUNCS.keys().cloned().collect()
+    }
 }
 
 // Unwraps value or returns EvalError::UnexpectedNone
