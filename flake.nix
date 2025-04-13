@@ -42,7 +42,7 @@
         inherit (lib.fileset) toSource unions;
         inherit (lib.lists) all foldl;
         inherit (lib.path) append;
-        inherit (lib.strings) makeLibraryPath makeBinPath;
+        inherit (lib.strings) makeLibraryPath;
         inherit (pkgs) writeShellScriptBin;
 
         buildCrate = {
@@ -60,6 +60,7 @@
               "cratePath"
               "localDeps"
               "isBinary"
+              "testRuntimeDeps"
             ];
 
             src = toSource {
@@ -100,15 +101,15 @@
             pkg = buildPackage (commonArgs // {cargoArtifacts = deps;});
             app = mkApp {drv = pkg;};
 
-            docsPkg = cargoDoc (commonArgs // {cargoArtifacts = deps;});
+            docPkg = cargoDoc (commonArgs // {cargoArtifacts = deps;});
 
-            docsApp = mkApp {
+            docApp = mkApp {
               drv = let
                 mimeopen = getExe' pkgs.perl540Packages.FileMimeInfo "mimeopen";
-                docsIndex = "${docsPkg}/share/doc/${crateName}/index.html";
+                docIndex = "${docPkg}/share/doc/${crateName}/index.html";
               in
                 writeShellScriptBin "${crateName}-doc-open" ''
-                  ${mimeopen} ${docsIndex}
+                  ${mimeopen} ${docIndex}
                 '';
             };
           in
@@ -116,8 +117,8 @@
             {
               checks."${crateName}" = checks;
 
-              packages."${crateName}-docs" = docsPkg;
-              apps."${crateName}-docs" = docsApp;
+              packages."${crateName}-doc" = docPkg;
+              apps."${crateName}-doc" = docApp;
             }
             (optionalAttrs isBinary {
               packages.${crateName} = pkg;
@@ -252,12 +253,13 @@
             "nativeBuildInputs"
             "runtimeDependencies"
           ];
+
+          concatedInputs = concatLists (attrValues inputs);
         in
-          devShell (inputs
-            // {
-              LD_LIBRARY_PATH = makeLibraryPath (concatLists (attrValues inputs));
-              packages = [pkgs.rust-analyzer];
-            });
+          devShell {
+            packages = concatedInputs ++ [pkgs.rust-analyzer];
+            LD_LIBRARY_PATH = makeLibraryPath concatedInputs;
+          };
       in
         {
           devShells.default = shell;
