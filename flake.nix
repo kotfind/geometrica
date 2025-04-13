@@ -33,10 +33,11 @@
             "clippy"
           ]);
 
-        inherit (builtins) isPath removeAttrs map mapAttrs attrValues;
+        inherit (builtins) isPath removeAttrs map mapAttrs concatMap attrValues concatLists;
         inherit (craneLib) buildDepsOnly buildPackage crateNameFromCargoToml devShell;
         inherit (craneLib.fileset) commonCargoSources;
         inherit (flake-utils.lib) mkApp;
+        inherit (lib.attrsets) unionOfDisjoint;
         inherit (lib.fileset) toSource unions;
         inherit (lib.lists) all foldl;
         inherit (lib.path) append;
@@ -120,8 +121,6 @@
             ];
 
             buildInputs = with pkgs; [
-              openssl
-
               # Iced Dependencies
               # source: https://github.com/iced-rs/iced/blob/master/DEPENDENCIES.md
               expat
@@ -136,10 +135,8 @@
               wayland
               libxkbcommon
 
-              # Iced Dependencies
-              # that are not listed above
-              xorg.libxcb
-              vulkan-loader
+              # Other Dependencies
+              openssl
               libgcc
             ];
 
@@ -148,52 +145,40 @@
               autoPatchelfHook
             ];
 
+            # For `autoPatchelfHook`
             runtimeDependencies = with pkgs; [
-              wayland
-              libglvnd
               libxkbcommon
+              vulkan-loader
             ];
-
-            # postFixup = ''
-            #   patchelf --add-rpath ${
-            #     makeLibraryPath (with pkgs; [
-            #       vulkan-loader
-            #       libxkbcommon
-            #     ])
-            #   } $out/bin/gui
-            # '';
-
-            # postFixup = ''
-            #   patchelf $out/bin/sniffnet --add-rpath ${
-            #     makeLibraryPath
-            #     (with pkgs; [
-            #       vulkan-loader
-            #       xorg.libX11
-            #       libxkbcommon
-            #     ])
-            #   }
-            # '';
           };
         };
 
         packages = mapAttrs (_: crate: buildCrate crate) crates;
         apps = mapAttrs (_: pkg: mkApp {drv = pkg;}) packages;
 
-        shell = devShell rec {
-          buildInputs =
-            foldl
-            (acc: crate: acc ++ (crate.buildInputs or []))
-            []
-            (attrValues crates);
+        collectCrateOptions = optionNames:
+          foldl
+          (acc: optionName:
+            unionOfDisjoint acc {
+              "${optionName}" =
+                concatMap
+                (c: c.${optionName} or [])
+                (attrValues crates);
+            })
+          {}
+          optionNames;
 
-          nativeBuildInputs =
-            foldl
-            (acc: crate: acc ++ (crate.nativeBuildInputs or []))
-            []
-            (attrValues crates);
-
-          LD_LIBRARY_PATH = makeLibraryPath buildInputs;
-        };
+        shell = let
+          inputs = collectCrateOptions [
+            "buildInputs"
+            "nativeBuildInputs"
+            "runtimeDependencies"
+          ];
+        in
+          devShell (inputs
+            // {
+              LD_LIBRARY_PATH = makeLibraryPath (concatLists (attrValues inputs));
+            });
       in {
         inherit packages apps;
         devShells.default = shell;
