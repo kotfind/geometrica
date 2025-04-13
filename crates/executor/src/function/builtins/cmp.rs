@@ -51,14 +51,10 @@ mod test {
     #[test]
     fn gr() {
         assert_eq!(eval("3   > 2"), true.into());
-        assert_eq!(eval("3.0 > 2"), true.into());
-        assert_eq!(eval("3   > 2.0"), true.into());
         assert_eq!(eval("3.0 > 2.0"), true.into());
         assert_eq!(eval(r#""def" > "abc""#), true.into());
 
         assert_eq!(eval("3   > 3"), false.into());
-        assert_eq!(eval("3.0 > 3"), false.into());
-        assert_eq!(eval("3   > 3.0"), false.into());
         assert_eq!(eval("3.0 > 3.0"), false.into());
         assert_eq!(eval(r#""abc" > "abc""#), false.into());
     }
@@ -66,14 +62,10 @@ mod test {
     #[test]
     fn le() {
         assert_eq!(eval("2   < 3"), true.into());
-        assert_eq!(eval("2.0 < 3"), true.into());
-        assert_eq!(eval("2   < 3.0"), true.into());
         assert_eq!(eval("2.0 < 3.0"), true.into());
         assert_eq!(eval(r#""abc" < "def""#), true.into());
 
         assert_eq!(eval("3   < 3"), false.into());
-        assert_eq!(eval("3.0 < 3"), false.into());
-        assert_eq!(eval("3   < 3.0"), false.into());
         assert_eq!(eval("3.0 < 3.0"), false.into());
         assert_eq!(eval(r#""abc" > "abc""#), false.into());
     }
@@ -81,14 +73,10 @@ mod test {
     #[test]
     fn geq() {
         assert_eq!(eval("3   >= 2"), true.into());
-        assert_eq!(eval("3.0 >= 2"), true.into());
-        assert_eq!(eval("3   >= 2.0"), true.into());
         assert_eq!(eval("3.0 >= 2.0"), true.into());
         assert_eq!(eval(r#""def" >= "abc""#), true.into());
 
         assert_eq!(eval("3   >= 3"), true.into());
-        assert_eq!(eval("3.0 >= 3"), true.into());
-        assert_eq!(eval("3   >= 3.0"), true.into());
         assert_eq!(eval("3.0 >= 3.0"), true.into());
         assert_eq!(eval(r#""abc" >= "abc""#), true.into());
     }
@@ -96,14 +84,10 @@ mod test {
     #[test]
     fn leq() {
         assert_eq!(eval("2   <= 3"), true.into());
-        assert_eq!(eval("2.0 <= 3"), true.into());
-        assert_eq!(eval("2   <= 3.0"), true.into());
         assert_eq!(eval("2.0 <= 3.0"), true.into());
         assert_eq!(eval(r#""abc" <= "def""#), true.into());
 
         assert_eq!(eval("3   <= 3"), true.into());
-        assert_eq!(eval("3.0 <= 3"), true.into());
-        assert_eq!(eval("3   <= 3.0"), true.into());
         assert_eq!(eval("3.0 <= 3.0"), true.into());
         assert_eq!(eval(r#""abc" <= "abc""#), true.into());
     }
@@ -111,15 +95,11 @@ mod test {
     #[test]
     fn eq() {
         assert_eq!(eval("3   == 3"), true.into());
-        assert_eq!(eval("3.0 == 3"), true.into());
-        assert_eq!(eval("3   == 3.0"), true.into());
         assert_eq!(eval("3.0 == 3.0"), true.into());
         assert_eq!(eval(r#""abc" == "abc""#), true.into());
         assert_eq!(eval(r#"(1, 2, 3) == (1, 2, 3)"#), true.into());
 
         assert_eq!(eval("1   == 3"), false.into());
-        assert_eq!(eval("1.0 == 3"), false.into());
-        assert_eq!(eval("1   == 3.0"), false.into());
         assert_eq!(eval("1.0 == 3.0"), false.into());
         assert_eq!(eval(r#""abc" == "def""#), false.into());
         assert_eq!(eval(r#"(1, 2, 3) == (4, 5, 6)"#), false.into());
@@ -128,15 +108,11 @@ mod test {
     #[test]
     fn neq() {
         assert_eq!(eval("3   != 3"), false.into());
-        assert_eq!(eval("3.0 != 3"), false.into());
-        assert_eq!(eval("3   != 3.0"), false.into());
         assert_eq!(eval("3.0 != 3.0"), false.into());
         assert_eq!(eval(r#""abc" != "abc""#), false.into());
         assert_eq!(eval(r#"(1, 2, 3) != (1, 2, 3)"#), false.into());
 
         assert_eq!(eval("1   != 3"), true.into());
-        assert_eq!(eval("1.0 != 3"), true.into());
-        assert_eq!(eval("1   != 3.0"), true.into());
         assert_eq!(eval("1.0 != 3.0"), true.into());
         assert_eq!(eval(r#""abc" != "def""#), true.into());
         assert_eq!(eval(r#"(1, 2, 3) != (4, 5, 6)"#), true.into());

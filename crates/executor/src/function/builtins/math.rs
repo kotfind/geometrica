@@ -56,8 +56,6 @@ mod test {
             Pt { x: 4.0, y: 6.0 }.into()
         );
         assert_eq!(eval("1   + 1"), 2.into());
-        assert_eq!(eval("1.0 + 1"), 2.0.into());
-        assert_eq!(eval("1   + 1.0"), 2.0.into());
         assert_eq!(eval("1.0 + 1.0"), 2.0.into());
         assert_eq!(eval(r#""aba" + "caba""#), "abacaba".to_string().into());
         assert_eq!(
@@ -73,46 +71,33 @@ mod test {
             Pt { x: -2.0, y: 1.0 }.into()
         );
         assert_eq!(eval("1   - 1"), 0.into());
-        assert_eq!(eval("1.0 - 1"), 0.0.into());
-        assert_eq!(eval("1   - 1.0"), 0.0.into());
         assert_eq!(eval("1.0 - 1.0"), 0.0.into());
     }
 
     #[test]
     fn mul() {
         assert_eq!(eval("(pt 1.0 2.0) * 3.0"), Pt { x: 3.0, y: 6.0 }.into());
-        assert_eq!(eval("(pt 1.0 2.0) * 3"), Pt { x: 3.0, y: 6.0 }.into());
-        assert_eq!(eval("3 * (pt 1.0 2.0)"), Pt { x: 3.0, y: 6.0 }.into());
         assert_eq!(eval("3.0 * (pt 1.0 2.0)"), Pt { x: 3.0, y: 6.0 }.into());
         assert_eq!(eval("2   * 2"), 4.into());
-        assert_eq!(eval("2.0 * 2"), 4.0.into());
-        assert_eq!(eval("2   * 2.0"), 4.0.into());
         assert_eq!(eval("2.0 * 2.0"), 4.0.into());
     }
 
     #[test]
     fn div() {
         assert_eq!(eval("(pt 3.0 6.0) / 3.0"), Pt { x: 1.0, y: 2.0 }.into());
-        assert_eq!(eval("(pt 3.0 6.0) / 3"), Pt { x: 1.0, y: 2.0 }.into());
         assert_eq!(eval("4   / 2"), 2.into());
-        assert_eq!(eval("4.0 / 2"), 2.0.into());
-        assert_eq!(eval("4   / 2.0"), 2.0.into());
         assert_eq!(eval("4.0 / 2.0"), 2.0.into());
     }
 
     #[test]
     fn pow() {
         assert_eq!(eval("2   ^ 2"), 4.into());
-        assert_eq!(eval("2.0 ^ 2"), 4.0.into());
-        assert_eq!(eval("2   ^ 2.0"), 4.0.into());
         assert_eq!(eval("2.0 ^ 2.0"), 4.0.into());
     }
 
     #[test]
     fn r#mod() {
         assert_eq!(eval("9   % 7"), 2.into());
-        assert_eq!(eval("9.0 % 7"), 2.0.into());
-        assert_eq!(eval("9   % 7.0"), 2.0.into());
         assert_eq!(eval("9.0 % 7.0"), 2.0.into());
     }
 

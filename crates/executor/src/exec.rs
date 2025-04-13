@@ -212,7 +212,7 @@ mod test {
         parser::definitions(
             r#"
             sq x:int -> int = x^2
-            sq x:real -> real = x^2
+            sq x:real -> real = x^2.0
             sum x:int y:int -> int = x + y
             a = 1
             b = 2
@@ -253,7 +253,7 @@ mod test {
         parser::definitions(
             r#"
             sq x:int -> int = x^2
-            sq x:real -> real = x^2
+            sq x:real -> real = x^2.0
             sum x:int y:int -> int = x + y
             a = 1
             b = 2

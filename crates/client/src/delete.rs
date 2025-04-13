@@ -24,7 +24,7 @@ mod test {
             .define(
                 r#"
                 x = 1.0
-                y = 2 * x
+                y = 2.0 * x
                 z = 3.0
                 p1 = pt x y
                 p2 = pt 1.0 z
