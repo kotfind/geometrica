@@ -33,24 +33,34 @@
             "clippy"
           ]);
 
-        inherit (builtins) isPath removeAttrs map mapAttrs concatMap attrValues concatLists;
-        inherit (craneLib) buildDepsOnly buildPackage crateNameFromCargoToml devShell;
+        inherit (builtins) isPath removeAttrs map concatMap attrValues concatLists isBool;
+        inherit (craneLib) buildDepsOnly buildPackage crateNameFromCargoToml devShell cargoDoc cargoTest;
         inherit (craneLib.fileset) commonCargoSources;
         inherit (flake-utils.lib) mkApp;
-        inherit (lib.attrsets) unionOfDisjoint;
+        inherit (lib) getExe' optionalAttrs;
+        inherit (lib.attrsets) unionOfDisjoint recursiveUpdate mapAttrsToList isDerivation;
         inherit (lib.fileset) toSource unions;
         inherit (lib.lists) all foldl;
         inherit (lib.path) append;
-        inherit (lib.strings) makeLibraryPath;
+        inherit (lib.strings) makeLibraryPath makeBinPath;
+        inherit (pkgs) writeShellScriptBin;
 
         buildCrate = {
           cratePath,
+          isBinary,
           localDeps ? [],
+          testRuntimeDeps ? [],
           ...
         } @ origArgs:
           assert isPath cratePath;
+          assert isBool isBinary;
+          assert all isDerivation testRuntimeDeps;
           assert all isPath localDeps; let
-            extraArgs = removeAttrs origArgs ["cratePath" "localDeps"];
+            extraArgs = removeAttrs origArgs [
+              "cratePath"
+              "localDeps"
+              "isBinary"
+            ];
 
             src = toSource {
               root = ./.;
@@ -73,19 +83,51 @@
               // {
                 inherit src cargoToml;
                 strictDeps = true;
-                cargoExtraArgs = "-p ${crateName}";
+                cargoExtraArgs = "-p ${crateName} --all-features";
               };
 
             deps = buildDepsOnly commonArgs;
 
-            pkg = buildPackage (commonArgs // {cargoArtifacts = deps;});
-          in
-            pkg;
+            checks = cargoTest (commonArgs
+              // {
+                cargoArtifacts = deps;
 
-        crates = {
+                nativeBuildInputs =
+                  (commonArgs.nativeBuildInputs or [])
+                  ++ testRuntimeDeps;
+              });
+
+            pkg = buildPackage (commonArgs // {cargoArtifacts = deps;});
+            app = mkApp {drv = pkg;};
+
+            docsPkg = cargoDoc (commonArgs // {cargoArtifacts = deps;});
+
+            docsApp = mkApp {
+              drv = let
+                mimeopen = getExe' pkgs.perl540Packages.FileMimeInfo "mimeopen";
+                docsIndex = "${docsPkg}/share/doc/${crateName}/index.html";
+              in
+                writeShellScriptBin "${crateName}-doc-open" ''
+                  ${mimeopen} ${docsIndex}
+                '';
+            };
+          in
+            recursiveUpdate
+            {
+              checks."${crateName}" = checks;
+
+              packages."${crateName}-docs" = docsPkg;
+              apps."${crateName}-docs" = docsApp;
+            }
+            (optionalAttrs isBinary {
+              packages.${crateName} = pkg;
+              apps.${crateName} = app;
+            });
+
+        crates = rec {
           server = {
             cratePath = ./crates/server;
-
+            isBinary = true;
             localDeps = [
               ./crates/executor
               ./crates/types
@@ -93,13 +135,25 @@
             ];
 
             buildInputs = with pkgs; [openssl];
-
             nativeBuildInputs = with pkgs; [pkg-config];
+          };
+
+          client = {
+            cratePath = ./crates/client;
+            isBinary = false;
+            localDeps = [
+              ./crates/parser
+              ./crates/types
+            ];
+
+            buildInputs = with pkgs; [openssl];
+            nativeBuildInputs = with pkgs; [pkg-config];
+            testRuntimeDeps = [(buildCrate server).packages.server];
           };
 
           cli = {
             cratePath = ./crates/cli;
-
+            isBinary = true;
             localDeps = [
               ./crates/client
               ./crates/parser
@@ -107,13 +161,13 @@
             ];
 
             buildInputs = with pkgs; [openssl];
-
             nativeBuildInputs = with pkgs; [pkg-config];
+            testRuntimeDeps = [(buildCrate server).packages.server];
           };
 
           gui = {
             cratePath = ./crates/gui;
-
+            isBinary = true;
             localDeps = [
               ./crates/client
               ./crates/parser
@@ -150,11 +204,35 @@
               libxkbcommon
               vulkan-loader
             ];
+
+            testRuntimeDeps = [(buildCrate server).packages.server];
+          };
+
+          executor = {
+            cratePath = ./crates/executor;
+            isBinary = false;
+            localDeps = [
+              ./crates/parser
+              ./crates/types
+            ];
+
+            buildInputs = with pkgs; [openssl];
+            nativeBuildInputs = with pkgs; [pkg-config];
+          };
+
+          parser = {
+            cratePath = ./crates/parser;
+            isBinary = false;
+            localDeps = [./crates/types];
+          };
+
+          types = {
+            cratePath = ./crates/types;
+            isBinary = false;
+            buildInputs = with pkgs; [openssl];
+            nativeBuildInputs = with pkgs; [pkg-config];
           };
         };
-
-        packages = mapAttrs (_: crate: buildCrate crate) crates;
-        apps = mapAttrs (_: pkg: mkApp {drv = pkg;}) packages;
 
         collectCrateOptions = optionNames:
           foldl
@@ -178,10 +256,21 @@
           devShell (inputs
             // {
               LD_LIBRARY_PATH = makeLibraryPath (concatLists (attrValues inputs));
+              packages = [pkgs.rust-analyzer];
             });
-      in {
-        inherit packages apps;
-        devShells.default = shell;
-      }
+      in
+        {
+          devShells.default = shell;
+        }
+        // (
+          foldl
+          recursiveUpdate
+          {}
+          (
+            mapAttrsToList
+            (_: c: buildCrate c)
+            crates
+          )
+        )
     );
 }
