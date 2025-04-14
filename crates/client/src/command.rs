@@ -37,7 +37,7 @@ macro_rules! unwrap_cmd_arg {
 }
 
 #[derive(Debug, Sequence)]
-enum CommandType {
+pub enum CommandType {
     Get,
     GetAll,
     Eval,
@@ -45,6 +45,21 @@ enum CommandType {
     Rm,
     ListFunc,
     ListCmd,
+}
+impl FromStr for CommandType {
+    type Err = anyhow::Error;
+
+    fn from_str(cmd_name: &str) -> Result<Self, Self::Err> {
+        let mut ans = None;
+        for cmd in enum_iterator::all::<CommandType>() {
+            if cmd.name() == cmd_name {
+                ans = Some(cmd);
+                break;
+            }
+        }
+
+        ans.ok_or(anyhow!("undefined command: {}", cmd_name))
+    }
 }
 
 impl CommandType {
@@ -64,68 +79,36 @@ impl CommandType {
         }
     }
 
-    fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         self._info().0
     }
 
-    fn sign(&self) -> &str {
+    pub fn sign(&self) -> &str {
         self._info().1
     }
 
-    fn desc(&self) -> &str {
+    pub fn desc(&self) -> &str {
         self._info().2
     }
 
     async fn apply(&self, client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         match self {
-            CommandType::Get => client.get_cmd(args).await,
-            CommandType::GetAll => client.get_all_cmd(args).await,
-            CommandType::Eval => client.eval_cmd(args).await,
-            CommandType::Set => client.set_cmd(args).await,
-            CommandType::Rm => client.rm_cmd(args).await,
-            CommandType::ListFunc => client.list_func_cmd(args).await,
-            CommandType::ListCmd => client.list_cmd_cmd(args),
+            CommandType::Get => Self::get_cmd(client, args).await,
+            CommandType::GetAll => Self::get_all_cmd(client, args).await,
+            CommandType::Eval => Self::eval_cmd(client, args).await,
+            CommandType::Set => Self::set_cmd(client, args).await,
+            CommandType::Rm => Self::rm_cmd(client, args).await,
+            CommandType::ListFunc => Self::list_func_cmd(client, args).await,
+            CommandType::ListCmd => Self::list_cmd_cmd(args),
         }
     }
-}
 
-impl FromStr for CommandType {
-    type Err = anyhow::Error;
-
-    fn from_str(cmd_name: &str) -> Result<Self, Self::Err> {
-        let mut ans = None;
-        for cmd in enum_iterator::all::<CommandType>() {
-            if cmd.name() == cmd_name {
-                ans = Some(cmd);
-                break;
-            }
-        }
-
-        ans.ok_or(anyhow!("undefined command: {}", cmd_name))
-    }
-}
-
-impl Client {
-    pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
-        let cmd = match cmd.parse_into().context("failed to parse command") {
-            Ok(cmd) => cmd,
-            Err(err) => return ScriptResult::error(err),
-        };
-
-        let cmd_type = match CommandType::from_str(&cmd.name.0) {
-            Ok(cmd_type) => cmd_type,
-            Err(err) => return ScriptResult::error(err),
-        };
-
-        cmd_type.apply(self, cmd.args).await
-    }
-
-    async fn get_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn get_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(IDENT name FROM args);
         unwrap_cmd_arg!(END FROM args);
 
-        let item = match self.get_item(name.clone()).await {
+        let item = match client.get_item(name.clone()).await {
             Ok(item) => item,
             Err(err) => return ScriptResult::error(err.context("get_item failed")),
         };
@@ -136,11 +119,11 @@ impl Client {
         ))
     }
 
-    async fn get_all_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn get_all_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(END FROM args);
 
-        let items = match self.get_all_items().await {
+        let items = match client.get_all_items().await {
             Ok(items) => items,
             Err(err) => return ScriptResult::error(err.context("get_all_items failed")),
         };
@@ -153,7 +136,7 @@ impl Client {
         ))
     }
 
-    async fn eval_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn eval_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut exprs = Vec::with_capacity(args.len());
         let mut args = args.into_iter().peekable();
         while args.peek().is_some() {
@@ -161,7 +144,7 @@ impl Client {
             exprs.push(expr);
         }
 
-        let values = match self.eval(exprs.clone()).await {
+        let values = match client.eval(exprs.clone()).await {
             Ok(values) => values,
             Err(err) => return ScriptResult::error(err.context("eval failed")),
         };
@@ -186,36 +169,36 @@ impl Client {
         ))
     }
 
-    async fn set_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn set_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(IDENT name FROM args);
         unwrap_cmd_arg!(EXPR expr FROM args);
         unwrap_cmd_arg!(END FROM args);
 
-        if let Err(err) = self.set(name, expr).await {
+        if let Err(err) = client.set(name, expr).await {
             return ScriptResult::error(err.context("set failed"));
         }
 
         ScriptResult::ok_none()
     }
 
-    async fn rm_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn rm_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(IDENT name FROM args);
         unwrap_cmd_arg!(END FROM args);
 
-        if let Err(err) = self.rm(name).await {
+        if let Err(err) = client.rm(name).await {
             return ScriptResult::error(err.context("rm failed"));
         }
 
         ScriptResult::ok_none()
     }
 
-    async fn list_func_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    async fn list_func_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(END FROM args);
 
-        let (builtins, user_defined) = match self.list_funcs().await {
+        let (builtins, user_defined) = match client.list_funcs().await {
             Ok(funcs) => funcs,
             Err(err) => return ScriptResult::error(err.context("list_funcs failed")),
         };
@@ -235,7 +218,7 @@ impl Client {
         ScriptResult::ok_one(Table::new_with_rows(["Signature", "Type"], funcs))
     }
 
-    fn list_cmd_cmd(&self, args: Vec<CommandArg>) -> ScriptResult {
+    fn list_cmd_cmd(args: Vec<CommandArg>) -> ScriptResult {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(END FROM args);
 
@@ -248,6 +231,26 @@ impl Client {
         }
 
         ScriptResult::ok_one(Table::new_with_rows(["Name", "Sign", "Description"], rows))
+    }
+}
+
+impl Client {
+    pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
+        let cmd = match cmd.parse_into().context("failed to parse command") {
+            Ok(cmd) => cmd,
+            Err(err) => return ScriptResult::error(err),
+        };
+
+        let cmd_type = match CommandType::from_str(&cmd.name.0) {
+            Ok(cmd_type) => cmd_type,
+            Err(err) => return ScriptResult::error(err),
+        };
+
+        cmd_type.apply(self, cmd.args).await
+    }
+
+    pub fn list_cmd() -> Vec<CommandType> {
+        enum_iterator::all().collect()
     }
 }
 

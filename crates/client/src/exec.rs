@@ -5,7 +5,7 @@ use types::lang::Statement;
 use crate::{Client, ScriptResult};
 
 impl Client {
-    /// Parses and executes script. Returns a table-result for each command.
+    /// Parses and executes the script.
     pub async fn exec(&self, script: impl ParseInto<Vec<Statement>>) -> ScriptResult {
         let script = match script.parse_into().context("failed to parse script") {
             Ok(x) => x,
@@ -26,9 +26,9 @@ impl Client {
         ScriptResult::ok(ans)
     }
 
-    /// Parses and executes a statement. Returns a table-result if statement was a command.
-    pub async fn exec_one(&self, script: impl ParseInto<Statement>) -> ScriptResult {
-        let stmt = match script.parse_into().context("failed to parse script") {
+    /// Parses and executes the statement.
+    pub async fn exec_one(&self, stmt: impl ParseInto<Statement>) -> ScriptResult {
+        let stmt = match stmt.parse_into().context("failed to parse script") {
             Ok(x) => x,
             Err(e) => return ScriptResult::error(e),
         };
