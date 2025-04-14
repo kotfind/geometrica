@@ -16,7 +16,7 @@ impl Display for ScriptResultPrinter<'_> {
         let res = self.0;
 
         for table in &res.results {
-            writeln!(f, "{}", TablePrinter(table))?;
+            writeln!(f, "{}\n", TablePrinter(table))?;
         }
 
         if let Some(err) = &res.error {

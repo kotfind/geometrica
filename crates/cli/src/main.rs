@@ -52,6 +52,7 @@ async fn exec(client: &Client, script: impl ToString) -> anyhow::Result<()> {
         .await
         .context("failed to execute script");
 
+    // TODO: Use writter
     print!("{}", ScriptResultPrinter(&res));
 
     match res.error {
