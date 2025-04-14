@@ -2,11 +2,28 @@ use std::process::{Child, Command, Stdio};
 
 use anyhow::{bail, Context};
 use reqwest::Url;
+use smart_default::SmartDefault;
 use url::Host;
 
-use crate::{client::ClientSettings, Client};
+use crate::Client;
 
 static SERVER_BINARY_NAME: &str = "server";
+
+#[derive(SmartDefault)]
+pub struct ClientSettings {
+    #[default(Url::parse(ClientSettings::DEFAULT_URL).unwrap())]
+    pub server_url: Url,
+
+    /// Try to spawn a server if connection failed and server_url is a loopback ip.
+    #[default(true)]
+    pub try_spawn_server: bool,
+    // TODO: server args
+}
+
+impl ClientSettings {
+    /// Default url for server. Can be safely parsed to [Url].
+    pub const DEFAULT_URL: &str = "http://127.0.0.1:4242";
+}
 
 impl Client {
     const SCHEMA: &str = "http";
