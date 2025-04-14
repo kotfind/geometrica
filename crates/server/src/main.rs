@@ -9,6 +9,7 @@ use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod clear;
 mod eval;
 mod exec;
 mod func;
@@ -94,6 +95,7 @@ fn router() -> Router {
         .nest("/ping", ping::router())
         .nest("/rm", rm::router())
         .nest("/set", set::router())
+        .nest("/clear", clear::router())
         .with_state(app)
 }
 

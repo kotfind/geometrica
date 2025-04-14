@@ -9,7 +9,8 @@ impl Client {
         self.req(api::exec::Request {
             defs: vec![def.parse_into().context("failed to parse definition")?],
         })
-        .await?;
+        .await
+        .context("define failed")?;
 
         Ok(())
     }
@@ -18,7 +19,8 @@ impl Client {
         self.req(api::exec::Request {
             defs: defs.parse_into().context("failed to parse definitions")?,
         })
-        .await?;
+        .await
+        .context("define failed")?;
 
         Ok(())
     }

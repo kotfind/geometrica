@@ -1,4 +1,5 @@
 use crate::Client;
+use anyhow::Context;
 use parser::ParseInto;
 use types::{api, core::Ident, lang::Expr};
 
@@ -8,11 +9,14 @@ impl Client {
         name: impl Into<Ident>,
         expr: impl ParseInto<Expr>,
     ) -> anyhow::Result<()> {
+        let name = name.into();
+        let expr = expr.parse_into().context("failed to parse expr")?;
         self.req(api::set::Request {
-            name: name.into(),
-            expr: expr.parse_into()?,
+            name: name.clone(),
+            expr: expr.clone(),
         })
-        .await?;
+        .await
+        .context(format!("failed to set '{name}' to '{expr}'"))?;
 
         Ok(())
     }

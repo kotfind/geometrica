@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::Context;
 use types::{
     api,
     core::{Ident, Value},
@@ -9,15 +10,20 @@ use crate::Client;
 
 impl Client {
     pub async fn get_all_items(&self) -> anyhow::Result<HashMap<Ident, Value>> {
-        let resp = self.req(api::items::get_all::Request {}).await?;
+        let resp = self
+            .req(api::items::get_all::Request {})
+            .await
+            .context("failed to get all items")?;
 
         Ok(resp.items)
     }
 
     pub async fn get_item(&self, name: impl Into<Ident>) -> anyhow::Result<Value> {
+        let name = name.into();
         let resp = self
-            .req(api::items::get::Request { name: name.into() })
-            .await?;
+            .req(api::items::get::Request { name: name.clone() })
+            .await
+            .context(format!("failed to get '{name}'"))?;
 
         Ok(resp.value)
     }

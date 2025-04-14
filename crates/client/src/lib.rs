@@ -2,6 +2,7 @@ pub use client::{Client, ClientSettings};
 pub use script_result::ScriptResult;
 pub use table::Table;
 
+mod clear;
 mod client;
 mod command;
 mod define;

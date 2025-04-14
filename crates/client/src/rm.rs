@@ -1,10 +1,14 @@
+use anyhow::Context;
 use types::{api, core::Ident};
 
 use crate::Client;
 
 impl Client {
     pub async fn rm(&self, name: impl Into<Ident>) -> anyhow::Result<()> {
-        self.req(api::rm::Request { name: name.into() }).await?;
+        let name = name.into();
+        self.req(api::rm::Request { name: name.clone() })
+            .await
+            .context(format!("failed to rm '{name}'"))?;
 
         Ok(())
     }

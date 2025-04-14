@@ -38,14 +38,16 @@ macro_rules! unwrap_cmd_arg {
 
 #[derive(Debug, Sequence)]
 pub enum CommandType {
+    Clear,
+    Eval,
     Get,
     GetAll,
-    Eval,
-    Set,
-    Rm,
-    ListFunc,
     ListCmd,
+    ListFunc,
+    Rm,
+    Set,
 }
+
 impl FromStr for CommandType {
     type Err = anyhow::Error;
 
@@ -76,6 +78,7 @@ impl CommandType {
             CommandType::Rm => ("rm", "ident+", "remove some items"),
             CommandType::ListFunc => ("list_func", "-", "list all functions"),
             CommandType::ListCmd => ("list_cmd", "-", "list all commands"),
+            CommandType::Clear => ("clear", "-", "clear all items and user-defined functions"),
         }
     }
 
@@ -100,6 +103,7 @@ impl CommandType {
             CommandType::Rm => Self::rm_cmd(client, args).await,
             CommandType::ListFunc => Self::list_func_cmd(client, args).await,
             CommandType::ListCmd => Self::list_cmd_cmd(args),
+            CommandType::Clear => Self::clear_cmd(client, args).await,
         }
     }
 
@@ -231,6 +235,17 @@ impl CommandType {
         }
 
         ScriptResult::ok_one(Table::new_with_rows(["Name", "Sign", "Description"], rows))
+    }
+
+    async fn clear_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(END FROM args);
+
+        if let Err(err) = client.clear().await {
+            return ScriptResult::error(err.context("clear failed"));
+        }
+
+        ScriptResult::ok_none()
     }
 }
 

@@ -67,6 +67,11 @@ impl ExecScope {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.funcs.clear();
+        self.nodes.clear();
+    }
+
     pub fn rm(&mut self, name: Ident) -> Result<(), ExecError> {
         let node = self
             .get_node(&name)

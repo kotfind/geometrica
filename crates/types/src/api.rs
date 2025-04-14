@@ -159,3 +159,11 @@ pub mod func {
         }
     }
 }
+
+pub mod clear {
+    route! {
+        ROUTE "/clear"
+        REQUEST {}
+        RESPONSE {}
+    }
+}

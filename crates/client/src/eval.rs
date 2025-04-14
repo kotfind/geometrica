@@ -7,9 +7,17 @@ impl Client {
     pub async fn eval_one(&self, expr: impl ParseInto<Expr>) -> anyhow::Result<Value> {
         let expr = expr.parse_into().context("failed to parse expr")?;
 
-        let resp = self.req(api::eval::Request { exprs: vec![expr] }).await?;
+        let resp = self
+            .req(api::eval::Request { exprs: vec![expr] })
+            .await
+            .context("failed to eval expr")?;
         assert_eq!(resp.values.len(), 1);
-        let res = resp.values.into_iter().next().unwrap()?;
+        let res = resp
+            .values
+            .into_iter()
+            .next()
+            .unwrap()
+            .context("evaluation failed")?;
         Ok(res)
     }
 
@@ -24,7 +32,8 @@ impl Client {
                     .map(|expr| expr.parse_into().context("failed to parse expr"))
                     .collect::<Result<_, _>>()?,
             })
-            .await?;
+            .await
+            .context("failed to eval exprs")?;
         let res = resp
             .values
             .into_iter()
