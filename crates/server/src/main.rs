@@ -9,15 +9,8 @@ use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod clear;
-mod eval;
-mod exec;
-mod func;
-mod items;
-mod ping;
 mod result;
-mod rm;
-mod set;
+mod routes;
 
 #[derive(clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -87,16 +80,7 @@ fn router() -> Router {
         scope: Arc::new(Mutex::new(ExecScope::new())),
     };
 
-    Router::new()
-        .nest("/eval", eval::router())
-        .nest("/exec", exec::router())
-        .nest("/items", items::router())
-        .nest("/func", func::router())
-        .nest("/ping", ping::router())
-        .nest("/rm", rm::router())
-        .nest("/set", set::router())
-        .nest("/clear", clear::router())
-        .with_state(app)
+    routes::router().with_state(app)
 }
 
 #[derive(Clone)]

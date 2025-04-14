@@ -59,6 +59,8 @@ macro_rules! route {
             type Request = Request;
             const ROUTE: &str = $route;
         }
+
+        pub const ROUTE: &str = $route;
     };
 }
 

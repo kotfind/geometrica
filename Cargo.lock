@@ -3841,6 +3841,7 @@ dependencies = [
  "axum",
  "clap",
  "executor",
+ "paste",
  "reqwest",
  "serde",
  "serde_json",
