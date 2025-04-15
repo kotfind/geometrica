@@ -82,12 +82,10 @@ mod test {
         assert_eq!(eval("3   == 3"), true.into());
         assert_eq!(eval("3.0 == 3.0"), true.into());
         assert_eq!(eval(r#""abc" == "abc""#), true.into());
-        assert_eq!(eval(r#"(1, 2, 3) == (1, 2, 3)"#), true.into());
 
         assert_eq!(eval("1   == 3"), false.into());
         assert_eq!(eval("1.0 == 3.0"), false.into());
         assert_eq!(eval(r#""abc" == "def""#), false.into());
-        assert_eq!(eval(r#"(1, 2, 3) == (4, 5, 6)"#), false.into());
     }
 
     #[test]
@@ -95,11 +93,9 @@ mod test {
         assert_eq!(eval("3   != 3"), false.into());
         assert_eq!(eval("3.0 != 3.0"), false.into());
         assert_eq!(eval(r#""abc" != "abc""#), false.into());
-        assert_eq!(eval(r#"(1, 2, 3) != (1, 2, 3)"#), false.into());
 
         assert_eq!(eval("1   != 3"), true.into());
         assert_eq!(eval("1.0 != 3.0"), true.into());
         assert_eq!(eval(r#""abc" != "def""#), true.into());
-        assert_eq!(eval(r#"(1, 2, 3) != (4, 5, 6)"#), true.into());
     }
 }

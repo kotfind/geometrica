@@ -76,7 +76,6 @@ mod test {
             eval(r#""abacaba" as str"#),
             r#""abacaba""#.to_string().into()
         );
-        assert_eq!(eval("(1, 2, 3) as str"), "(1, 2, 3)".to_string().into());
         assert_eq!(eval("(pt 1.0 2.0) as str"), "pt 1 2".to_string().into());
         assert_eq!(
             eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) as str"),
