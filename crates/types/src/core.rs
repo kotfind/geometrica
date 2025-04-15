@@ -27,7 +27,6 @@ pub enum Value {
     Int(Option<i64>),
     Real(Option<f64>),
     Str(Option<String>),
-    Array(Option<Vec<Value>>),
     Pt(Option<Pt>),
     Line(Option<Line>),
     Circ(Option<Circ>),
@@ -55,7 +54,6 @@ value_from!(Bool, bool);
 value_from!(Int, i64);
 value_from!(Real, f64);
 value_from!(Str, String);
-value_from!(Array, Vec<Value>);
 value_from!(Pt, Pt);
 value_from!(Line, Line);
 value_from!(Circ, Circ);
@@ -67,7 +65,6 @@ impl Value {
             Value::Int(_) => ValueType::Int,
             Value::Real(_) => ValueType::Real,
             Value::Str(_) => ValueType::Str,
-            Value::Array(_) => ValueType::Array,
             Value::Pt(_) => ValueType::Pt,
             Value::Line(_) => ValueType::Line,
             Value::Circ(_) => ValueType::Circ,
@@ -80,7 +77,6 @@ impl Value {
             Value::Int(v) => v.is_none(),
             Value::Real(v) => v.is_none(),
             Value::Str(v) => v.is_none(),
-            Value::Array(v) => v.is_none(),
             Value::Pt(v) => v.is_none(),
             Value::Line(v) => v.is_none(),
             Value::Circ(v) => v.is_none(),
@@ -93,7 +89,6 @@ impl Value {
             ValueType::Int => Value::Int(None),
             ValueType::Real => Value::Real(None),
             ValueType::Str => Value::Str(None),
-            ValueType::Array => Value::Array(None),
             ValueType::Pt => Value::Pt(None),
             ValueType::Line => Value::Line(None),
             ValueType::Circ => Value::Circ(None),
@@ -108,7 +103,6 @@ pub enum ValueType {
     Int,
     Real,
     Str,
-    Array,
     Pt,
     Line,
     Circ,
@@ -168,18 +162,6 @@ mod text {
         assert_eq!(
             Value::Str(Some("hello".to_string())),
             "hello".to_string().into()
-        );
-    }
-
-    #[test]
-    fn value_from_array() {
-        assert_eq!(
-            Value::Array(Some(vec![
-                1.into(),
-                "hello".to_string().into(),
-                true.into()
-            ])),
-            vec![1.into(), "hello".to_string().into(), true.into()].into()
         );
     }
 

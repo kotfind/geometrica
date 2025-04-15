@@ -9,12 +9,6 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#add" (lhs:  Int, rhs:  Int) ->  Int { lhs + rhs }
         fn "#add" (lhs: Real, rhs: Real) -> Real { lhs + rhs }
         fn "#add" (lhs:  Str, rhs:  Str) -> Str  { lhs + &rhs }
-        fn "#add" (lhs: Array, rhs: Array) -> Array {
-                let mut lhs = lhs;
-                let mut rhs = rhs;
-                lhs.append(&mut rhs);
-                lhs
-        }
         // Sub
         fn "#sub" (lhs:   Pt, rhs:   Pt) -> Pt   { Pt { x: lhs.x - rhs.x, y: lhs.y - rhs.y } }
         fn "#sub" (lhs:  Int, rhs:  Int) -> Int  { lhs - rhs }
@@ -58,10 +52,6 @@ mod test {
         assert_eq!(eval("1   + 1"), 2.into());
         assert_eq!(eval("1.0 + 1.0"), 2.0.into());
         assert_eq!(eval(r#""aba" + "caba""#), "abacaba".to_string().into());
-        assert_eq!(
-            eval("(1, 2, 3) + (4, 5, 6)"),
-            (1..=6).map(Value::from).collect::<Vec<Value>>().into()
-        );
     }
 
     #[test]

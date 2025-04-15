@@ -1,18 +1,5 @@
 use super::*;
 
-fn array_eq(lhs: &[Value], rhs: &[Value]) -> bool {
-    if lhs.len() != rhs.len() {
-        return false;
-    }
-
-    for (l, r) in lhs.iter().zip(rhs.iter()) {
-        if l != r {
-            return false;
-        }
-    }
-    true
-}
-
 pub(super) fn populate(builtins: &mut FuncMap) {
     simple_builtin!(INTO builtins INSERT
         // Gr
@@ -35,12 +22,10 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#eq" (lhs:  Int, rhs:  Int) -> Bool { lhs == rhs }
         fn "#eq" (lhs: Real, rhs: Real) -> Bool { lhs == rhs }
         fn "#eq" (lhs:  Str, rhs:  Str) -> Bool { lhs == rhs }
-        fn "#eq" (lhs: Array, rhs: Array) -> Bool { array_eq(&lhs, &rhs) }
         // Neq
         fn "#neq" (lhs:  Int, rhs:  Int) -> Bool { lhs != rhs }
         fn "#neq" (lhs: Real, rhs: Real) -> Bool { lhs != rhs }
         fn "#neq" (lhs:  Str, rhs:  Str) -> Bool { lhs != rhs }
-        fn "#neq" (lhs: Array, rhs: Array) -> Bool { !array_eq(&lhs, &rhs) }
     );
 }
 

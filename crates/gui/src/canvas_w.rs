@@ -87,13 +87,6 @@ impl Draw for Circ {
 impl Draw for Value {
     fn draw(&self, frame: &mut canvas::Frame) {
         match self {
-            Value::Array(vec) => {
-                if let Some(vec) = vec {
-                    for val in vec {
-                        val.draw(frame);
-                    }
-                }
-            }
             Value::Pt(pt) => {
                 if let Some(pt) = pt {
                     pt.draw(frame);

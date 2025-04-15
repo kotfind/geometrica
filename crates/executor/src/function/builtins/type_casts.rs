@@ -21,7 +21,6 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#as_str" (v:   Int) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Real) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:   Str) -> Str { Ok(Value::from(v).to_string()) }
-        fn "#as_str" (v: Array) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:    Pt) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Line) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Circ) -> Str { Ok(Value::from(v).to_string()) }
@@ -31,7 +30,6 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         // fn "#is_none" (v:   Int) -> Bool { Ok(v.is_none()) }
         // fn "#is_none" (v:  Real) -> Bool { Ok(v.is_none()) }
         // fn "#is_none" (v:   Str) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v: Array) -> Bool { Ok(v.is_none()) }
         // fn "#is_none" (v:    Pt) -> Bool { Ok(v.is_none()) }
         // fn "#is_none" (v:  Line) -> Bool { Ok(v.is_none()) }
         // fn "#is_none" (v:  Circ) -> Bool { Ok(v.is_none()) }
@@ -96,7 +94,6 @@ mod test {
         assert_eq!(eval("none int as str"), "none int".to_string().into());
         assert_eq!(eval("none real as str"), "none real".to_string().into());
         assert_eq!(eval("none str as str"), "none str".to_string().into());
-        assert_eq!(eval("none array as str"), "none array".to_string().into());
         assert_eq!(eval("none pt as str"), "none pt".to_string().into());
         assert_eq!(eval("none line as str"), "none line".to_string().into());
         assert_eq!(eval("none circ as str"), "none circ".to_string().into());
@@ -109,7 +106,6 @@ mod test {
     //     assert_eq!(eval("none int is none"), true.into());
     //     assert_eq!(eval("none real is none"), true.into());
     //     assert_eq!(eval("none str is none"), true.into());
-    //     assert_eq!(eval("none array is none"), true.into());
     //     assert_eq!(eval("none pt is none"), true.into());
     //     assert_eq!(eval("none line is none"), true.into());
     //     assert_eq!(eval("none circ is none"), true.into());

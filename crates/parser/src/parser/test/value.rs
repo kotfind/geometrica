@@ -34,7 +34,6 @@ fn none() {
     assert_eq!(lang::none("none int"), Ok(Value::none(ValueType::Int)));
     assert_eq!(lang::none("none real"), Ok(Value::none(ValueType::Real)));
     assert_eq!(lang::none("none str"), Ok(Value::none(ValueType::Str)));
-    assert_eq!(lang::none("none array"), Ok(Value::none(ValueType::Array)));
     assert_eq!(lang::none("none pt"), Ok(Value::none(ValueType::Pt)));
     assert_eq!(lang::none("none line"), Ok(Value::none(ValueType::Line)));
     assert_eq!(lang::none("none circ"), Ok(Value::none(ValueType::Circ)));
@@ -46,19 +45,6 @@ fn char() {
     assert_eq!(lang::_char(r#"\n"#), Ok('\n'));
     assert_eq!(lang::_char(r#"\\"#), Ok('\\'));
     assert_eq!(lang::_char(r#"\""#), Ok('"'));
-}
-
-#[test]
-fn array() {
-    assert_eq!(lang::array("()"), Ok(vec![].into()));
-    assert_eq!(
-        lang::array("(1, 2, 3)"),
-        Ok(vec![1.into(), 2.into(), 3.into()].into())
-    );
-    assert_eq!(
-        lang::array(r#"(1, 1.23, "hello")"#),
-        Ok(vec![1.into(), (1.23).into(), "hello".to_string().into()].into())
-    );
 }
 
 #[test]
@@ -79,7 +65,6 @@ fn value_type() {
     assert_eq!(lang::value_type("int"), Ok(ValueType::Int));
     assert_eq!(lang::value_type("real"), Ok(ValueType::Real));
     assert_eq!(lang::value_type("str"), Ok(ValueType::Str));
-    assert_eq!(lang::value_type("array"), Ok(ValueType::Array));
     assert_eq!(lang::value_type("pt"), Ok(ValueType::Pt));
     assert_eq!(lang::value_type("line"), Ok(ValueType::Line));
     assert_eq!(lang::value_type("circ"), Ok(ValueType::Circ));

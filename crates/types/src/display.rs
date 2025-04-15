@@ -37,16 +37,6 @@ impl Display for Value {
                 write!(f, "{v:#.*}", precision)
             }
             Value::Str(Some(v)) => write!(f, "\"{v}\""),
-            Value::Array(Some(v)) => {
-                write!(
-                    f,
-                    "({})",
-                    v.iter()
-                        .map(|item| item.to_string())
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            }
             Value::Pt(Some(v)) => write!(f, "{v}"),
             Value::Line(Some(v)) => write!(f, "{v}"),
             Value::Circ(Some(v)) => write!(f, "{v}"),
@@ -54,7 +44,6 @@ impl Display for Value {
             | Value::Int(None)
             | Value::Real(None)
             | Value::Str(None)
-            | Value::Array(None)
             | Value::Pt(None)
             | Value::Line(None)
             | Value::Circ(None) => write!(f, "none {}", self.value_type()),
@@ -69,7 +58,6 @@ impl Display for ValueType {
             ValueType::Int => "int",
             ValueType::Real => "real",
             ValueType::Str => "str",
-            ValueType::Array => "array",
             ValueType::Pt => "pt",
             ValueType::Line => "line",
             ValueType::Circ => "circ",

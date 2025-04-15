@@ -117,8 +117,6 @@ peg::parser! {
                     AsExpr { body: Box::new(body), value_type }.into()
                 }
 
-                array:array() { array.into() } // array
-
                 "(" _ e:expr() _ ")" { e } // braced
 
                 func_call:func_call_expr() { func_call.into() } // function call
@@ -210,7 +208,6 @@ peg::parser! {
             / "int"
             / "real"
             / "str"
-            / "array"
             / "pt"
             / "line"
             / "circ")
@@ -220,7 +217,6 @@ peg::parser! {
                 "int" => ValueType::Int,
                 "real" => ValueType::Real,
                 "str" => ValueType::Str,
-                "array" => ValueType::Array,
                 "pt" => ValueType::Pt,
                 "line" => ValueType::Line,
                 "circ" => ValueType::Circ,
@@ -274,12 +270,6 @@ peg::parser! {
             / r#"\n"# { '\n' }
             / r#"\\"# { '\\' }
             / c:[^ '\\' | '"'] { c }
-
-        pub rule array() -> Value
-            = "(" _ v:(value() ** (_ "," _)) _ ")"
-        {
-            v.into()
-        }
 
         // -------------------- Whitespace & Comments --------------------
         // Optional whitespace

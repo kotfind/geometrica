@@ -16,12 +16,6 @@ impl Transformable for Value {
             Value::Pt(pt) => pt.map(|pt| pt.transform(t).into()),
             Value::Line(line) => line.map(|line| line.transform(t).into()),
             Value::Circ(circ) => circ.map(|circ| circ.transform(t).into()),
-            Value::Array(vec) => vec.map(|vec| {
-                vec.into_iter()
-                    .filter_map(|v| v.transform(t))
-                    .collect::<Vec<_>>()
-                    .into()
-            }),
             Value::Bool(_) | Value::Int(_) | Value::Real(_) | Value::Str(_) => None,
         }
     }

@@ -369,11 +369,3 @@ fn _let() {
         })
     );
 }
-
-#[test]
-fn array() {
-    assert_eq!(
-        lang::expr("(1, 2, 3)"),
-        Ok(Value::from(vec![1.into(), 2.into(), 3.into()]).into())
-    );
-}
