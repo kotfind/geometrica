@@ -5,19 +5,20 @@ mod test_client;
 
 #[tokio::test]
 async fn simple() {
-    let con = TestClient::new().await;
+    let client = TestClient::new().await;
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
             x = 1
             y = 2
             z = x + y
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    let items = con.get_all_items().await.unwrap();
+    let items = client.get_all_items().await.unwrap();
 
     assert!(items.len() == 3);
     assert!(items[&Ident::from("x")] == 1.into());
@@ -27,10 +28,11 @@ async fn simple() {
 
 #[tokio::test]
 async fn with_funcs() {
-    let con = TestClient::new().await;
+    let client = TestClient::new().await;
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
                 sq x:int -> int = x^2
                 sq x:real -> real = x^2.0
                 sum x:int y:int -> int = x + y
@@ -38,11 +40,11 @@ async fn with_funcs() {
                 b = 2
                 c = sum (sq a) (sq b)
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    let items = con.get_all_items().await.unwrap();
+    let items = client.get_all_items().await.unwrap();
 
     assert!(items.len() == 3);
     assert!(items[&Ident::from("a")] == 1.into());
@@ -52,29 +54,31 @@ async fn with_funcs() {
 
 #[tokio::test]
 async fn multiple_requests() {
-    let con = TestClient::new().await;
+    let client = TestClient::new().await;
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
             sq x:int -> int = x^2
             sq x:real -> real = x^2.0
             sum x:int y:int -> int = x + y
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
             a = 1
             b = 2
             c = sum (sq a) (sq b)
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    let items = con.get_all_items().await.unwrap();
+    let items = client.get_all_items().await.unwrap();
 
     assert!(items.len() == 3);
     assert!(items[&Ident::from("a")] == 1.into());

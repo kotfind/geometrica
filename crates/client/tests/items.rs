@@ -5,19 +5,20 @@ mod test_client;
 
 #[tokio::test]
 async fn get_all() {
-    let con = TestClient::new().await;
+    let client = TestClient::new().await;
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
         x = 1
         y = 2
         z = x + y
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    let items = con.get_all_items().await.unwrap();
+    let items = client.get_all_items().await.unwrap();
 
     assert!(items.len() == 3);
     assert!(items[&Ident::from("x")] == 1.into());
@@ -27,20 +28,21 @@ async fn get_all() {
 
 #[tokio::test]
 async fn get_item() {
-    let con = TestClient::new().await;
+    let client = TestClient::new().await;
 
-    con.define(
-        r#"
+    client
+        .define(
+            r#"
         x = 1
         y = 2
         z = x + y
         "#,
-    )
-    .await
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
-    assert!(con.get_item("x").await.unwrap() == 1.into());
-    assert!(con.get_item("y").await.unwrap() == 2.into());
-    assert!(con.get_item("z").await.unwrap() == 3.into());
-    assert!(con.get_item("t").await.is_err());
+    assert!(client.get_item("x").await.unwrap() == 1.into());
+    assert!(client.get_item("y").await.unwrap() == 2.into());
+    assert!(client.get_item("z").await.unwrap() == 3.into());
+    assert!(client.get_item("t").await.is_err());
 }

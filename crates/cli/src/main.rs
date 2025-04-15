@@ -28,7 +28,7 @@ struct Cli {
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    let con = Client::from(ClientSettings {
+    let client = Client::from(ClientSettings {
         server_url: cli.server_url,
         try_spawn_server: cli.do_init_server,
     })
@@ -36,11 +36,11 @@ async fn main() -> anyhow::Result<()> {
     .context("failed to connect to server")?;
 
     if let Some(script_file) = cli.script_file {
-        script_file_mode::run(con, script_file).await?;
+        script_file_mode::run(client, script_file).await?;
     } else if is_terminal::is_terminal(std::io::stdin()) {
-        tty_mode::run(con).await?;
+        tty_mode::run(client).await?;
     } else {
-        stdin_mode::run(con).await?;
+        stdin_mode::run(client).await?;
     }
 
     Ok(())

@@ -4,14 +4,14 @@ mod test_client;
 
 #[tokio::test]
 async fn eval() {
-    let con = TestClient::new().await;
-    assert_eq!(con.eval_one("1 + 1").await.unwrap(), 2.into());
+    let client = TestClient::new().await;
+    assert_eq!(client.eval_one("1 + 1").await.unwrap(), 2.into());
 }
 
 #[tokio::test]
 async fn eval_multi() {
-    let con = TestClient::new().await;
-    let mut res = con
+    let client = TestClient::new().await;
+    let mut res = client
         .eval(["1 + 1", "2 * 2", "x + 1"])
         .await
         .unwrap()
