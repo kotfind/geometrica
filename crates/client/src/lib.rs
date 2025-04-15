@@ -9,6 +9,3 @@ mod new;
 mod request;
 mod script_result;
 mod table;
-
-#[cfg(test)]
-mod test_utils;

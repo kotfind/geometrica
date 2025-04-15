@@ -2,7 +2,7 @@ use std::{ops::Deref, process::Child};
 
 use reqwest::Url;
 
-use crate::{Client, ClientSettings};
+use client::{Client, ClientSettings};
 
 pub struct TestClient {
     client: Client,

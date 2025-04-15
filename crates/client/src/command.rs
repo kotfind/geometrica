@@ -268,5 +268,3 @@ impl Client {
         enum_iterator::all().collect()
     }
 }
-
-// TODO: add tests

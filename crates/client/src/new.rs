@@ -152,13 +152,3 @@ impl Client {
             .is_ok()
     }
 }
-
-#[cfg(test)]
-mod test {
-    use crate::test_utils::TestClient;
-
-    #[tokio::test]
-    async fn connect() {
-        TestClient::new().await;
-    }
-}
