@@ -49,8 +49,8 @@ pub enum ExecError {
 }
 
 pub struct ExecScope {
-    funcs: FuncMap,
-    nodes: HashMap<Ident, Node>,
+    pub(crate) funcs: FuncMap,
+    pub(crate) nodes: HashMap<Ident, Node>,
 }
 
 impl Default for ExecScope {

@@ -68,8 +68,8 @@ mod test {
         let Value::Real(Some(c)) = eval(&format!("({l_str}).c")) else {
             panic!();
         };
-        assert!(a * p1.x + b * p1.y + c == 0.into());
-        assert!(a * p2.x + b * p2.y + c == 0.into());
+        assert!(a * p1.x + b * p1.y + c == 0.0);
+        assert!(a * p2.x + b * p2.y + c == 0.0);
     }
 
     #[test]

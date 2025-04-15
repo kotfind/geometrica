@@ -56,6 +56,14 @@ impl From<FunctionInner> for Function {
 }
 
 impl Function {
+    pub(crate) fn address(&self) -> usize {
+        Arc::as_ptr(&self.0) as usize
+    }
+
+    pub(crate) fn inner(&self) -> &FunctionInner {
+        &self.0
+    }
+
     pub(crate) fn eval(&self, args: Vec<Value>) -> EvalResult {
         // TODO: check arg_types if #[cfg(debug)]
         match self
@@ -153,17 +161,17 @@ impl Function {
     }
 }
 
-struct FunctionInner {
-    sign: FunctionSignature,
-    return_type: ValueType,
+pub(crate) struct FunctionInner {
+    pub(crate) sign: FunctionSignature,
+    pub(crate) return_type: ValueType,
 
     /// If kind is empty, then function is considered to be "dummy". Dummy function is pushed to
     /// scope before function body is parsed. It is used to make recursion possible. Function with
     /// this kind will panic if evaluated.
-    kind: OnceLock<FunctionInnerKind>,
+    pub(crate) kind: OnceLock<FunctionInnerKind>,
 }
 
-enum FunctionInnerKind {
+pub(crate) enum FunctionInnerKind {
     BuiltIn(Box<dyn Sync + Send + 'static + Fn(Vec<Value>) -> EvalResult>),
     CustomFunction(CustomFunction),
 }
@@ -177,9 +185,9 @@ impl Debug for FunctionInnerKind {
     }
 }
 
-struct CustomFunction {
-    arg_names: Vec<Ident>,
-    body: CExpr,
+pub struct CustomFunction {
+    pub(crate) arg_names: Vec<Ident>,
+    pub(crate) body: CExpr,
 }
 
 impl CustomFunction {

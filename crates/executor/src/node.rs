@@ -54,6 +54,14 @@ impl From<NodeInnerKind> for Node {
 }
 
 impl Node {
+    pub(crate) fn inner(&self) -> &NodeInner {
+        &self.0
+    }
+
+    pub(crate) fn address(&self) -> usize {
+        Arc::as_ptr(&self.0) as usize
+    }
+
     fn from_value(value: Value) -> Self {
         Node::from(NodeInnerKind::Value(Mutex::new(value)))
     }
@@ -226,23 +234,23 @@ impl Node {
 }
 
 #[derive(Debug)]
-struct NodeInner {
+pub(crate) struct NodeInner {
     required_by: Mutex<Vec<WeakNode>>,
-    kind: NodeInnerKind,
+    pub(crate) kind: NodeInnerKind,
 }
 
 #[derive(Debug)]
-enum NodeInnerKind {
+pub(crate) enum NodeInnerKind {
     Value(Mutex<Value>),
     CExpr(CExprNode),
 }
 
 #[derive(Debug)]
-struct CExprNode {
+pub(crate) struct CExprNode {
     /// Last evaluated value
     value: Mutex<Value>,
-    body: CExpr,
-    bindings: Vec<(Ident, Node)>,
+    pub(crate) body: CExpr,
+    pub(crate) bindings: Vec<(Ident, Node)>,
 }
 
 #[cfg(test)]
