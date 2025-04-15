@@ -6,7 +6,6 @@ use clap::Parser;
 use executor::exec::ExecScope;
 use tempfile::NamedTempFile;
 use tokio::{net::TcpListener, sync::Mutex};
-use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod result;
@@ -44,7 +43,8 @@ async fn main() -> anyhow::Result<()> {
     if let Some(port_file) = cli.port_file {
         write_port(local_addr, port_file)?;
     }
-    info!("Listening on {}...", local_addr);
+    println!("Welcome to Geometrica Server!");
+    println!("Listening on {}...", local_addr);
 
     axum::serve(listener, router()).await?;
 
