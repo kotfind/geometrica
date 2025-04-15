@@ -4,11 +4,21 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 
 use crate::exec;
 
+const GREETING_MSG: &str = "Welcome to Geometrica Cli!
+Enter list_cmd! to see all available commands.\n\n";
+
 /// Note: won't fail if some of commands failed
 pub async fn run(client: Client) -> anyhow::Result<()> {
     let mut reader = BufReader::new(tokio::io::stdin());
     let mut writer = BufWriter::new(tokio::io::stdout());
     let mut script: Option<String> = None;
+
+    writer
+        .write_all(GREETING_MSG.as_bytes())
+        .await
+        .context("failed to write help message to stdout")?;
+    writer.flush().await.context("failed to flush to stdout")?;
+
     loop {
         let prompt = if script.is_some() { "_ " } else { "> " };
         writer
