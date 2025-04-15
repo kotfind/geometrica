@@ -145,9 +145,9 @@ impl ExecScope {
         self.funcs.get(sign).cloned()
     }
 
-    // Returns a pair of two `Vec<FunctionSignature>`.
-    // The first one contains built-in functions,
-    // the second one contains user-defined functions.
+    /// Returns a pair of two `Vec<FunctionSignature>`.
+    /// The first one contains built-in functions,
+    /// the second one contains user-defined functions.
     pub fn list_funcs(&self) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
         (
             Function::list_builtins(),
