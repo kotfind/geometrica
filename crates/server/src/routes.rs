@@ -67,7 +67,7 @@ pub fn router() -> Router<App> {
                 .eval_expr(expr, HashMap::new())
                 .map_err(api_err_no_result)?;
 
-            scope.set(name, value).map_err(api_err_no_result)?;
+            scope.set(&name, value).map_err(api_err_no_result)?;
 
             api_ok(R {})
         }

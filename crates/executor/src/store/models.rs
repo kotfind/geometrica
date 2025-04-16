@@ -4,9 +4,12 @@
 //! * Arc's addresses are used as ids, when serializing.
 
 use serde_with::serde_as;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::OnceLock,
+};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use types::{
     core::{Ident, Value, ValueType},
     lang::FunctionSignature,
@@ -56,7 +59,16 @@ pub(super) enum StoredCExprKind {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub(super) enum StoredFunction {
+pub(super) struct StoredFunction {
+    pub(super) sign: FunctionSignature,
+    pub(super) return_type: ValueType,
+
+    /// See [FunctionInner::kind] docs on using OnceLock here.
+    pub(super) kind: StoredOnceLock<StoredFunctionKind>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub(super) enum StoredFunctionKind {
     Builtin(FunctionSignature),
     CExpr {
         arg_names: Vec<Ident>,
@@ -71,4 +83,22 @@ pub(super) enum StoredNode {
         body: StoredCExprId,
         bindings: Vec<(Ident, StoredNodeId)>,
     },
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct StoredOnceLock<T>(pub(super) OnceLock<T>);
+
+impl<T: Serialize> Serialize for StoredOnceLock<T> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self.0.get() {
+            Some(inner) => inner.serialize(serializer),
+            None => panic!("cannot serialize uninitialized StoredOneLock"),
+        }
+    }
+}
+
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for StoredOnceLock<T> {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        T::deserialize(deserializer).map(|inner| StoredOnceLock(OnceLock::from(inner)))
+    }
 }

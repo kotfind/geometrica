@@ -1,9 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::OnceLock,
+};
 
 use crate::{
     cexpr::{CExpr, CExprInner, CExprInnerKind, FuncCallCExpr, IfCExpr},
     exec::ExecScope,
-    function::{CustomFunction, Function, FunctionInnerKind},
+    function::{CustomFunction, Function, FunctionInner, FunctionInnerKind},
     node::{CExprNode, Node, NodeInnerKind},
 };
 
@@ -59,30 +62,44 @@ impl Function {
         if scope.stored_exec_scope.funcs.contains_key(&id) {
             return id;
         }
-        assert!(
-            scope.processing.insert(id),
-            "circular dependency detected, processing: {:#?}",
-            scope.processing
-        );
 
-        let sign = self.sign();
-        let func = match self
-            .inner()
-            .kind
-            .get()
-            .expect("cannot serialize dummy function")
-        {
-            FunctionInnerKind::BuiltIn(_) => StoredFunction::Builtin(sign),
+        let FunctionInner {
+            sign,
+            return_type,
+            kind,
+        } = self.inner();
+
+        let stored_func = StoredFunction {
+            sign: sign.clone(),
+            return_type: return_type.clone(),
+            kind: StoredOnceLock(OnceLock::new()),
+        };
+
+        assert!(scope
+            .stored_exec_scope
+            .funcs
+            .insert(id, stored_func)
+            .is_none());
+
+        let stored_kind = match kind.get().expect("cannot serialize dummy function") {
+            FunctionInnerKind::BuiltIn(_) => StoredFunctionKind::Builtin(sign.clone()),
             FunctionInnerKind::CustomFunction(CustomFunction { arg_names, body }) => {
-                StoredFunction::CExpr {
+                StoredFunctionKind::CExpr {
                     arg_names: arg_names.clone(),
                     body: body.to_stored(scope),
                 }
             }
         };
 
-        assert!(scope.stored_exec_scope.funcs.insert(id, func).is_none());
-        assert!(scope.processing.remove(&id));
+        scope
+            .stored_exec_scope
+            .funcs
+            .get_mut(&id)
+            .expect("we have just pushed this")
+            .kind
+            .0
+            .set(stored_kind)
+            .expect("cannot define function twice");
 
         id
     }
@@ -106,7 +123,7 @@ impl CExpr {
             value_type,
         } = self.inner().clone();
 
-        let new_kind = match kind {
+        let stored_kind = match kind {
             CExprInnerKind::Value(value) => StoredCExprKind::Value(value.clone()),
             CExprInnerKind::Variable(ident) => StoredCExprKind::Variable(ident.clone()),
             CExprInnerKind::FuncCall(FuncCallCExpr { func, args }) => StoredCExprKind::FuncCall {
@@ -125,13 +142,17 @@ impl CExpr {
             },
         };
 
-        let cexpr = StoredCExpr {
+        let stored_cexpr = StoredCExpr {
             required_vars,
             value_type,
-            kind: new_kind,
+            kind: stored_kind,
         };
 
-        assert!(scope.stored_exec_scope.cexprs.insert(id, cexpr).is_none());
+        assert!(scope
+            .stored_exec_scope
+            .cexprs
+            .insert(id, stored_cexpr)
+            .is_none());
         assert!(scope.processing.remove(&id));
 
         id
@@ -150,7 +171,7 @@ impl Node {
             scope.processing
         );
 
-        let node = match &self.inner().kind {
+        let stored_node = match &self.inner().kind {
             NodeInnerKind::Value(value) => StoredNode::Value(value.lock().unwrap().clone()),
             NodeInnerKind::CExpr(CExprNode { body, bindings, .. }) => StoredNode::CExpr {
                 body: body.to_stored(scope),
@@ -161,7 +182,11 @@ impl Node {
             },
         };
 
-        assert!(scope.stored_exec_scope.nodes.insert(id, node).is_none());
+        assert!(scope
+            .stored_exec_scope
+            .nodes
+            .insert(id, stored_node)
+            .is_none());
         assert!(scope.processing.remove(&id));
 
         id
@@ -226,5 +251,26 @@ mod test {
             .into_iter()
             .collect()
         );
+    }
+
+    /// Only checks, that cast won't panic
+    #[test]
+    fn recursion() {
+        let mut scope = ExecScope::new();
+
+        parser::definitions(
+            r#"
+            fact n:int -> int = if
+                n == 0 then 1,
+                else n * (fact (n - 1))
+            x = fact 5
+        "#,
+        )
+        .unwrap()
+        .exec(&mut scope)
+        .unwrap();
+
+        let stored_exec_scope = scope.to_stored();
+        serde_json::to_string(&stored_exec_scope).unwrap();
     }
 }

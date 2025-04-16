@@ -32,6 +32,12 @@ impl CExpr {
     }
 }
 
+impl From<CExprInner> for CExpr {
+    fn from(value: CExprInner) -> Self {
+        CExpr(Arc::new(value))
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct CExprInner {
     /// Set of all variables used inside of this CExpr

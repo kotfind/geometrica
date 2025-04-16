@@ -64,6 +64,13 @@ impl Function {
         &self.0
     }
 
+    pub(crate) fn set_kind(&mut self, kind: FunctionInnerKind) {
+        self.0
+            .kind
+            .set(kind)
+            .expect("cannot set function kind twice");
+    }
+
     pub(crate) fn eval(&self, args: Vec<Value>) -> EvalResult {
         // TODO: check arg_types if #[cfg(debug)]
         match self

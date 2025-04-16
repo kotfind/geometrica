@@ -12,6 +12,7 @@ use crate::{
     eval::Eval,
     function::{FuncMap, Function},
     node::Node,
+    store::LoadError,
 };
 
 #[derive(Debug, Error)]
@@ -21,6 +22,10 @@ pub enum ExecError {
 
     #[error("eval error")]
     EvalError(#[from] EvalError),
+
+    // Error while loading state from file
+    #[error("load error")]
+    LoadError(#[from] LoadError),
 
     #[error("undefined variable '{var}' in function '{func}'")]
     UndefinedVariableInFunction { var: Ident, func: FunctionSignature },
@@ -85,14 +90,14 @@ impl ExecScope {
         Ok(())
     }
 
-    pub fn set(&self, name: Ident, value: Value) -> Result<(), ExecError> {
+    pub fn set(&mut self, name: &Ident, value: Value) -> Result<(), ExecError> {
         let node = self
-            .get_node(&name)
+            .get_node(name)
             .ok_or(ExecError::UndefinedVariable(name.clone()))?;
 
         if node.value_type() != value.value_type() {
             return Err(ExecError::SetDifferentType {
-                name,
+                name: name.clone(),
                 old_type: node.value_type(),
                 new_type: value.value_type(),
             });

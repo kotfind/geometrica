@@ -62,7 +62,7 @@ impl Node {
         Arc::as_ptr(&self.0) as usize
     }
 
-    fn from_value(value: Value) -> Self {
+    pub(crate) fn from_value(value: Value) -> Self {
         Node::from(NodeInnerKind::Value(Mutex::new(value)))
     }
 
@@ -94,7 +94,7 @@ impl Node {
         nodes_to_rm
     }
 
-    fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
+    pub(crate) fn from_cexpr(body: CExpr, bindings: Vec<(Ident, Node)>) -> Result<Self, EvalError> {
         let node = Node::from(NodeInnerKind::CExpr(CExprNode {
             value: Mutex::new(
                 body.eval(
