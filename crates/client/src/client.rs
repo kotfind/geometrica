@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 use anyhow::Context;
 use parser::ParseInto;
@@ -179,6 +179,40 @@ impl Client {
         .await
         .context(format!("failed to set '{name}' to '{expr}'"))?;
 
+        Ok(())
+    }
+
+    pub async fn load_json(&self, json: impl ToString) -> anyhow::Result<()> {
+        self.req(api::json::load::Request {
+            json: json.to_string(),
+        })
+        .await
+        .context("failed to load from json")?;
+
+        Ok(())
+    }
+
+    pub async fn dump_json(&self) -> anyhow::Result<String> {
+        let resp = self
+            .req(api::json::dump::Request {})
+            .await
+            .context("failed to dump to json")?;
+        Ok(resp.json)
+    }
+
+    pub async fn save(&self, file: &Path) -> anyhow::Result<()> {
+        let json = self.dump_json().await.context("dump_json failed")?;
+        tokio::fs::write(file, json.as_bytes())
+            .await
+            .context("failed to write to file")?;
+        Ok(())
+    }
+
+    pub async fn load(&self, file: &Path) -> anyhow::Result<()> {
+        let json = tokio::fs::read_to_string(file)
+            .await
+            .context("failed to read file")?;
+        self.load_json(json).await.context("load_json failed")?;
         Ok(())
     }
 }

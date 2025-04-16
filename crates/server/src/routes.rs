@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{http::StatusCode, routing::post, Router};
-use executor::exec::Exec;
+use executor::exec::{Exec, ExecScope};
 use types::api::Error;
 
 use crate::{
@@ -71,6 +71,16 @@ pub fn router() -> Router<App> {
 
             api_ok(R {})
         }
+
+        ROUTE (json::dump)() SCOPE scope {
+            api_ok(R { json: scope.to_json() })
+        }
+
+        ROUTE (json::load)(json) SCOPE scope {
+            let new_exec_scope = ExecScope::from_json(&json).map_err(api_err_no_result)?;
+            *scope = new_exec_scope;
+            api_ok(R {})
+        }
     );
 
     router
@@ -88,7 +98,14 @@ macro_rules! route {
         ($($arg:ident),*)
 
         // Locked scope
+        //
+        // Conflicts with SCOPE_MUTEX
         $(SCOPE $scope:ident)?
+
+        // Scope mutex, not locked
+        //
+        // Conflicts with SCOPE
+        $(SCOPE_MUTEX $scope_mutex:ident)?
 
         // The api response type is provided to body as R
         $body:block
@@ -105,6 +122,11 @@ macro_rules! route {
                 $(
                     #[allow(unused_mut)]
                     let mut $scope = scope.lock().await;
+                )?
+
+                $(
+                    #[allow(unused_mut)]
+                    let mut $scope_mutex = scope;
                 )?
 
                 #[allow(unused_imports)]

@@ -1,10 +1,13 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, bail, Context};
 use enum_iterator::Sequence;
 use itertools::Itertools;
 use parser::ParseInto;
-use types::lang::{Command, CommandArg};
+use types::{
+    core::Value,
+    lang::{Command, CommandArg, Expr},
+};
 
 use crate::{table::Table, Client, ScriptResult};
 
@@ -46,6 +49,8 @@ pub enum CommandType {
     ListFunc,
     Rm,
     Set,
+    Save,
+    Load,
 }
 
 impl FromStr for CommandType {
@@ -79,6 +84,16 @@ impl CommandType {
             CommandType::ListFunc => ("list_func", "-", "list all functions"),
             CommandType::ListCmd => ("list_cmd", "-", "list all commands"),
             CommandType::Clear => ("clear", "-", "clear all items and user-defined functions"),
+            CommandType::Save => (
+                "save",
+                "expr",
+                "writes state to file, expr should\nevaluate to a str (filepath)",
+            ),
+            CommandType::Load => (
+                "load",
+                "expr",
+                "reads state from file, expr should\nevaluate to a str (filepath)",
+            ),
         }
     }
 
@@ -104,6 +119,8 @@ impl CommandType {
             CommandType::ListFunc => Self::list_func_cmd(client, args).await,
             CommandType::ListCmd => Self::list_cmd_cmd(args),
             CommandType::Clear => Self::clear_cmd(client, args).await,
+            CommandType::Save => Self::save_cmd(client, args).await,
+            CommandType::Load => Self::load_cmd(client, args).await,
         }
     }
 
@@ -243,6 +260,54 @@ impl CommandType {
 
         if let Err(err) = client.clear().await {
             return ScriptResult::error(err.context("clear failed"));
+        }
+
+        ScriptResult::ok_none()
+    }
+
+    async fn eval_file_path(client: &Client, expr: Expr) -> anyhow::Result<PathBuf> {
+        Ok(match client.eval_one(expr).await {
+            Ok(Value::Str(Some(path))) => PathBuf::from(path),
+            Ok(Value::Str(None)) => {
+                bail!("file path should not be none")
+            }
+
+            Ok(v) => {
+                bail!("file path must be a str, got {}", v.value_type())
+            }
+            Err(err) => return Err(err.context("failed to evaluate file path expr")),
+        })
+    }
+
+    async fn save_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(EXPR expr FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        let path = match Self::eval_file_path(client, expr).await {
+            Ok(path) => path,
+            Err(err) => return ScriptResult::error(err.context("eval_file_path failed")),
+        };
+
+        if let Err(err) = client.save(&path).await {
+            return ScriptResult::error(err.context("save failed"));
+        }
+
+        ScriptResult::ok_none()
+    }
+
+    async fn load_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(EXPR expr FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        let path = match Self::eval_file_path(client, expr).await {
+            Ok(path) => path,
+            Err(err) => return ScriptResult::error(err.context("eval_file_path failed")),
+        };
+
+        if let Err(err) = client.load(&path).await {
+            return ScriptResult::error(err.context("load failed"));
         }
 
         ScriptResult::ok_none()

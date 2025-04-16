@@ -5,65 +5,6 @@ use crate::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Error {
-    pub msg: String,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.msg)
-    }
-}
-
-impl std::error::Error for Error {}
-
-pub trait Request: Serialize + DeserializeOwned {
-    const ROUTE: &str;
-    type Response: Response;
-}
-
-pub trait Response: Serialize + DeserializeOwned {
-    const ROUTE: &str;
-    type Request: Request;
-}
-
-macro_rules! route {
-    (
-        ROUTE $route:literal
-        REQUEST {
-            $($req_field_name:ident: $req_field_type:ty),*
-            $(,)?
-        }
-        RESPONSE {
-            $($resp_field_name:ident: $resp_field_type:ty),*
-            $(,)?
-        }
-    ) => {
-        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
-        pub struct Request {
-            $(pub $req_field_name: $req_field_type),*
-        }
-
-        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
-        pub struct Response {
-            $(pub $resp_field_name: $resp_field_type),*
-        }
-
-        impl crate::api::Request for Request {
-            type Response = Response;
-            const ROUTE: &str = $route;
-        }
-
-        impl crate::api::Response for Response {
-            type Request = Request;
-            const ROUTE: &str = $route;
-        }
-
-        pub const ROUTE: &str = $route;
-    };
-}
-
 pub mod eval {
     use super::*;
 
@@ -163,9 +104,99 @@ pub mod func {
 }
 
 pub mod clear {
+    use super::*;
+
     route! {
         ROUTE "/clear"
         REQUEST {}
         RESPONSE {}
     }
 }
+
+pub mod json {
+    use super::*;
+
+    pub mod dump {
+        use super::*;
+
+        route! {
+            ROUTE "/json/dump"
+            REQUEST {}
+            RESPONSE {
+                json: String,
+            }
+        }
+    }
+
+    pub mod load {
+        use super::*;
+
+        route! {
+            ROUTE "/json/load"
+            REQUEST {
+                json: String,
+            }
+            RESPONSE {}
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Error {
+    pub msg: String,
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
+impl std::error::Error for Error {}
+
+pub trait Request: Serialize + DeserializeOwned {
+    const ROUTE: &str;
+    type Response: Response;
+}
+
+pub trait Response: Serialize + DeserializeOwned {
+    const ROUTE: &str;
+    type Request: Request;
+}
+
+macro_rules! route {
+    (
+        ROUTE $route:literal
+        REQUEST {
+            $($req_field_name:ident: $req_field_type:ty),*
+            $(,)?
+        }
+        RESPONSE {
+            $($resp_field_name:ident: $resp_field_type:ty),*
+            $(,)?
+        }
+    ) => {
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        pub struct Request {
+            $(pub $req_field_name: $req_field_type),*
+        }
+
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        pub struct Response {
+            $(pub $resp_field_name: $resp_field_type),*
+        }
+
+        impl crate::api::Request for Request {
+            type Response = Response;
+            const ROUTE: &str = $route;
+        }
+
+        impl crate::api::Response for Response {
+            type Request = Request;
+            const ROUTE: &str = $route;
+        }
+
+        pub const ROUTE: &str = $route;
+    };
+}
+use route;
