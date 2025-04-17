@@ -24,15 +24,6 @@ pub(super) fn populate(builtins: &mut FuncMap) {
         fn "#as_str" (v:    Pt) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Line) -> Str { Ok(Value::from(v).to_string()) }
         fn "#as_str" (v:  Circ) -> Str { Ok(Value::from(v).to_string()) }
-        // // is_none
-        // // XXX: those are temporaryly disabled
-        // fn "#is_none" (v:  Bool) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:   Int) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:  Real) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:   Str) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:    Pt) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:  Line) -> Bool { Ok(v.is_none()) }
-        // fn "#is_none" (v:  Circ) -> Bool { Ok(v.is_none()) }
     );
 }
 
@@ -68,22 +59,25 @@ mod test {
 
     #[test]
     fn as_str() {
-        assert_eq!(eval("true as str"), "true".to_string().into());
-        assert_eq!(eval("false as str"), "false".to_string().into());
-        assert_eq!(eval("1 as str"), "1".to_string().into());
-        assert_eq!(eval("1.0 as str"), "1.000".to_string().into());
+        assert_eq!(eval("true as str"), eval("true").to_string().into());
+        assert_eq!(eval("false as str"), eval("false").to_string().into());
+        assert_eq!(eval("1 as str"), eval("1").to_string().into());
+        assert_eq!(eval("1.0 as str"), eval("1.000").to_string().into());
         assert_eq!(
             eval(r#""abacaba" as str"#),
-            r#""abacaba""#.to_string().into()
+            eval(r#""abacaba""#).to_string().into()
         );
-        assert_eq!(eval("(pt 1.0 2.0) as str"), "pt 1 2".to_string().into());
+        assert_eq!(
+            eval("(pt 1.0 2.0) as str"),
+            eval("pt 1.000 2.000").to_string().into()
+        );
         assert_eq!(
             eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) as str"),
-            "line (pt 1 2) (pt 3 4)".to_string().into()
+            eval("line (pt 1.0 2.0) (pt 3.0 4.0)").to_string().into(),
         );
         assert_eq!(
             eval("(circ (pt 1.0 2.0) 3.0) as str"),
-            "circ (pt 1 2) 3".to_string().into()
+            eval("circ (pt 1.0 2.0) 3.0").to_string().into()
         );
     }
 
@@ -97,27 +91,4 @@ mod test {
         assert_eq!(eval("none line as str"), "none line".to_string().into());
         assert_eq!(eval("none circ as str"), "none circ".to_string().into());
     }
-
-    // XXX: those are temporaryly disabled
-    // #[test]
-    // fn is_none() {
-    //     assert_eq!(eval("none bool is none"), true.into());
-    //     assert_eq!(eval("none int is none"), true.into());
-    //     assert_eq!(eval("none real is none"), true.into());
-    //     assert_eq!(eval("none str is none"), true.into());
-    //     assert_eq!(eval("none pt is none"), true.into());
-    //     assert_eq!(eval("none line is none"), true.into());
-    //     assert_eq!(eval("none circ is none"), true.into());
-    //     assert_eq!(eval("false is none"), false.into());
-    //     assert_eq!(eval("1 is none"), false.into());
-    //     assert_eq!(eval("1.0 is none"), false.into());
-    //     assert_eq!(eval("\"abacaba\" is none"), false.into());
-    //     assert_eq!(eval("(1, 2, 3) is none"), false.into());
-    //     assert_eq!(eval("(pt 1.0 2.0) is none"), false.into());
-    //     assert_eq!(
-    //         eval("(line (pt 1.0 2.0) (pt 3.0 4.0)) is none"),
-    //         false.into()
-    //     );
-    //     assert_eq!(eval("(circ (pt 1.0 2.0) 3.0) is none"), false.into());
-    // }
 }
