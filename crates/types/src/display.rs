@@ -28,15 +28,16 @@ impl Display for Expr {
 }
 
 impl Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Value::Bool(Some(v)) => write!(f, "{v}"),
             Value::Int(Some(v)) => write!(f, "{v}"),
             Value::Real(Some(v)) => {
-                let precision = f.precision().unwrap_or(3);
-                write!(f, "{v:#.*}", precision)
+                write!(f, "{}", f64_to_string_g(*v, f.precision()))
             }
-            Value::Str(Some(v)) => write!(f, "\"{v}\""),
+            Value::Str(Some(v)) => {
+                write!(f, "\"{}\"", v.replace("\\", "\\\\").replace("\"", "\\\""))
+            }
             Value::Pt(Some(v)) => write!(f, "{v}"),
             Value::Line(Some(v)) => write!(f, "{v}"),
             Value::Circ(Some(v)) => write!(f, "{v}"),
@@ -52,7 +53,7 @@ impl Display for Value {
 }
 
 impl Display for ValueType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             ValueType::Bool => "bool",
             ValueType::Int => "int",
@@ -67,20 +68,30 @@ impl Display for ValueType {
 }
 
 impl Display for Pt {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "pt {x} {y}", x = self.x, y = self.y)
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "pt {x} {y}",
+            x = f64_to_string_g(self.x, f.precision()),
+            y = f64_to_string_g(self.y, f.precision())
+        )
     }
 }
 
 impl Display for Line {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "line ({p1}) ({p2})", p1 = self.p1, p2 = self.p2)
     }
 }
 
 impl Display for Circ {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "circ ({o}) {r}", o = self.o, r = self.r)
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "circ ({o}) {r}",
+            o = self.o,
+            r = f64_to_string_g(self.r, f.precision())
+        )
     }
 }
 
@@ -166,7 +177,7 @@ impl Display for InfixExpr {
 }
 
 impl Display for InfixOp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             InfixOp::OR => "|",
             InfixOp::AND => "&",
@@ -196,7 +207,7 @@ impl Display for UnaryExpr {
 }
 
 impl Display for UnaryOp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             UnaryOp::NOT => "!",
             UnaryOp::NEG => "-",
@@ -235,5 +246,19 @@ impl Display for FunctionSignature {
         }
 
         write!(f, "{}", parts.join(" "))
+    }
+}
+
+/// Converts a f64 to a String in a way similar to C's printf's `g` modifier.
+fn f64_to_string_g(num: f64, precision: Option<usize>) -> String {
+    const DEFAULT_PRECISION: usize = 3;
+    const E_STYLE_EXP10_THRESHOLD: usize = 4;
+
+    let precision = precision.unwrap_or(DEFAULT_PRECISION);
+    let exp10 = num.log10().ceil().abs();
+    if exp10.is_finite() && exp10 > E_STYLE_EXP10_THRESHOLD as f64 {
+        format!("{num:.precision$e}")
+    } else {
+        format!("{num:.precision$}")
     }
 }
