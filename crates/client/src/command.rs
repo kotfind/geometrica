@@ -11,32 +11,24 @@ use types::{
 
 use crate::{table::Table, Client, ScriptResult};
 
-macro_rules! unwrap_cmd_arg {
-    (END FROM $args:ident) => {
-        if $args.next().is_some() {
-            return ScriptResult::error(anyhow!("got arg, expected none"));
-        }
-    };
-
-    (IDENT $name:ident FROM $args:ident) => {
-        let $name = match $args.next() {
-            Some(CommandArg::Ident(ident)) => ident,
-            Some(CommandArg::Expr(_)) => {
-                return ScriptResult::error(anyhow!("got expr, ident expected"))
-            }
-            None => return ScriptResult::error(anyhow!("expected ident, got nothing")),
+impl Client {
+    pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
+        let cmd = match cmd.parse_into().context("failed to parse command") {
+            Ok(cmd) => cmd,
+            Err(err) => return ScriptResult::error(err),
         };
-    };
 
-    (EXPR $name:ident FROM $args:ident) => {
-        let $name = match $args.next() {
-            Some(CommandArg::Expr(expr)) => expr,
-            Some(CommandArg::Ident(_)) => {
-                return ScriptResult::error(anyhow!("got ident, expr expected"))
-            }
-            None => return ScriptResult::error(anyhow!("expected expr, got nothing")),
+        let cmd_type = match CommandType::from_str(&cmd.name.0) {
+            Ok(cmd_type) => cmd_type,
+            Err(err) => return ScriptResult::error(err),
         };
-    };
+
+        cmd_type.apply(self, cmd.args).await
+    }
+
+    pub fn list_cmd() -> Vec<CommandType> {
+        enum_iterator::all().collect()
+    }
 }
 
 #[derive(Debug, Sequence)]
@@ -172,7 +164,10 @@ impl CommandType {
 
         assert_eq!(exprs.len(), values.len());
 
-        // TODO: shorten value if too long
+        fn fit(text: impl ToString) -> String {
+            fit_to_len(text, 100)
+        }
+
         ScriptResult::ok_one(Table::new_with_rows(
             ["Name", "Value"],
             exprs
@@ -180,10 +175,10 @@ impl CommandType {
                 .zip(values.into_iter())
                 .map(|(expr, value)| {
                     [
-                        format!("{expr}"),
+                        fit(expr),
                         match value {
-                            Ok(value) => value.to_string(),
-                            Err(_) => "error".to_string(),
+                            Ok(value) => fit(value),
+                            Err(err) => fit(err),
                         },
                     ]
                 }),
@@ -314,22 +309,50 @@ impl CommandType {
     }
 }
 
-impl Client {
-    pub async fn command(&self, cmd: impl ParseInto<Command>) -> ScriptResult {
-        let cmd = match cmd.parse_into().context("failed to parse command") {
-            Ok(cmd) => cmd,
-            Err(err) => return ScriptResult::error(err),
-        };
+fn fit_to_len(text: impl ToString, len: usize) -> String {
+    const SUFFIX: &str = "...";
 
-        let cmd_type = match CommandType::from_str(&cmd.name.0) {
-            Ok(cmd_type) => cmd_type,
-            Err(err) => return ScriptResult::error(err),
-        };
-
-        cmd_type.apply(self, cmd.args).await
+    if len < SUFFIX.len() {
+        panic!("len may not be less than {}, got {}", SUFFIX.len(), len);
     }
 
-    pub fn list_cmd() -> Vec<CommandType> {
-        enum_iterator::all().collect()
+    let text = text.to_string();
+
+    if text.len() <= len {
+        return text;
     }
+
+    text.chars()
+        .take(len - SUFFIX.len())
+        .chain(SUFFIX.chars())
+        .collect()
 }
+
+macro_rules! unwrap_cmd_arg {
+    (END FROM $args:ident) => {
+        if $args.next().is_some() {
+            return ScriptResult::error(anyhow!("got arg, expected none"));
+        }
+    };
+
+    (IDENT $name:ident FROM $args:ident) => {
+        let $name = match $args.next() {
+            Some(CommandArg::Ident(ident)) => ident,
+            Some(CommandArg::Expr(_)) => {
+                return ScriptResult::error(anyhow!("got expr, ident expected"))
+            }
+            None => return ScriptResult::error(anyhow!("expected ident, got nothing")),
+        };
+    };
+
+    (EXPR $name:ident FROM $args:ident) => {
+        let $name = match $args.next() {
+            Some(CommandArg::Expr(expr)) => expr,
+            Some(CommandArg::Ident(_)) => {
+                return ScriptResult::error(anyhow!("got ident, expr expected"))
+            }
+            None => return ScriptResult::error(anyhow!("expected expr, got nothing")),
+        };
+    };
+}
+use unwrap_cmd_arg;
