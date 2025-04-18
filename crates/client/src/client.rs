@@ -215,4 +215,20 @@ impl Client {
         self.load_json(json).await.context("load_json failed")?;
         Ok(())
     }
+
+    pub async fn dump_svg(&self) -> anyhow::Result<String> {
+        let resp = self
+            .req(api::svg::dump::Request {})
+            .await
+            .context("failed to dump to svg")?;
+        Ok(resp.svg)
+    }
+
+    pub async fn save_svg(&self, file: &Path) -> anyhow::Result<()> {
+        let svg = self.dump_svg().await.context("dump_svg failed")?;
+        tokio::fs::write(file, svg.as_bytes())
+            .await
+            .context("failed to write to file")?;
+        Ok(())
+    }
 }

@@ -141,6 +141,22 @@ pub mod json {
     }
 }
 
+pub mod svg {
+    use super::*;
+
+    pub mod dump {
+        use super::*;
+
+        route! {
+            ROUTE "/svg/dump"
+            REQUEST {}
+            RESPONSE {
+                svg: String,
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Error {
     pub msg: String,

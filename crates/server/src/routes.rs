@@ -81,6 +81,10 @@ pub fn router() -> Router<App> {
             *scope = new_exec_scope;
             api_ok(R {})
         }
+
+        ROUTE (svg::dump)() SCOPE scope {
+            api_ok(R { svg: scope.to_svg() })
+        }
     );
 
     router

@@ -1,3 +1,4 @@
+use indoc::indoc;
 use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{anyhow, bail, Context};
@@ -43,6 +44,7 @@ pub enum CommandType {
     Set,
     Save,
     Load,
+    SaveSvg,
 }
 
 impl FromStr for CommandType {
@@ -79,12 +81,27 @@ impl CommandType {
             CommandType::Save => (
                 "save",
                 "expr",
-                "writes state to file, expr should\nevaluate to a str (filepath)",
+                indoc!(
+                    "writes the state to a file
+                    expr should evaluate to a file path (str)"
+                ),
             ),
             CommandType::Load => (
                 "load",
                 "expr",
-                "reads state from file, expr should\nevaluate to a str (filepath)",
+                indoc!(
+                    "reads state from file
+                    expr should evaluate to a file path (str)"
+                ),
+            ),
+            CommandType::SaveSvg => (
+                "save_svg",
+                "expr",
+                indoc!(
+                    "writes svg image to a file
+                    expr should evaluate to a file path (str)
+                    note: can NOT be imported"
+                ),
             ),
         }
     }
@@ -113,6 +130,7 @@ impl CommandType {
             CommandType::Clear => Self::clear_cmd(client, args).await,
             CommandType::Save => Self::save_cmd(client, args).await,
             CommandType::Load => Self::load_cmd(client, args).await,
+            CommandType::SaveSvg => Self::save_svg_cmd(client, args).await,
         }
     }
 
@@ -303,6 +321,23 @@ impl CommandType {
 
         if let Err(err) = client.load(&path).await {
             return ScriptResult::error(err.context("load failed"));
+        }
+
+        ScriptResult::ok_none()
+    }
+
+    async fn save_svg_cmd(client: &Client, args: Vec<CommandArg>) -> ScriptResult {
+        let mut args = args.into_iter();
+        unwrap_cmd_arg!(EXPR expr FROM args);
+        unwrap_cmd_arg!(END FROM args);
+
+        let path = match Self::eval_file_path(client, expr).await {
+            Ok(path) => path,
+            Err(err) => return ScriptResult::error(err.context("eval_file_path failed")),
+        };
+
+        if let Err(err) = client.save_svg(&path).await {
+            return ScriptResult::error(err.context("save_svg failed"));
         }
 
         ScriptResult::ok_none()
