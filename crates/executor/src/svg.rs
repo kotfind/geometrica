@@ -77,6 +77,7 @@ fn svg_style() -> Style {
                 fill: black;
                 stroke: black;
                 stroke-width: {stroke_width};
+                stroke-linecap: round;
             }}
 
             .{pt} {{
