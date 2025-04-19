@@ -115,11 +115,23 @@ pub struct Pt {
     pub y: f64,
 }
 
+impl Pt {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Line {
     pub p1: Pt,
     pub p2: Pt,
+}
+
+impl Line {
+    pub fn new(p1: Pt, p2: Pt) -> Self {
+        Self { p1, p2 }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -129,6 +141,12 @@ pub struct Circ {
     pub o: Pt,
     /// Radius
     pub r: f64,
+}
+
+impl Circ {
+    pub fn new(o: Pt, r: f64) -> Self {
+        Self { o, r }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]

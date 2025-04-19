@@ -11,8 +11,9 @@ use types::core::{Circ, Line, Pt, Value};
 
 use crate::exec::ExecScope;
 
-const STROKE_WIDTH: f64 = 10.0;
-const PT_RADIUS: f64 = 40.0;
+const STROKE_WIDTH: f64 = 1.0;
+const PT_RADIUS: f64 = 4.0;
+const VIEWBOX_PADDING: f64 = 10.0;
 
 const PT_CLASS: &str = "pt";
 const LINE_CLASS: &str = "line";
@@ -43,14 +44,13 @@ impl ExecScope {
             .min_by(|x, y| x.total_cmp(y))
             .unwrap_or(1.0);
         let scale = 1000.0 / res;
-        let pad = (scale * 0.01).max(PT_RADIUS * 2.0);
 
         (
             [
-                scale * min_x - pad,
-                scale * min_y - pad,
-                scale * wid + 2.0 * pad,
-                scale * hei + 2.0 * pad,
+                scale * min_x - VIEWBOX_PADDING,
+                scale * min_y - VIEWBOX_PADDING,
+                scale * wid + 2.0 * VIEWBOX_PADDING,
+                scale * hei + 2.0 * VIEWBOX_PADDING,
             ],
             scale,
         )
@@ -89,7 +89,7 @@ fn svg_style() -> Style {
 
             .{circ} {{
                 fill: none;
-                storke: black;
+                stroke: black;
                 stroke-width: {stroke_width};
             }}
         "
