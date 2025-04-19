@@ -16,19 +16,31 @@
         # for corefonts
         config.allowUnfree = true;
       };
+      lib = pkgs.lib;
 
       inherit (pkgs) mkShell;
+      inherit (lib.strings) concatMapStringsSep;
+
+      fonts = with pkgs; [
+        corefonts
+        dejavu_fonts
+      ];
 
       shell = mkShell {
         name = "geometrica-doc-shell";
 
-        buildInputs = with pkgs; [
-          typst
-          zathura
-          corefonts
-        ];
+        buildInputs = with pkgs;
+          [
+            typst
+            zathura
+          ]
+          ++ fonts;
 
-        TYPST_FONT_PATHS = "${pkgs.corefonts}/share/fonts/truetype/";
+        TYPST_FONT_PATHS =
+          concatMapStringsSep
+          ":"
+          (font_pkg: "${font_pkg}/share/fonts/truetype/")
+          fonts;
       };
     in {
       devShell = shell;

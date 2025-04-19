@@ -40,8 +40,8 @@
 
 == Решение с Geometrica
 
-#grid(
-    columns: (1fr, 1fr),
+#slide(
+    composer: (1fr, 1fr),
     [
         Варианты решения:
         - #only("2-")[Через lib-клиент]
@@ -138,3 +138,280 @@
         [Нельзя работать из терминала],
     ),
 )
+
+= Функционал
+
+// TODO
+// TODO?: Разделить на секции server, client, cli, gui?
+
+= Целевая аудиторий
+
+// TODO
+
+= Цель и задачи
+
+==
+
+*Цель:* разработать программный продукт "Geometrica"
+
+#pause
+*Задачи:*
+
+- Определения функциональных требований
+- Выбор стека технологий
+- Написание "Технического Задания"
+- Разработка архитектуры приложения
+- Реализация программной системы "Geometrica"
+- Тестирование программной системы "Geometrica"
+- Написание итоговой документации
+- Защита проекта
+
+= Описание языка
+
+== Общая структура
+
+// definition
+#let d(body) = text(fill: green, body)
+
+// command
+#let c(body) = text(fill: red, body)
+
+// expr
+#let e(body) = text(fill: blue, body)
+
+#slide(
+    composer: (1fr, 2fr),
+    [
+        - Императивные:
+            - #d[Объявления]
+            - #c[Команды]
+        - Функциональные #e[выражения]
+    ],
+    [
+        #set text(font: "DejaVu Sans Mono", size: 20pt)
+
+        #d[fact n:int -> int =] #e[if]
+
+        #e("    " + [n > 0 then n \* (fact (n - 1)),])
+
+        #e("    " + [n == 0 then 1])
+
+        #d[n = ]#e[5]
+
+        #d[t = ]#e[fact n]
+
+        #c[set! n] #e[(1 + 1)]
+
+        #c[get_all!]
+    ],
+)
+
+== Конструкции
+
+#slide[
+    === Скрипт
+    - #pause Выражение (Statement)
+        - #pause Вызов команды
+        - #pause Объявление
+            - #pause #text(fill: gray)[Объявление] функции
+            - #pause #text(fill: gray)[Объявление] значения
+]
+
+#slide[
+    #show regex("\w*!"): set text(weight: "bold")
+
+    === Команды
+
+    #grid(
+        columns: (1fr, 1fr),
+        gutter: 10mm,
+        [
+            - #pause Изменения:
+                ```
+                clear!
+                rm! x y z
+                set! x (10 * 2 + 1)
+                ```
+        ],
+        [
+            - #pause Служебные:
+                ```
+                list_cmd!
+                list_func!
+                ```
+        ],
+
+        [
+            - #pause Работа с файлами:
+                ```
+                save! "file.geom"
+                load! "file.geom"
+                save_svg! "img.svg"
+                ```
+        ],
+        [
+            - #pause Вычисления:
+                ```
+                eval! (x + 1)
+                get! x y z
+                get_all!
+                ```
+        ],
+    )
+]
+
+#slide[
+    === Объявления значений
+
+    #grid(
+        columns: (1fr, 1fr),
+        gutter: 10mm,
+        [
+            - #pause Независмые
+            ```
+            x:real = 42.0
+            y = "Hello,\nworld!"
+            p = 2.0 * (pt 10.0 20.0)
+
+            // ошибка: real не int
+            t:int = 10.0
+
+            // none
+            x = none line
+            ```
+        ],
+        [
+            - #pause Зависимые
+            ```
+            k:real = 2.0 * x
+            l = (x + y) / 2.0
+
+            // ошибка: m опр. через m
+            m = 2 * m
+            ```
+        ],
+    )
+]
+
+#slide[
+    === Объявления функций
+
+    ```
+    sum x:int y:int -> int = x + y
+
+    // перегрузка
+    sum x:real y:real -> real = x + y
+
+    // рекурсия
+    fact n:int -> int = if
+        n > 0 then n * (fact (n - 1))
+        n == 0 then 1
+
+    // ошибка: x - НЕ аргумент ф-ции
+    add_x t:int -> int = t + x
+    ```
+]
+
+#slide[
+    === Выражения (Expr)
+
+    - #pause Литерал
+    - #pause Переменная
+    - #pause Приведение типов `as`
+    - #pause Условное выражение `if`
+    - #pause Вызов функции
+    - #pause `Dot`-нотация
+    - #pause Применение бинарного оператора
+    - #pause Применение унарного оператора
+    - #pause Выражение `let`
+]
+
+#slide[
+    === Выражения. Приведение типов `as`
+
+    #align(
+        center + horizon,
+        ```
+        x = 10
+        y = x as real // y = 10.0
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. Условное выражение `if`
+
+    #align(
+        center + horizon,
+        ```
+        cmp x:int y:int -> str = if
+            x > y  then "x is greater",
+            x < y  then "y is greater",
+            x == y then "x and y are the same",
+            else        "just how?" // else можно не писать
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. Вызов функции
+
+    #align(
+        center + horizon,
+        ```
+        p1 = pt 100.0 100.0
+        l = line p1 (pt 200.0 200.0)
+        l_p2_y = y (p2 l)
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. `Dot`-нотация
+
+    #align(
+        center + horizon,
+        ```
+        l_p2_x = l.p2.x
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. Унарный оператор
+
+    #align(
+        center + horizon,
+        ```
+        y = -x
+        cond2 = !cond1
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. Бинарный оператор
+
+    #align(
+        center + horizon,
+        ```
+        mid = (p1 + p2) / 2
+        ```,
+    )
+]
+
+#slide[
+    === Выражения. Выражение `let`
+
+    #align(
+        center + horizon,
+        ```
+        dist p1:pt p2:pt -> real = let
+            delta = p1 - p2,
+            x = delta.x,
+            y = delta.y,
+        in
+            (x^2.0 + y^2.0)^0.5
+        ```,
+    )
+]
