@@ -9,10 +9,22 @@
     table(
         columns: 2,
         inset: 5mm,
-        align: center + top,
-        table.header[*Термин*][*Аналог*\ (примерный)],
+        align: center + horizon,
+        table.header(
+            align(center + top)[*Термин*],
+            align(center + top)[*Аналог*\ (примерный)],
+        ),
+
         [Крейт], [Пакет],
         [Трейт], [Интерфейс],
+        [`enum`],
+        [
+            `sealed class`
+
+            #text(fill: gray)[`typesafe`] `union`
+
+            `std::variant`
+        ],
     ),
 )
 
@@ -449,29 +461,27 @@
     )
 ]
 
-= Архитектура
+= Реализация
 
 == Взаимодействие между крейтами
 
-#let crate_relations_block = [
-    #align(
-        center + horizon,
-        diagraph.render(
-            read("./crate_relations.dot"),
-            width: 100%,
-        ),
-    )
-
-    #set par(justify: true)
-    #set text(fill: gray, size: 10pt)
-    Бинарные крейты (bin) выделены жирным, крейты-библиотеки
-    (lib) выделены курсивом. Обычными стрелками показаны
-    библиотечные зависимости, пунктирными --- зависимости других типов.
-]
-
 #slide(
     composer: (1fr, 1fr),
-    crate_relations_block,
+    [
+        #align(
+            center + horizon,
+            diagraph.render(
+                read("./crate_relations.dot"),
+                width: 100%,
+            ),
+        )
+
+        #set par(justify: true)
+        #set text(fill: gray, size: 10pt)
+        Бинарные крейты (bin) выделены жирным, крейты-библиотеки
+        (lib) выделены курсивом. Обычными стрелками показаны
+        библиотечные зависимости, пунктирными --- зависимости других типов.
+    ],
     [
         - *Types* --- общие объявления
 
@@ -513,6 +523,9 @@
                         Только `POST`
                     ],
                     only("3-")[
+                        Есть обработка ошибок
+                    ],
+                    only("4-")[
                         Пример объявления:
                     ],
                 )
@@ -521,7 +534,7 @@
                 #set text(size: 20pt)
 
                 #only(
-                    "3-",
+                    "4-",
                     ```rust
                     pub mod items {
                         pub mod get {
@@ -644,3 +657,157 @@
         ```
     ],
 )
+
+== Статистика
+
+#align(
+    center + horizon,
+    table(
+        columns: 2,
+        align: (left, right),
+        inset: 5mm,
+
+        // cloc --vcs=git .
+        [Строк кода:], `~6500`,
+
+        // ls crates/
+        [Крейтов:], `7`,
+
+        // rg -w mod | rg -v test | wc -l
+        [Модулей:], `~60`,
+
+        // rg -w 'struct|enum' | wc -l
+        [Структур и перечислений:], `~130`,
+
+        // rg -w 'fn' | wc -l
+        [Функций и методов:], `~500`,
+
+        // cargo tarpaulin \
+        //     --skip-clean \
+        //     --workspace \
+        //     --exclude-files 'crates/cli/*' \
+        //     --exclude-files 'crates/gui/*' \
+        //     --exclude-files 'crates/server/*' \
+        //     --exclude-files 'crates/types/*' \
+        //     --out html
+        [Покрытие тестами\ (`parser`, `executor`, `client`):], `~60%`
+    ),
+)
+
+== Стек технологий
+
+#grid(
+    columns: (1fr, 1fr),
+    gutter: 10mm,
+    [
+        - #pause *Общие*:
+            - #pause rust
+            - #pause cargo
+            - #pause nix
+
+        - #pause *Документация:*
+            - #pause Typst
+            - #pause GraphViz
+
+        - #pause *Types:*
+            - #pause serde
+    ],
+    [
+        - #pause *Parser:*
+            - #pause peg
+
+        - #pause *Server:*
+            - #pause tokio
+            - #pause axum
+
+        - #pause *Client:*
+            - #pause tokio
+            - #pause reqwest
+
+        - #pause *GUI:*
+            - #pause iced
+    ],
+)
+
+= Итог
+
+== Выводы
+
+- Цель достигнута
+- Все поставленные задачи выполнены
+
+== Сравнение с аналогами
+
+#let cmp_products = (
+    [*Geometrica*],
+    [GeoGebra],
+    [Desmos],
+    [Жив. Мат.],
+    [MathKit],
+)
+
+// dot
+#let dot(color) = table.cell(
+    align: center + horizon,
+    stroke: none,
+    circle(fill: color, radius: 0.2em),
+)
+// good
+#let g = dot(green)
+// middle
+#let m = dot(yellow)
+// bad
+#let b = dot(red)
+
+// @typstyle off
+#let cmp_body = (
+    //                                         *Geometrica*
+    //                                          |    GeoGebra
+    //                                          |    |    Desmos
+    //                                          |    |    |    Живая Математика
+    //                                          |    |    |    |    MathKit
+    //                                          |    |    |    |    |
+    [Бесплатно],              "+", "+", "+", "-", "+", m,
+    [Оффлайн версия],         "+", "+", "-", "+", "+", m,
+
+    [Макросы],                "?", "-", "-", "+", "+", m,
+
+    [Библиотека для сущ. ЯП], "+", "+", "+", "-", "-", m,
+    [Встроенный ЯП],          "+", "?", "?", "-", "-", g,
+    [REST API],               "+", "-", "-", "-", "-", g,
+    [Работа из терминала],    "+", "-", "-", "-", "-", g,
+
+    [Стили],                  "-", "+", "+", "+", "+", b,
+)
+
+#grid(
+    columns: (auto, 1fr),
+    align: center + horizon,
+    gutter: 10mm,
+    [
+        #table(
+            columns: cmp_products.len() + 2,
+            align: center + horizon,
+            inset: 2mm,
+
+            table.header(
+                table.cell(stroke: none)[],
+                ..cmp_products.map(col => rotate(90deg, reflow: true, col)),
+                table.cell(stroke: none)[],
+            ),
+
+            ..cmp_body
+        )
+    ],
+    [
+        #set align(left)
+        #set par(justify: true)
+        #set text(fill: gray, size: 17pt)
+        Полные названия аналогов приведены в секции "Аналоги". "+" --- функция
+        имеется, "-" --- функция отсутствует, "?" --- функция частично
+        присутствует/ имеются значительные ограничения. Зеленый --- Geometrica
+        превосходит большинство аналогов, желтый --- Geometrica первосходит
+        многие аналоги, красный --- Geometrica проигрывает аналогам.
+    ],
+)
+
