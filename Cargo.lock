@@ -684,10 +684,10 @@ dependencies = [
  "clap",
  "client",
  "is-terminal",
- "reqwest",
  "tabled",
  "termsize",
  "tokio",
+ "url",
 ]
 
 [[package]]

@@ -257,7 +257,12 @@
           concatedInputs = concatLists (attrValues inputs);
         in
           devShell {
-            packages = concatedInputs ++ [pkgs.rust-analyzer];
+            packages =
+              concatedInputs
+              ++ (with pkgs; [
+                rust-analyzer
+                cargo-tarpaulin
+              ]);
             LD_LIBRARY_PATH = makeLibraryPath concatedInputs;
           };
       in

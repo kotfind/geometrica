@@ -4,7 +4,7 @@ use anyhow::Context;
 use clap::Parser;
 use client::{Client, ClientSettings};
 use printing::ScriptResultPrinter;
-use reqwest::Url;
+use url::Url;
 
 mod printing;
 mod script_file_mode;

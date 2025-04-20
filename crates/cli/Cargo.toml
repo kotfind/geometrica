@@ -8,7 +8,7 @@ anyhow = "1.0.93"
 clap = { version = "4.5.20", features = ["derive"] }
 client = { path = "../client" }
 is-terminal = "0.4.13"
-reqwest = "0.12.12"
 tabled = "0.16.0"
 termsize = "0.1.9"
 tokio = "1.41.1"
+url = "2.5.4"
