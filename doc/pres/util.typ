@@ -15,27 +15,13 @@
     /// -
     minus: none,
 ) = [
-    #let repeat_num = 1 + plus.len() + minus.len()
+    #let repeat_num = 3
 
     #let slide_inner(self) = [
         #let (uncover, only, alternatives) = utils.methods(self)
 
         #let sign(sign) = {
             align(center, text(weight: "bold", size: 50pt, sign))
-        }
-
-        #let lst(
-            lst,
-            offset: 0,
-        ) = {
-            list(
-                ..lst
-                    .enumerate(start: offset + 2)
-                    .map(i_item => uncover(
-                        str(i_item.at(0)) + "-",
-                        i_item.at(1),
-                    )),
-            )
         }
 
         #grid(
@@ -53,9 +39,9 @@
                 columns: (10mm, 1fr),
                 align: left,
                 gutter: 10mm,
-                sign("+"), lst(plus),
+                sign("+"), uncover("2-", list(..plus)),
                 grid.cell(colspan: 2, line(length: 100%)),
-                sign("-"), lst(minus, offset: plus.len())
+                sign("-"), uncover("3-", list(..minus))
             ),
         )
     ]

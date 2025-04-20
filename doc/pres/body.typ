@@ -2,7 +2,7 @@
 #import themes.university: *
 #import "@preview/diagraph:0.3.3"
 
-== Про терминологию Rust
+== Терминология Rust
 
 #align(
     center + horizon,
@@ -11,8 +11,12 @@
         inset: 5mm,
         align: center + horizon,
         table.header(
-            align(center + top)[*Термин*],
-            align(center + top)[*Аналог*\ (примерный)],
+            align(center + bottom)[*Термин*],
+            align(center + bottom)[
+                #text(fill: gray)[Примерный]
+
+                *Аналог*
+            ],
         ),
 
         [Крейт], [Пакет],
@@ -34,7 +38,10 @@
 
 - #pause Встроенный язык программирования (далее Язык)
 
-- #pause #text(fill: gray)[Локальный] сервер + 3 клиента: `cli`, `gui` и `lib`
+- #pause #text(fill: gray)[Локальный] сервер + 3 клиента:
+    - Командной строки (cli)
+    - Графический (gui)
+    - Библиотека (lib) для ЯП Rust
 
 == Применимость
 
@@ -68,7 +75,7 @@
     ),
     minus: (
         [Нет макросов],
-        [Ограниченный ЯП],
+        [Ограниченный встроенный ЯП],
         [Нет REST API],
         [Нельзя работать из терминала],
     ),
@@ -104,7 +111,7 @@
         [Есть стили],
     ),
     minus: (
-        [Платно: домашная --- 2400 руб, базовая --- 6120 руб],
+        [Платно: домашняя --- 2400 руб, базовая --- 6120 руб],
         [Нет встроенного ЯП],
         [Нет библиотеки для сущ. ЯП],
         [Нет REST API],
@@ -133,7 +140,7 @@
 
 = Функционал
 
-==
+== Функционал
 
 - #pause Создать новый объект
 
@@ -185,19 +192,23 @@
 #let e(body) = text(fill: blue, body)
 
 #slide(
-    composer: (1fr, 2fr),
+    composer: (100mm, 1fr),
     [
-        - Типизация:
+        - #pause Типизация:
             - Сильная
             - Статическая
-        - Конструкции:
-            - Императивные:
+        - #pause Конструкции:
+            - #pause Императивные:
                 - #d[Объявления]
                 - #c[Команды]
-            - Функциональные #e[выражения]
+            - #pause Функциональные:
+                - #e[выражения]
     ],
     [
+        #meanwhile
+
         #set text(font: "DejaVu Sans Mono", size: 20pt)
+        #set par(spacing: 0.65em)
 
         #d[fact n:int -> int =] #e[if]
 
@@ -400,7 +411,6 @@
 
 #slide[
     === Выражения. Бинарный оператор
-    хорошо
     #align(
         center + horizon,
         ```
@@ -467,12 +477,12 @@
 
 - #pause Содержит:
     - #pause Типы Языка (`Value`, `FunctionSignature`, ...)
-    - #pause Коснтрукции Языка (`Expr`, ...)
+    - #pause Конструкции Языка (`Expr`, ...)
     - #pause api (`api::json::dump::{Request, Respone, ROUTE}`, ...)
-- Легкий, использует условную компиляцию
+- #pause Легкий, использует условную компиляцию
 
 #slide(
-    repeat: 3,
+    repeat: 4,
     self => [
         #let (uncover, only, alternatives) = utils.methods(self)
 
@@ -560,7 +570,7 @@
     )
 
     #set par(justify: true)
-    #set text(fill: gray, size: 20pt)
+    #set text(fill: gray, size: 15pt)
     В кругах обозначены состояния, в прямоугольниках --- действия, в ромбах ---
     условия. Действия в желтом прямоугольнике происходят на стороне сервера,
     остальные --- на стороне клиента.
@@ -573,19 +583,19 @@
     gutter: 10mm,
     [
         Режимы работы:
-        - #only("2-")[Скриптовый]
+        - #only("2-")[*Скриптовый*]
 
             #only("2")[
                 Запуск: ```bash cli script.geom```
             ]
 
-        - #only("3-")[Стандартного ввода]
+        - #only("3-")[*Стандартного ввода*]
 
             #only("3")[
                 Запуск: ```bash cat script.geom | cli```
             ]
 
-        - #only("4-")[Интерактивный]
+        - #only("4-")[*Интерактивный*]
 
             #only("4")[
                 Запуск: ```bash cli```
@@ -665,9 +675,9 @@
     gutter: 10mm,
     [
         - #pause *Общие*:
-            - #pause rust
-            - #pause cargo
-            - #pause nix
+            - #pause Rust
+            - #pause Cargo
+            - #pause Nix
 
         - #pause *Документация:*
             - #pause Typst
@@ -697,8 +707,8 @@
 
 == Выводы
 
-- Цель достигнута
-- Все поставленные задачи выполнены
+- #pause Цель достигнута
+- #pause Все поставленные задачи выполнены
 
 == Сравнение с аналогами
 
@@ -770,7 +780,7 @@
         Полные названия аналогов приведены в секции "Аналоги". "+" --- функция
         имеется, "-" --- функция отсутствует, "?" --- функция частично
         присутствует/ имеются значительные ограничения. Зеленый --- Geometrica
-        превосходит большинство аналогов, желтый --- Geometrica первосходит
+        превосходит большинство аналогов, желтый --- Geometrica превосходит
         многие аналоги, красный --- Geometrica проигрывает аналогам.
     ],
 )
@@ -781,42 +791,50 @@
 - #pause Больше фигур
 - #pause Больше платформ
 
-= Практический пример
+== Практический пример
 
-== Постановка задачи
+#slide[
+    === Постановка задачи
 
-#align(
-    center + horizon,
-    image("circles.svg", height: 90%),
-)
+    #align(
+        center + horizon,
+        image("circles.svg", height: 90%),
+    )
+]
 
-== Решение с GeoGebra
+#slide[
+    === Решение с GeoGebra
 
-#align(
-    center + horizon,
-    image("circles-geogebra.png", height: 90%),
-)
+    #align(
+        center + horizon,
+        image("circles-geogebra.png", height: 90%),
+    )
+]
 
-== Решение с Geometrica
+#slide[
+    === Решение с Geometrica
 
-#slide(
-    composer: (1fr, 1fr),
-    [
-        Варианты решения:
-        - #only("2-")[Через lib-клиент]
+    #grid(
+        columns: (1fr, 1fr),
+        [
+            Варианты решения:
+            - #only("2-")[Через lib-клиент]
 
-        - #only("3-")[Через api]
+            - #only("3-")[Через api]
 
-        - #only("4-")[Через стандартный вывод, Язык и cli-клиент]
-    ],
-    block(
-        height: 90%,
-        align(
-            center + horizon,
-            image("circles-geometrica.png", width: 100%),
+            - #only("4-")[Через стандартный вывод, Язык и cli-клиент]
+        ],
+        block(
+            height: 90%,
+            align(
+                center + horizon,
+                image("circles-geometrica.png", width: 100%),
+            ),
         ),
-    ),
-)
+    )
+]
+
+
 
 == Конец
 

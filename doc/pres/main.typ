@@ -4,24 +4,17 @@
 #show: university-theme.with(
     aspect-ratio: "16-9",
     config-info(
-        title: [
-            "Geometrica"
-        ],
+        title: [Geometrica],
         subtitle: [
             Система построение геометрических чертежей со встроенным языком
             программирования и возможностью удаленного программного управления
         ],
         author: [Чубий Савва Андреевич],
-        // date: datetime(
-        //     year: 2025,
-        //     month: 4,
-        //     day: 29,
-        // ),
-        // institution: [Высшая Школа Экономики],
     ),
 )
 
 #title-slide(
+    title: ["Geometrica"],
     authors: grid(
         columns: (auto, 14cm),
         align: (right, left),
