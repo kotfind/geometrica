@@ -1,5 +1,6 @@
 #import "@preview/touying:0.6.1": *
 #import themes.university: *
+#import "@preview/diagraph:0.3.3"
 
 == Про терминологию Rust
 
@@ -22,6 +23,21 @@
 - #pause Встроенный язык программирования (далее Язык)
 
 - #pause #text(fill: gray)[Локальный] сервер + 3 клиента: `cli`, `gui` и `lib`
+
+== Применимость
+
+- #pause Целевая аудитория:
+    - Школьники/ школьные учителя (`gui`)
+    - Студенты/ преподаватели ВУЗов (`cli`, `gui`, `lib`)
+
+- #pause Примеры использования:
+    - #pause Наглядная демонстрация теорем
+        #text(fill: gray)[(см. "Описание языка", гл. 4)]
+    - #pause Совместное решение задач в классе
+    - #pause Проведение проверочных работ
+    - #pause Выполнение домашних заданий
+    - #pause Самостоятельное решение задач
+    - #pause Отладка программ
 
 = Практический пример
 == Постановка задачи
@@ -141,12 +157,25 @@
 
 = Функционал
 
-// TODO
-// TODO?: Разделить на секции server, client, cli, gui?
+==
 
-= Целевая аудиторий
+- #pause Создать новый объект
 
-// TODO
+    Типы: `bool`, `int`, `real`, `str`, `pt`, `line`, `circ`
+
+    Виды: свободный/ зависимый
+
+- #pause Изменить свободный объект и *пересчитать все зависимые*
+
+- #pause Удалить объект и все зависимые
+
+- #pause Получить значение объекта
+
+- #pause Выполнить код на Языке
+
+- #pause Экспортировать/ импортировать чертеж из файла
+
+- #pause Экспортировать в `svg`
 
 = Цель и задачи
 
@@ -182,10 +211,14 @@
 #slide(
     composer: (1fr, 2fr),
     [
-        - Императивные:
-            - #d[Объявления]
-            - #c[Команды]
-        - Функциональные #e[выражения]
+        - Типизация:
+            - Сильная
+            - Статическая
+        - Конструкции:
+            - Императивные:
+                - #d[Объявления]
+                - #c[Команды]
+            - Функциональные #e[выражения]
     ],
     [
         #set text(font: "DejaVu Sans Mono", size: 20pt)
@@ -391,7 +424,7 @@
 
 #slide[
     === Выражения. Бинарный оператор
-
+    хорошо
     #align(
         center + horizon,
         ```
@@ -415,3 +448,199 @@
         ```,
     )
 ]
+
+= Архитектура
+
+== Взаимодействие между крейтами
+
+#let crate_relations_block = [
+    #align(
+        center + horizon,
+        diagraph.render(
+            read("./crate_relations.dot"),
+            width: 100%,
+        ),
+    )
+
+    #set par(justify: true)
+    #set text(fill: gray, size: 10pt)
+    Бинарные крейты (bin) выделены жирным, крейты-библиотеки
+    (lib) выделены курсивом. Обычными стрелками показаны
+    библиотечные зависимости, пунктирными --- зависимости других типов.
+]
+
+#slide(
+    composer: (1fr, 1fr),
+    crate_relations_block,
+    [
+        - *Types* --- общие объявления
+
+        - *Parser* --- парсер Языка
+
+        - *Executor* --- основные вычисления
+
+        - *Server* --- сервер
+
+        - *Client* --- клиент--библиотека
+
+        - *GUI* --- графический клиент
+
+        - *CLI* --- клиент командной строки
+    ],
+)
+
+== Крейт Types
+
+- #pause Содержит:
+    - #pause Типы Языка (`Value`, `FunctionSignature`, ...)
+    - #pause Коснтрукции Языка (`Expr`, ...)
+    - #pause api (`api::json::dump::{Request, Respone, ROUTE}`, ...)
+- Легкий, использует условную компиляцию
+
+#slide(
+    repeat: 3,
+    self => [
+        #let (uncover, only, alternatives) = utils.methods(self)
+
+        === Про api
+
+        #grid(
+            columns: (auto, 1fr),
+            gutter: 10mm,
+            [
+                #list(
+                    only("2-")[
+                        Только `POST`
+                    ],
+                    only("3-")[
+                        Пример объявления:
+                    ],
+                )
+            ],
+            align(center + horizon)[
+                #set text(size: 20pt)
+
+                #only(
+                    "3-",
+                    ```rust
+                    pub mod items {
+                        pub mod get {
+                            route! {
+                                ROUTE "/items/get"
+                                REQUEST {
+                                    name: Ident
+                                }
+                                RESPONSE {
+                                    value: Value
+                                }
+                            }
+                        }
+                    }
+                    ```,
+                )
+            ],
+        )
+    ],
+)
+
+== Крейт Executor
+
+- #pause Поддерживает состояние чертежа через `Node`
+- #pause Компилирует `Expr` в `CExpr`
+- #pause Выполняет все вычисления
+
+== Крейт Server
+
+- #pause Фасад над *Executor*
+- #pause Реализует api из *Types*
+
+== Крейт Client
+
+- #pause Используется в *GUI* и *CLI*
+
+- #pause Главная структура --- `Client`
+
+- #pause При создании `Client` может запустить сервер
+
+- #pause Всё делается через методы `Client`:
+    - `Client::eval`
+    - `Client::get_all_items`
+    - `Cilent::command`
+    - ...
+
+- #pause Некоторые методы просто посылают запрос, другие имеют более сложную
+    логику
+
+#slide[
+    === Процесс исполнение кода на Языке
+
+    #align(
+        center + horizon,
+        diagraph.render(
+            read("./execution_process.dot"),
+            width: 100%,
+        ),
+    )
+
+    #set par(justify: true)
+    #set text(fill: gray, size: 20pt)
+    В кругах обозначены состояния, в прямоугольниках --- действия, в ромбах ---
+    условия. Действия в желтом прямоугольнике происходят на стороне сервера,
+    остальные --- на стороне клиента.
+]
+
+== Крейт CLI
+
+#grid(
+    columns: (auto, 1fr),
+    gutter: 10mm,
+    [
+        Режимы работы:
+        - #only("2-")[Скриптовый]
+
+            #only("2")[
+                Запуск: ```bash cli script.geom```
+            ]
+
+        - #only("3-")[Стандартного ввода]
+
+            #only("3")[
+                Запуск: ```bash cat script.geom | cli```
+            ]
+
+        - #only("4-")[Интерактивный]
+
+            #only("4")[
+                Запуск: ```bash cli```
+
+                Пример сессии:
+            ]
+    ],
+    only("4")[
+        #set text(size: 17pt)
+        #set align(right + horizon)
+
+        ```
+        Welcome to Geometrica Cli!
+        Enter list_cmd! to see all available commands.
+
+        > x = 1.0
+        > y = 2.0
+        > z = (x + y) / 2.0
+        > get! z
+        ╭──────┬───────╮
+        │ Name │ Value │
+        ├──────┼───────┤
+        │ z    │ 1.500 │
+        ╰──────┴───────╯
+
+        > set! x 4.0
+        > get! z
+        ╭──────┬───────╮
+        │ Name │ Value │
+        ├──────┼───────┤
+        │ z    │ 3.000 │
+        ╰──────┴───────╯
+        ```
+    ],
+)
