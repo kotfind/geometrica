@@ -816,3 +816,29 @@
 - #pause Стили
 - #pause Больше фигур
 - #pause Больше платформ
+
+== Конец
+
+#block(
+    width: 100%,
+    height: 100%,
+
+    {
+        {
+            show: body => columns(gutter: 5mm, 3, body)
+            set text(fill: gray, size: 15pt)
+            read("./geometrica-cat.geom")
+        }
+        place(
+            left + top,
+            block(
+                height: 100%,
+                width: 100%,
+                align(
+                    center + horizon,
+                    image("./geometrica-cat.png", height: 80%),
+                ),
+            ),
+        )
+    },
+){
