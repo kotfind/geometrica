@@ -51,42 +51,6 @@
     - #pause Самостоятельное решение задач
     - #pause Отладка программ
 
-= Практический пример
-== Постановка задачи
-
-#align(
-    center + horizon,
-    image("circles.svg", height: 90%),
-)
-
-== Решение с GeoGebra
-
-#align(
-    center + horizon,
-    image("circles-geogebra.png", height: 90%),
-)
-
-== Решение с Geometrica
-
-#slide(
-    composer: (1fr, 1fr),
-    [
-        Варианты решения:
-        - #only("2-")[Через lib-клиент]
-
-        - #only("3-")[Через api]
-
-        - #only("4-")[Через стандартный вывод, Язык и cli-клиент]
-    ],
-    block(
-        height: 90%,
-        align(
-            center + horizon,
-            image("circles-geometrica.png", width: 100%),
-        ),
-    ),
-)
-
 = Аналоги
 
 #import "util.typ": analog
@@ -816,6 +780,43 @@
 - #pause Стили
 - #pause Больше фигур
 - #pause Больше платформ
+
+= Практический пример
+
+== Постановка задачи
+
+#align(
+    center + horizon,
+    image("circles.svg", height: 90%),
+)
+
+== Решение с GeoGebra
+
+#align(
+    center + horizon,
+    image("circles-geogebra.png", height: 90%),
+)
+
+== Решение с Geometrica
+
+#slide(
+    composer: (1fr, 1fr),
+    [
+        Варианты решения:
+        - #only("2-")[Через lib-клиент]
+
+        - #only("3-")[Через api]
+
+        - #only("4-")[Через стандартный вывод, Язык и cli-клиент]
+    ],
+    block(
+        height: 90%,
+        align(
+            center + horizon,
+            image("circles-geometrica.png", width: 100%),
+        ),
+    ),
+)
 
 == Конец
 
