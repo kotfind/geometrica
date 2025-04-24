@@ -3,14 +3,18 @@ use std::collections::HashMap;
 use client::Client;
 use iced::{
     font::Weight,
-    widget::{button, container, pane_grid, text},
+    widget::{button, column, container, pane_grid, text},
     Border, Element, Font,
     Length::Fill,
     Task, Theme,
 };
 use types::core::{Ident, Value};
 
-use crate::{canvas_w, command_w, variable_w};
+use crate::{
+    canvas_w, command_w,
+    status_bar_w::{self, StatusMessage, StatusMessageKind},
+    variable_w,
+};
 
 #[derive(Debug)]
 pub struct State {
@@ -18,16 +22,21 @@ pub struct State {
     vars: HashMap<Ident, Value>,
     client: Client,
     panes: pane_grid::State<Pane>,
+    status_bar_w: status_bar_w::State,
 }
 
 #[derive(Debug, Clone)]
 pub enum Msg {
-    CanvasWMsg(canvas_w::Msg),
-    CommandWMsg(command_w::Msg),
-    GotVars(HashMap<Ident, Value>),
     PaneDrag(pane_grid::DragEvent),
     PaneResize(pane_grid::ResizeEvent),
     PaneClose(pane_grid::Pane),
+
+    SetStatusMessage(StatusMessage),
+    GotVars(HashMap<Ident, Value>),
+
+    CanvasWMsg(canvas_w::Msg),
+    CommandWMsg(command_w::Msg),
+    StatusBarWMsg(status_bar_w::Msg),
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
@@ -64,12 +73,22 @@ impl State {
                 vars: Default::default(),
                 client: client.clone(),
                 panes,
+                status_bar_w: status_bar_w::State::new(),
             },
-            Task::perform(Self::fetch_vars(client), Msg::GotVars),
+            Task::future(Self::fetch_vars_msg(client)),
         )
     }
 
     pub fn view(&self) -> Element<Msg> {
+        column![
+            self.view_master_area(),
+            self.status_bar_w.view().map(Msg::StatusBarWMsg)
+        ]
+        .width(Fill)
+        .into()
+    }
+
+    fn view_master_area(&self) -> Element<Msg> {
         pane_grid::PaneGrid::new(&self.panes, |pane, state, _| {
             let (title, body) = match state {
                 Pane::CANVAS_W => ("", canvas_w::view(&self.vars).map(Msg::CanvasWMsg)),
@@ -127,34 +146,50 @@ impl State {
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match msg {
-            Msg::CanvasWMsg(_msg) => {
-                // XXX: not used yet
-            }
-            Msg::CommandWMsg(msg) => {
-                return self.command_w.update(msg).map(Msg::CommandWMsg);
-            }
-            Msg::GotVars(vars) => {
-                self.vars = vars;
-                return Task::perform(Self::fetch_vars(self.client.clone()), Msg::GotVars);
-            }
             Msg::PaneDrag(pane_grid::DragEvent::Dropped { pane, target }) => {
                 self.panes.drop(pane, target);
+                Task::none()
             }
-            Msg::PaneDrag(_) => {}
+            Msg::PaneDrag(_) => Task::none(),
             Msg::PaneResize(pane_grid::ResizeEvent { split, ratio }) => {
                 self.panes.resize(split, ratio);
+                Task::none()
             }
             Msg::PaneClose(pane) => {
                 self.panes.close(pane);
+                Task::none()
             }
-        }
 
-        Task::none()
+            Msg::GotVars(vars) => {
+                self.vars = vars;
+                Task::future(Self::fetch_vars_msg(self.client.clone()))
+            }
+
+            Msg::CanvasWMsg(_msg) => Task::none(),
+            Msg::CommandWMsg(msg) => self.command_w.update(msg).map(Msg::CommandWMsg),
+            Msg::StatusBarWMsg(msg) => self.status_bar_w.update(msg).map(Msg::StatusBarWMsg),
+
+            Msg::SetStatusMessage(message) => self
+                .status_bar_w
+                .update(status_bar_w::Msg::SetMessage(message))
+                .map(Msg::StatusBarWMsg),
+        }
     }
 
-    async fn fetch_vars(client: Client) -> HashMap<Ident, Value> {
+    async fn fetch_vars_msg(client: Client) -> Msg {
+        Self::fetch_vars(client).await.map_or_else(
+            |e| {
+                Msg::SetStatusMessage(StatusMessage::new(
+                    StatusMessageKind::Error,
+                    format!("failed to fetch vars: {e}"),
+                ))
+            },
+            Msg::GotVars,
+        )
+    }
+
+    async fn fetch_vars(client: Client) -> anyhow::Result<HashMap<Ident, Value>> {
         // FiXME: polling w/o timeout
-        // FIXME: unwrap
-        client.get_all_items().await.unwrap()
+        client.get_all_items().await
     }
 }
