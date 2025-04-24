@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use iced::{
     border::Radius,
-    widget::{container, text},
+    widget::{button, container, mouse_area, text, tooltip},
     Border, Color, Element,
     Length::Fill,
     Task, Theme,
@@ -83,7 +83,7 @@ pub struct State {
 
 impl State {
     pub fn view(&self) -> Element<Msg> {
-        let text = if let Some(message) = &self.message {
+        let ans = if let Some(message) = &self.message {
             text(message.text.clone()).style(|_theme: &Theme| text::Style {
                 color: Some(message.kind.to_color()),
             })
@@ -92,7 +92,7 @@ impl State {
         }
         .width(Fill);
 
-        container(text)
+        let ans = container(ans)
             .width(Fill)
             .padding(1)
             .style(|theme| container::Style {
@@ -102,8 +102,17 @@ impl State {
                     radius: Radius::new(0.0),
                 },
                 ..Default::default()
-            })
-            .into()
+            });
+
+        let ans = mouse_area(ans).on_press(Msg::ClearMessage);
+
+        let ans = tooltip(
+            ans,
+            text("press to hide this message"),
+            tooltip::Position::FollowCursor,
+        );
+
+        ans.into()
     }
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
