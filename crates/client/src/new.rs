@@ -57,7 +57,7 @@ impl Client {
 
         let server_to_spawn_port =
             Self::is_spawnable(server_url.clone(), settings.try_spawn_server)
-                .context("won's try spawning a server")
+                .context("won't try spawning a server")
                 .context("failed to connect to server")?;
 
         let (server_port, server_child) = Self::spawn_server(server_to_spawn_port)
