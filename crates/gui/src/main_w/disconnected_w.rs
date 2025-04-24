@@ -1,3 +1,4 @@
+use anyhow::Context;
 use client::{Client, ClientSettings};
 use iced::{
     font::Weight,
@@ -7,6 +8,8 @@ use iced::{
     Length::Fill,
     Task,
 };
+
+use crate::status_bar_w::StatusMessage;
 
 #[derive(Debug)]
 pub struct State {
@@ -28,6 +31,7 @@ pub enum Msg {
     Connected(Client),
     ServerUrlInputChanged(String),
     Connect,
+    SetStatusMessage(StatusMessage),
 }
 
 impl State {
@@ -58,26 +62,31 @@ impl State {
             Msg::Connected(_) => {
                 unreachable!("This message should have been processed in a parent widget, and not forwarded here");
             }
-            Msg::ServerUrlInputChanged(url) => self.server_url_input = url,
-            Msg::Connect => {
-                let task =
-                    Task::perform(Self::connect(self.server_url_input.clone()), Msg::Connected);
-                self.server_url_input.clear();
-                return task;
+            Msg::ServerUrlInputChanged(url) => {
+                self.server_url_input = url;
+                Task::none()
             }
-        };
-
-        Task::none()
+            Msg::Connect => Task::perform(Self::connect(self.server_url_input.clone()), |res| {
+                res.map_or_else(
+                    |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
+                    Msg::Connected,
+                )
+            }),
+            Msg::SetStatusMessage(_) => {
+                unreachable!("this message should have been processed in a parent widget");
+            }
+        }
     }
 
-    async fn connect(server_url: String) -> Client {
+    async fn connect(server_url: String) -> anyhow::Result<Client> {
         // TODO: more settings
-        // TODO: fix unwrap (x2)
-        Client::from(ClientSettings {
-            server_url: server_url.parse().unwrap(),
+        let client = Client::from(ClientSettings {
+            server_url: server_url.parse().context("failed to parse server url")?,
             ..Default::default()
         })
         .await
-        .unwrap()
+        .context("failed to connect")?;
+
+        Ok(client)
     }
 }

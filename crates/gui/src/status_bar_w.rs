@@ -17,8 +17,23 @@ pub struct StatusMessage {
 impl StatusMessage {
     const MESSAGE_DURATION: Duration = Duration::from_secs(20);
 
-    pub fn new(kind: StatusMessageKind, text: String) -> Self {
-        Self { kind, text }
+    pub fn new(kind: StatusMessageKind, text: impl ToString) -> Self {
+        Self {
+            kind,
+            text: text.to_string(),
+        }
+    }
+
+    pub fn error(text: impl ToString) -> Self {
+        Self::new(StatusMessageKind::Error, text)
+    }
+
+    pub fn warn(text: impl ToString) -> Self {
+        Self::new(StatusMessageKind::Warn, text)
+    }
+
+    pub fn info(text: impl ToString) -> Self {
+        Self::new(StatusMessageKind::Info, text)
     }
 }
 
@@ -61,16 +76,12 @@ pub enum Msg {
     ClearMessage,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct State {
     message: Option<StatusMessage>,
 }
 
 impl State {
-    pub fn new() -> Self {
-        Self { message: None }
-    }
-
     pub fn view(&self) -> Element<Msg> {
         let text = if let Some(message) = &self.message {
             text(message.text.clone()).style(|_theme: &Theme| text::Style {
