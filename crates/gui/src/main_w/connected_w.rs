@@ -15,10 +15,12 @@ use crate::{canvas_w, command_w, status_bar_w::StatusMessage, variable_w};
 
 #[derive(Debug)]
 pub struct State {
-    command_w: command_w::State,
-    vars: HashMap<Ident, Value>,
     client: Client,
+    vars: HashMap<Ident, Value>,
     panes: pane_grid::State<Pane>,
+
+    command_w: command_w::State,
+    variable_w: variable_w::State,
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +34,7 @@ pub enum Msg {
 
     CanvasWMsg(canvas_w::Msg),
     CommandWMsg(command_w::Msg),
+    VariableWMsg(variable_w::Msg),
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
@@ -64,10 +67,11 @@ impl State {
 
         (
             Self {
-                command_w: command_w::State::new(client.clone()),
-                vars: Default::default(),
                 client: client.clone(),
+                vars: Default::default(),
                 panes,
+                command_w: command_w::State::new(client.clone()),
+                variable_w: variable_w::State::new(client.clone()),
             },
             Task::future(Self::fetch_vars_msg(client)),
         )
@@ -82,7 +86,10 @@ impl State {
             let (title, body) = match state {
                 Pane::CANVAS_W => ("", canvas_w::view(&self.vars).map(Msg::CanvasWMsg)),
                 Pane::COMMAND_W => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
-                Pane::VARIABLE_W => ("Variables", variable_w::view(&self.vars)),
+                Pane::VARIABLE_W => (
+                    "Variables",
+                    self.variable_w.view(&self.vars).map(Msg::VariableWMsg),
+                ),
             };
 
             let mut content = pane_grid::Content::new(body);
@@ -148,18 +155,21 @@ impl State {
                 self.panes.close(pane);
                 Task::none()
             }
-
             Msg::GotVars(vars) => {
                 self.vars = vars;
                 Task::future(Self::fetch_vars_msg(self.client.clone()))
             }
-
             Msg::CanvasWMsg(_msg) => Task::none(),
             Msg::CommandWMsg(msg) => self.command_w.update(msg).map(Msg::CommandWMsg),
-
             Msg::SetStatusMessage(_) => {
                 unreachable!("should have been processed in parent widget")
             }
+            Msg::VariableWMsg(msg) => match msg {
+                variable_w::Msg::SetStatusMessage(message) => {
+                    Task::done(Msg::SetStatusMessage(message))
+                }
+                _ => self.variable_w.update(msg).map(Msg::VariableWMsg),
+            },
         }
     }
 

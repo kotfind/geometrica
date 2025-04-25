@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use iced::{
     border::Radius,
-    widget::{button, container, mouse_area, text, tooltip},
+    widget::{container, mouse_area, text, tooltip},
     Border, Color, Element,
     Length::Fill,
     Task, Theme,
