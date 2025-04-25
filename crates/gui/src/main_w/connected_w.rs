@@ -69,8 +69,8 @@ impl State {
                 client: client.clone(),
                 vars: Default::default(),
                 panes,
-                command_w: command_w::State::new(client.clone()),
-                variable_w: variable_w::State::new(client.clone()),
+                command_w: command_w::State::new(),
+                variable_w: variable_w::State::new(),
             },
             Task::future(Self::fetch_vars_msg(client)),
         )
@@ -159,7 +159,10 @@ impl State {
                 Task::future(Self::fetch_vars_msg(self.client.clone()))
             }
             Msg::CanvasWMsg(_msg) => Task::none(),
-            Msg::CommandWMsg(msg) => self.command_w.update(msg).map(Msg::CommandWMsg),
+            Msg::CommandWMsg(msg) => self
+                .command_w
+                .update(msg, self.client.clone())
+                .map(Msg::CommandWMsg),
             Msg::SetStatusMessage(_) => {
                 unreachable!("should have been processed in parent widget")
             }
@@ -167,7 +170,10 @@ impl State {
                 variable_w::Msg::SetStatusMessage(message) => {
                     Task::done(Msg::SetStatusMessage(message))
                 }
-                _ => self.variable_w.update(msg).map(Msg::VariableWMsg),
+                _ => self
+                    .variable_w
+                    .update(msg, self.client.clone())
+                    .map(Msg::VariableWMsg),
             },
         }
     }

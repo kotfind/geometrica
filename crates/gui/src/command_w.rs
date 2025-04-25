@@ -17,7 +17,6 @@ use itertools::Itertools;
 pub struct State {
     scripts_and_results: Vec<ScriptOrResult>,
     script_input: String,
-    client: Client,
 }
 
 #[derive(Debug, Clone)]
@@ -29,11 +28,10 @@ pub enum Msg {
 }
 
 impl State {
-    pub fn new(client: Client) -> Self {
+    pub fn new() -> Self {
         Self {
             scripts_and_results: Default::default(),
             script_input: Default::default(),
-            client,
         }
     }
 
@@ -73,7 +71,7 @@ impl State {
         .into()
     }
 
-    pub fn update(&mut self, msg: Msg) -> Task<Msg> {
+    pub fn update(&mut self, msg: Msg, client: Client) -> Task<Msg> {
         match msg {
             Msg::ScriptInputChanged(script) => self.script_input = script,
 
@@ -85,7 +83,7 @@ impl State {
                 self.script_input.clear();
                 self.scripts_and_results
                     .push(ScriptOrResult::Script(script.clone()));
-                return Task::perform(Self::send_script(self.client.clone(), script), |res| {
+                return Task::perform(Self::send_script(client, script), |res| {
                     Msg::GotScriptResult(Arc::new(res))
                 });
             }

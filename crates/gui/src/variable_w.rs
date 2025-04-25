@@ -17,7 +17,6 @@ use crate::status_bar_w::StatusMessage;
 #[derive(Debug)]
 pub struct State {
     new_def_text: String,
-    client: Client,
 }
 
 #[derive(Debug, Clone)]
@@ -29,10 +28,9 @@ pub enum Msg {
 }
 
 impl State {
-    pub fn new(client: Client) -> Self {
+    pub fn new() -> Self {
         Self {
             new_def_text: "".to_string(),
-            client,
         }
     }
 
@@ -75,22 +73,20 @@ impl State {
             .into()
     }
 
-    pub fn update(&mut self, msg: Msg) -> Task<Msg> {
+    pub fn update(&mut self, msg: Msg, client: Client) -> Task<Msg> {
         match msg {
             Msg::NewDefTextChanged(text) => {
                 self.new_def_text = text;
                 Task::none()
             }
             Msg::DefineNew => {
-                let task = Task::perform(
-                    Self::define_new(self.client.clone(), self.new_def_text.clone()),
-                    |res| {
+                let task =
+                    Task::perform(Self::define_new(client, self.new_def_text.clone()), |res| {
                         res.map_or_else(
                             |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
                             |_| Msg::None,
                         )
-                    },
-                );
+                    });
                 self.new_def_text = "".to_string();
                 task
             }
