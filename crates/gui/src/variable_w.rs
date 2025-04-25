@@ -18,6 +18,7 @@ use crate::{mode_selector_w::Mode, status_bar_w::StatusMessage};
 pub struct State {
     new_def_text: String,
     mouse_on_item: Option<Ident>,
+    currently_editing: Option<(/* var_name: */ Ident, /* var_value: */ String)>,
 }
 
 #[derive(Debug, Clone)]
@@ -27,6 +28,8 @@ pub enum Msg {
 
     NewDefTextChanged(String),
     MouseOnItemChanged(Option<Ident>),
+    CurrentlyEditingChanged(Option<(Ident, String)>),
+    ApplyCurrentlyEditing,
 
     DefineNew,
     Remove(Ident),
@@ -37,6 +40,7 @@ impl State {
         Self {
             new_def_text: "".to_string(),
             mouse_on_item: None,
+            currently_editing: None,
         }
     }
 
@@ -88,67 +92,86 @@ impl State {
         var_value: &'a Value,
         mode: &'a Mode,
     ) -> GridRow<'a, Msg> {
-        fn cell<'a>(
-            mouse_on_item: &'a Option<Ident>,
-            var_name: &'a Ident,
-            txt: String,
-            mode: &'a Mode,
-        ) -> Element<'a, Msg> {
-            let ans = text(txt).width(Fill);
-            let ans = container(ans).style(move |_theme| {
-                if !mouse_on_item.as_ref().is_some_and(|item| item == var_name) {
-                    return Default::default();
-                }
+        let name_cell_inner = text!("{var_name}").into();
 
-                let color = match mode {
-                    Mode::Modify => Color {
-                        r: 1.0,
-                        g: 1.0,
-                        b: 0.0,
-                        a: 1.0,
-                    },
-                    Mode::Delete => Color {
-                        r: 1.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 1.0,
-                    },
-                    Mode::Function => Color {
-                        r: 0.0,
-                        g: 1.0,
-                        b: 0.0,
-                        a: 1.0,
-                    },
-                    _ => Default::default(),
-                };
-
-                container::Style {
-                    background: Some(Background::Color(color)),
-                    ..Default::default()
-                }
-            });
-
-            mouse_area(ans)
-                .on_press(match mode {
-                    Mode::Modify => {
-                        /* TODO */
-                        Msg::None
-                    }
-                    Mode::Delete => Msg::Remove(var_name.clone()),
-                    Mode::Function => {
-                        /* TODO */
-                        Msg::None
-                    }
-                    _ => Msg::None,
-                })
-                .on_enter(Msg::MouseOnItemChanged(Some(var_name.clone())))
-                .into()
-        }
+        let value_cell_inner = match &self.currently_editing {
+            Some((editing_var_name, editing_var_value)) if editing_var_name == var_name => {
+                text_input(&var_value.to_string(), editing_var_value)
+                    .on_input(|new_value| {
+                        Msg::CurrentlyEditingChanged(Some((editing_var_name.clone(), new_value)))
+                    })
+                    .on_submit(Msg::ApplyCurrentlyEditing)
+                    .into()
+            }
+            _ => text!("{var_value}").into(),
+        };
 
         grid_row![
-            cell(&self.mouse_on_item, var_name, var_name.to_string(), mode),
-            cell(&self.mouse_on_item, var_name, var_value.to_string(), mode)
+            self.view_cell(mode, var_name, var_value, name_cell_inner),
+            self.view_cell(mode, var_name, var_value, value_cell_inner)
         ]
+    }
+
+    fn view_cell<'a>(
+        &'a self,
+        mode: &'a Mode,
+        var_name: &'a Ident,
+        var_value: &'a Value,
+        inner: Element<'a, Msg>,
+    ) -> Element<'a, Msg> {
+        let ans = container(inner).width(Fill).style(move |_theme| {
+            if !self
+                .mouse_on_item
+                .as_ref()
+                .is_some_and(|item| item == var_name)
+            {
+                return Default::default();
+            }
+
+            let color = match mode {
+                Mode::Modify => Color {
+                    r: 1.0,
+                    g: 1.0,
+                    b: 0.0,
+                    a: 1.0,
+                },
+                Mode::Delete => Color {
+                    r: 1.0,
+                    g: 0.0,
+                    b: 0.0,
+                    a: 1.0,
+                },
+                Mode::Function => Color {
+                    r: 0.0,
+                    g: 1.0,
+                    b: 0.0,
+                    a: 1.0,
+                },
+                _ => Default::default(),
+            };
+
+            container::Style {
+                background: Some(Background::Color(color)),
+                ..Default::default()
+            }
+        });
+
+        mouse_area(ans)
+            .on_press(match mode {
+                _ if self.currently_editing.is_some() => Msg::ApplyCurrentlyEditing,
+
+                Mode::Modify => {
+                    Msg::CurrentlyEditingChanged(Some((var_name.clone(), var_value.to_string())))
+                }
+                Mode::Delete => Msg::Remove(var_name.clone()),
+                Mode::Function => {
+                    /* TODO */
+                    Msg::None
+                }
+                _ => Msg::None,
+            })
+            .on_enter(Msg::MouseOnItemChanged(Some(var_name.clone())))
+            .into()
     }
 
     fn view_new_def(&self) -> Element<Msg> {
@@ -190,6 +213,21 @@ impl State {
                 self.mouse_on_item = ident;
                 Task::none()
             }
+            Msg::CurrentlyEditingChanged(currently_editing) => {
+                self.currently_editing = currently_editing;
+                Task::none()
+            }
+            Msg::ApplyCurrentlyEditing => match self.currently_editing.take() {
+                Some((var_name, var_value)) if !var_value.is_empty() => {
+                    Task::perform(Self::set(client, var_name, var_value), |res| {
+                        res.map_or_else(
+                            |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
+                            |_| Msg::None,
+                        )
+                    })
+                }
+                _ => Task::none(),
+            },
         }
     }
 
@@ -201,5 +239,9 @@ impl State {
 
     async fn remove(client: Client, var_name: Ident) -> anyhow::Result<()> {
         client.rm(var_name).await
+    }
+
+    async fn set(client: Client, var_name: Ident, var_value: String) -> anyhow::Result<()> {
+        client.set(var_name, var_value).await
     }
 }
