@@ -38,12 +38,11 @@ pub enum Msg {
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Pane {
-    CANVAS_W = 0,
-    COMMAND_W = 1,
-    VARIABLE_W = 2,
+    CanvasW = 0,
+    CommandW = 1,
+    VariableW = 2,
 }
 
 static LEFT_PANE_RATIO: f32 = 0.2;
@@ -56,12 +55,12 @@ impl State {
         let panes = pane_grid::State::with_configuration(Cfg::Split {
             axis: Vertical,
             ratio: LEFT_PANE_RATIO,
-            a: Box::new(Cfg::Pane(Pane::VARIABLE_W)),
+            a: Box::new(Cfg::Pane(Pane::VariableW)),
             b: Box::new(Cfg::Split {
                 axis: Vertical,
                 ratio: RIGHT_PANE_RATIO,
-                a: Box::new(Cfg::Pane(Pane::CANVAS_W)),
-                b: Box::new(Cfg::Pane(Pane::COMMAND_W)),
+                a: Box::new(Cfg::Pane(Pane::CanvasW)),
+                b: Box::new(Cfg::Pane(Pane::CommandW)),
             }),
         });
 
@@ -84,9 +83,9 @@ impl State {
     fn view_master_area(&self) -> Element<Msg> {
         pane_grid::PaneGrid::new(&self.panes, |pane, state, _| {
             let (title, body) = match state {
-                Pane::CANVAS_W => ("", canvas_w::view(&self.vars).map(Msg::CanvasWMsg)),
-                Pane::COMMAND_W => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
-                Pane::VARIABLE_W => (
+                Pane::CanvasW => ("", canvas_w::view(&self.vars).map(Msg::CanvasWMsg)),
+                Pane::CommandW => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
+                Pane::VariableW => (
                     "Variables",
                     self.variable_w.view(&self.vars).map(Msg::VariableWMsg),
                 ),
@@ -94,7 +93,7 @@ impl State {
 
             let mut content = pane_grid::Content::new(body);
 
-            if state != &Pane::CANVAS_W {
+            if state != &Pane::CanvasW {
                 let title = container(text(title).font(Font {
                     weight: Weight::Bold,
                     ..Default::default()

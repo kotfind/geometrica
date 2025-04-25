@@ -45,14 +45,14 @@ impl State {
     }
 
     fn view_variables<'a>(&'a self, vars: &'a HashMap<Ident, Value>) -> Element<'a, Msg> {
-        let bold = Font {
-            weight: Weight::Bold,
-            ..Default::default()
-        };
-
         let header = ["Name", "Value"]
             .into_iter()
-            .map(|txt| text(txt).font(bold))
+            .map(|txt| {
+                text(txt).font(Font {
+                    weight: Weight::Bold,
+                    ..Default::default()
+                })
+            })
             .collect_vec();
 
         let header = grid_row(header);
@@ -102,8 +102,8 @@ impl State {
     }
 
     async fn define_new(client: Client, def: String) -> anyhow::Result<()> {
-        // FIXME: technically allowed defining functions, which
-        // is not the intended behaviour
+        // FIXME: this method technically allows defining functions,
+        // which is not the intended behaviour
         client.define_one(def.trim()).await
     }
 }
