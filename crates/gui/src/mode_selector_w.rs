@@ -10,7 +10,7 @@ use iced::{
 pub enum Mode {
     #[default]
     CreatePoint,
-    Move,
+    Modify,
     Transform,
     Delete,
     Function,
@@ -19,8 +19,12 @@ pub enum Mode {
 impl Mode {
     /// Returns list of modes, that doesn't hold any data.
     fn basic_modes() -> &'static [Mode] {
-        static BASIC_MODES: &[Mode] =
-            &[Mode::CreatePoint, Mode::Move, Mode::Transform, Mode::Delete];
+        static BASIC_MODES: &[Mode] = &[
+            Mode::CreatePoint,
+            Mode::Modify,
+            Mode::Transform,
+            Mode::Delete,
+        ];
 
         BASIC_MODES
     }
@@ -30,7 +34,7 @@ impl Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Mode::CreatePoint => write!(f, "Create Point"),
-            Mode::Move => write!(f, "Move"),
+            Mode::Modify => write!(f, "Modify"),
             Mode::Transform => write!(f, "Transform"),
             Mode::Delete => write!(f, "Delete"),
             Mode::Function => write!(f, "Function"),

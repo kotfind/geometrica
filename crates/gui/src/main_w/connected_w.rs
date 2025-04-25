@@ -102,7 +102,9 @@ impl State {
                 Pane::CommandW => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
                 Pane::VariableW => (
                     "Variables",
-                    self.variable_w.view(&self.vars).map(Msg::VariableWMsg),
+                    self.variable_w
+                        .view(&self.vars, &self.mode)
+                        .map(Msg::VariableWMsg),
                 ),
                 Pane::ModeSelectorW => (
                     "Mode Selector",
