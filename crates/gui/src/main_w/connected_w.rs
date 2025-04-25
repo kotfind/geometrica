@@ -11,7 +11,12 @@ use iced::{
 };
 use types::core::{Ident, Value};
 
-use crate::{canvas_w, command_w, status_bar_w::StatusMessage, variable_w};
+use crate::{
+    canvas_w, command_w,
+    mode_selector_w::{self, Mode},
+    status_bar_w::StatusMessage,
+    variable_w,
+};
 
 #[derive(Debug)]
 pub struct State {
@@ -21,6 +26,8 @@ pub struct State {
 
     command_w: command_w::State,
     variable_w: variable_w::State,
+
+    mode: Mode,
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +42,7 @@ pub enum Msg {
     CanvasWMsg(canvas_w::Msg),
     CommandWMsg(command_w::Msg),
     VariableWMsg(variable_w::Msg),
+    ModeSelectorW(mode_selector_w::Msg),
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
@@ -43,6 +51,7 @@ enum Pane {
     CanvasW = 0,
     CommandW = 1,
     VariableW = 2,
+    ModeSelectorW = 3,
 }
 
 static LEFT_PANE_RATIO: f32 = 0.2;
@@ -60,7 +69,12 @@ impl State {
                 axis: Vertical,
                 ratio: RIGHT_PANE_RATIO,
                 a: Box::new(Cfg::Pane(Pane::CanvasW)),
-                b: Box::new(Cfg::Pane(Pane::CommandW)),
+                b: Box::new(Cfg::Split {
+                    axis: Horizontal,
+                    ratio: 0.5,
+                    a: Box::new(Cfg::Pane(Pane::ModeSelectorW)),
+                    b: Box::new(Cfg::Pane(Pane::CommandW)),
+                }),
             }),
         });
 
@@ -71,6 +85,7 @@ impl State {
                 panes,
                 command_w: command_w::State::new(),
                 variable_w: variable_w::State::new(),
+                mode: Default::default(),
             },
             Task::future(Self::fetch_vars_msg(client)),
         )
@@ -88,6 +103,10 @@ impl State {
                 Pane::VariableW => (
                     "Variables",
                     self.variable_w.view(&self.vars).map(Msg::VariableWMsg),
+                ),
+                Pane::ModeSelectorW => (
+                    "Mode Selector",
+                    mode_selector_w::view(&self.mode).map(Msg::ModeSelectorW),
                 ),
             };
 
@@ -174,6 +193,12 @@ impl State {
                     .variable_w
                     .update(msg, self.client.clone())
                     .map(Msg::VariableWMsg),
+            },
+            Msg::ModeSelectorW(msg) => match msg {
+                mode_selector_w::Msg::ModeSelected(mode) => {
+                    self.mode = mode;
+                    Task::none()
+                }
             },
         }
     }

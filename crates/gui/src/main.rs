@@ -1,6 +1,7 @@
 mod canvas_w;
 mod command_w;
 mod main_w;
+mod mode_selector_w;
 mod status_bar_w;
 mod variable_w;
 
