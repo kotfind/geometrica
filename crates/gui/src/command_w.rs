@@ -83,9 +83,13 @@ impl State {
                 self.script_input.clear();
                 self.scripts_and_results
                     .push(ScriptOrResult::Script(script.clone()));
-                return Task::perform(Self::send_script(client, script), |res| {
-                    Msg::GotScriptResult(Arc::new(res))
-                });
+                return Task::perform(
+                    {
+                        let client = client.clone();
+                        async move { client.exec(script).await }
+                    },
+                    |res| Msg::GotScriptResult(Arc::new(res)),
+                );
             }
 
             Msg::GotScriptResult(script_result) => {
@@ -95,10 +99,6 @@ impl State {
         }
 
         Task::none()
-    }
-
-    async fn send_script(client: Client, script: String) -> ScriptResult {
-        client.exec(script).await
     }
 }
 

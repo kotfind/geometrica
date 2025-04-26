@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
 use client::Client;
 use iced::{
     font::Weight,
@@ -13,6 +12,7 @@ use types::core::{Ident, Value};
 
 use crate::{
     canvas_w, command_w,
+    helpers::perform_or_status,
     mode_selector_w::{self, Mode},
     status_bar_w::StatusMessage,
     variable_w,
@@ -87,7 +87,13 @@ impl State {
                 variable_w: variable_w::State::new(),
                 mode: Default::default(),
             },
-            Task::future(Self::fetch_vars_msg(client)),
+            perform_or_status!(
+                {
+                    let client = client.clone();
+                    async move { client.get_all_items().await }
+                },
+                Msg::GotVars
+            ),
         )
     }
 
@@ -180,7 +186,13 @@ impl State {
             }
             Msg::GotVars(vars) => {
                 self.vars = vars;
-                Task::future(Self::fetch_vars_msg(self.client.clone()))
+                perform_or_status!(
+                    {
+                        let client = self.client.clone();
+                        async move { client.get_all_items().await }
+                    },
+                    Msg::GotVars
+                )
             }
             Msg::CanvasWMsg(msg) => match msg {
                 canvas_w::Msg::SetStatusMessage(message) => {
@@ -211,17 +223,5 @@ impl State {
                 }
             },
         }
-    }
-
-    async fn fetch_vars_msg(client: Client) -> Msg {
-        Self::fetch_vars(client).await.map_or_else(
-            |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
-            Msg::GotVars,
-        )
-    }
-
-    async fn fetch_vars(client: Client) -> anyhow::Result<HashMap<Ident, Value>> {
-        // FiXME: polling w/o timeout
-        client.get_all_items().await.context("failed to fetch vars")
     }
 }

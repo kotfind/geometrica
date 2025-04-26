@@ -12,7 +12,7 @@ use iced_aw::{grid, grid_row, GridRow};
 use itertools::Itertools;
 use types::core::{Ident, Value};
 
-use crate::{mode_selector_w::Mode, status_bar_w::StatusMessage};
+use crate::{helpers::perform_or_status, mode_selector_w::Mode, status_bar_w::StatusMessage};
 
 #[derive(Debug)]
 pub struct State {
@@ -189,13 +189,14 @@ impl State {
                 Task::none()
             }
             Msg::DefineNew => {
-                let task =
-                    Task::perform(Self::define_new(client, self.new_def_text.clone()), |res| {
-                        res.map_or_else(
-                            |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
-                            |_| Msg::None,
-                        )
-                    });
+                let task = perform_or_status!({
+                    let client = client.clone();
+                    let def = self.new_def_text.trim().to_string();
+
+                    // FIXME: this method technically allows defining functions,
+                    // which is not the intended behaviour
+                    async move { client.define_one(def.clone()).await }
+                });
                 self.new_def_text = "".to_string();
                 task
             }
@@ -203,11 +204,9 @@ impl State {
                 unreachable!("should have been processed in parent widget")
             }
             Msg::None => Task::none(),
-            Msg::Remove(var_name) => Task::perform(Self::remove(client, var_name), |res| {
-                res.map_or_else(
-                    |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
-                    |_| Msg::None,
-                )
+            Msg::Remove(var_name) => perform_or_status!({
+                let client = client.clone();
+                async move { client.rm(var_name).await }
             }),
             Msg::MouseOnItemChanged(ident) => {
                 self.mouse_on_item = ident;
@@ -219,29 +218,13 @@ impl State {
             }
             Msg::ApplyCurrentlyEditing => match self.currently_editing.take() {
                 Some((var_name, var_value)) if !var_value.is_empty() => {
-                    Task::perform(Self::set(client, var_name, var_value), |res| {
-                        res.map_or_else(
-                            |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
-                            |_| Msg::None,
-                        )
+                    perform_or_status!({
+                        let client = client.clone();
+                        async move { client.set(var_name, var_value).await }
                     })
                 }
                 _ => Task::none(),
             },
         }
-    }
-
-    async fn define_new(client: Client, def: String) -> anyhow::Result<()> {
-        // FIXME: this method technically allows defining functions,
-        // which is not the intended behaviour
-        client.define_one(def.trim()).await
-    }
-
-    async fn remove(client: Client, var_name: Ident) -> anyhow::Result<()> {
-        client.rm(var_name).await
-    }
-
-    async fn set(client: Client, var_name: Ident, var_value: String) -> anyhow::Result<()> {
-        client.set(var_name, var_value).await
     }
 }

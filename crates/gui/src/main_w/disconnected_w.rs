@@ -9,7 +9,7 @@ use iced::{
     Task,
 };
 
-use crate::status_bar_w::StatusMessage;
+use crate::{helpers::perform_or_status, status_bar_w::StatusMessage};
 
 #[derive(Debug)]
 pub struct State {
@@ -66,12 +66,9 @@ impl State {
                 self.server_url_input = url;
                 Task::none()
             }
-            Msg::Connect => Task::perform(Self::connect(self.server_url_input.clone()), |res| {
-                res.map_or_else(
-                    |e| Msg::SetStatusMessage(StatusMessage::error(format!("{e:#}"))),
-                    Msg::Connected,
-                )
-            }),
+            Msg::Connect => {
+                perform_or_status!(Self::connect(self.server_url_input.clone()), Msg::Connected)
+            }
             Msg::SetStatusMessage(_) => {
                 unreachable!("this message should have been processed in a parent widget");
             }
