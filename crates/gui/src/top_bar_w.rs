@@ -1,13 +1,13 @@
 use crate::status_bar_w::StatusMessage;
 use anyhow::anyhow;
 use client::Client;
-use iced::Task;
 use iced::{
     widget::{container, mouse_area, text},
     Background, Color, Element,
     Length::{Fill, Shrink},
     Renderer, Theme,
 };
+use iced::{Padding, Task};
 use iced_aw::menu_bar;
 use iced_aw::{menu, Menu};
 use iced_aw::{menu::Item, style::menu_bar};
@@ -54,9 +54,14 @@ fn file_menu<'a>() -> Menu<'a, Msg, Theme, Renderer> {
 }
 
 fn menu_item<'a>(content: impl Into<Element<'a, Msg>>, on_press: Msg) -> Element<'a, Msg> {
+    static MENU_ITEM_WIDTH: f32 = 150.0;
+
     let ans = content.into();
-    let ans = container(ans).padding(2);
+    let ans = container(ans)
+        .padding(Padding::new(2.0).left(10.0))
+        .width(MENU_ITEM_WIDTH);
     let ans = mouse_area(ans).on_press(on_press);
+
     ans.into()
 }
 
