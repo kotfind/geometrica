@@ -1,16 +1,17 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
-use super::draw::{draw_value, LINE_WIDTH, POINT_WIDTH};
+use super::draw::draw_value;
 use super::helpers::point_to_pt;
 use super::widget::Msg;
-use iced::Point;
+use iced::Color;
 use iced::{
     mouse::{self, Cursor},
     widget::canvas,
     Rectangle, Renderer, Theme,
 };
 use itertools::Itertools;
-use types::core::{Ident, Value, ValueType};
+use types::core::{Ident, Pt, Value, ValueType};
 
 use super::helpers::new_point_name;
 use crate::mode_selector_w::Mode;
@@ -24,6 +25,7 @@ pub(super) struct Program<'a> {
 #[derive(Debug, Default)]
 pub(super) struct ProgramState {
     picked_pt: Option<Ident>,
+    highlighted_item: Option<Ident>,
 }
 
 impl canvas::Program<Msg> for Program<'_> {
@@ -40,12 +42,23 @@ impl canvas::Program<Msg> for Program<'_> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
 
         for (var_name, var_value) in self.vars {
-            let is_picked = state
-                .picked_pt
+            let is_highlighted = state
+                .highlighted_item
                 .as_ref()
-                .is_some_and(|picked| picked == var_name);
+                .is_some_and(|highlighted| highlighted == var_name);
 
-            draw_value(var_value, &mut frame, is_picked);
+            let color = if is_highlighted {
+                Color {
+                    r: 1.0,
+                    g: 0.0,
+                    b: 0.0,
+                    a: 1.0,
+                }
+            } else {
+                Color::BLACK
+            };
+
+            draw_value(var_value, &mut frame, color);
         }
 
         vec![frame.into_geometry()]
@@ -58,97 +71,129 @@ impl canvas::Program<Msg> for Program<'_> {
         bounds: Rectangle,
         cursor: Cursor,
     ) -> (canvas::event::Status, Option<Msg>) {
-        use canvas::{
-            event::Status::{Captured, Ignored},
-            Event::Mouse,
-        };
-        use mouse::{
-            Button::Left,
-            Event::{ButtonPressed, ButtonReleased, CursorMoved},
-        };
-
         match event {
-            Mouse(mouse_event) => {
-                let Some(cursor_pos) = cursor.position_in(bounds) else {
-                    return (Ignored, None);
-                };
-
-                let cursor_pt = point_to_pt(&cursor_pos);
-                let cursor_items = self
-                    .vars
-                    .iter()
-                    .filter(|(_name, value)| is_under_cursor(cursor_pos, value))
-                    .map(|(name, value)| (name.clone(), value.clone()))
-                    .collect_vec();
-
-                match mouse_event {
-                    ButtonPressed(Left) => match &self.mode {
-                        Mode::CreatePoint => (
-                            Captured,
-                            Some(Msg::CreatePoint(
-                                new_point_name(self.vars.keys()),
-                                cursor_pt,
-                            )),
-                        ),
-                        Mode::Modify => {
-                            if let Some((name, _value)) = cursor_items
-                                .into_iter()
-                                .find(|(_, value)| value.value_type() == ValueType::Pt)
-                            {
-                                state.picked_pt = Some(name);
-                            }
-                            (Captured, None)
-                        }
-                        Mode::Transform => todo!(),
-                        Mode::Delete => (
-                            Captured,
-                            cursor_items
-                                .into_iter()
-                                .next()
-                                .map(|(name, _value)| Msg::Delete(name)),
-                        ),
-                        Mode::Function => todo!(),
-                    },
-                    CursorMoved { position: _ } => match &self.mode {
-                        Mode::Modify => {
-                            if let Some(picked_pt) = &state.picked_pt {
-                                (Captured, Some(Msg::MovePoint(picked_pt.clone(), cursor_pt)))
-                            } else {
-                                (Ignored, None)
-                            }
-                        }
-                        Mode::Transform => todo!(),
-                        Mode::Function => {
-                            /* TODO: highlight items */
-                            todo!()
-                        }
-                        _ => (Ignored, None),
-                    },
-
-                    ButtonReleased(_) => {
-                        state.picked_pt = None;
-
-                        (Captured, None)
-                    }
-
-                    _ => (Ignored, None),
-                }
+            canvas::Event::Mouse(mouse_event) => {
+                Self::handle_mouse_event(self, state, mouse_event, bounds, cursor)
             }
-            _ => (Ignored, None),
+            _ => (canvas::event::Status::Ignored, None),
         }
     }
 }
 
-static POINT_CLICK_AREA_WIDTH: f64 = POINT_WIDTH as f64 * 2.0;
-static LINE_CLICK_AREA_WIDTH: f64 = LINE_WIDTH as f64 * 2.0;
+impl Program<'_> {
+    fn handle_mouse_event(
+        &self,
+        state: &mut <Self as canvas::Program<Msg>>::State,
+        mouse_event: mouse::Event,
+        bounds: Rectangle,
+        cursor: Cursor,
+    ) -> (canvas::event::Status, Option<Msg>) {
+        use canvas::event::Status::{Captured, Ignored};
+        use mouse::{
+            Button::Left,
+            Event::{ButtonPressed, ButtonReleased},
+        };
 
-fn is_under_cursor(cursor_pos: Point, value: &Value) -> bool {
-    let cursor_pos = point_to_pt(&cursor_pos);
-    // XXX: transformation
-    match value {
-        Value::Pt(Some(pt)) => pt.dist(cursor_pos) < POINT_CLICK_AREA_WIDTH,
-        Value::Line(Some(line)) => line.dist(cursor_pos) < LINE_CLICK_AREA_WIDTH,
-        Value::Circ(Some(circ)) => circ.dist(cursor_pos) < LINE_CLICK_AREA_WIDTH,
-        _ => false,
+        let Some(cursor_pt) = cursor.position_in(bounds) else {
+            return (Ignored, None);
+        };
+
+        let cursor_pt = point_to_pt(&cursor_pt);
+
+        if let ButtonReleased(_) = &mouse_event {
+            state.picked_pt = None;
+        }
+
+        match &self.mode {
+            Mode::CreatePoint => {
+                state.highlighted_item = None;
+
+                if let ButtonPressed(Left) = mouse_event {
+                    (
+                        Captured,
+                        Some(Msg::CreatePoint(
+                            new_point_name(self.vars.keys()),
+                            cursor_pt,
+                        )),
+                    )
+                } else {
+                    (Ignored, None)
+                }
+            }
+
+            Mode::Modify => {
+                let cursor_item =
+                    self.get_cursor_item(cursor_pt, |v| v.value_type() == ValueType::Pt);
+                let cursor_item_name = cursor_item.map(|(name, _value)| name);
+                state.highlighted_item = state.picked_pt.clone().or(cursor_item_name.clone());
+
+                if let (ButtonPressed(Left), Some(cursor_item_name)) =
+                    (mouse_event, cursor_item_name)
+                {
+                    state.picked_pt = Some(cursor_item_name);
+                }
+
+                if let Some(picked_pt) = &state.picked_pt {
+                    return (Captured, Some(Msg::MovePoint(picked_pt.clone(), cursor_pt)));
+                }
+
+                (Ignored, None)
+            }
+
+            Mode::Delete => {
+                let cursor_item = self.get_cursor_item(cursor_pt, |_| true);
+                let cursor_item_name = cursor_item.map(|(name, _value)| name);
+                state.highlighted_item = cursor_item_name.clone();
+
+                if let (ButtonPressed(Left), Some(cursor_item_name)) =
+                    (mouse_event, cursor_item_name)
+                {
+                    (Captured, Some(Msg::Delete(cursor_item_name)))
+                } else {
+                    (Ignored, None)
+                }
+            }
+
+            Mode::Transform => todo!(),
+            Mode::Function => todo!(),
+        }
+    }
+
+    fn get_cursor_item(
+        &self,
+        cursor_pos: Pt,
+        cond: impl Fn(&Value) -> bool,
+    ) -> Option<(Ident, Value)> {
+        static CLICK_DIST: f64 = 10.0;
+
+        struct WithDist<'a> {
+            dist: f64,
+            name: &'a Ident,
+            value: &'a Value,
+        }
+
+        self.vars
+            .iter()
+            .filter(|(_, value)| cond(value))
+            .filter_map(|(name, value)| {
+                Some(WithDist {
+                    dist: match value {
+                        Value::Pt(Some(pt)) => pt.dist(cursor_pos),
+                        Value::Line(Some(line)) => line.dist(cursor_pos),
+                        Value::Circ(Some(circ)) => circ.dist(cursor_pos),
+                        _ => return None,
+                    },
+                    name,
+                    value,
+                })
+            })
+            .filter(|item| item.dist < CLICK_DIST)
+            .sorted_by(|lhs, rhs| match (lhs.value, rhs.value) {
+                (Value::Pt(_), Value::Line(_)) | (Value::Pt(_), Value::Circ(_)) => Ordering::Less,
+
+                _ => lhs.dist.total_cmp(&rhs.dist),
+            })
+            .next()
+            .map(|item| (item.name.clone(), item.value.clone()))
     }
 }
