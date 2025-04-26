@@ -1,9 +1,8 @@
 use std::time::Duration;
 
 use iced::{
-    border::Radius,
     widget::{container, mouse_area, text, tooltip},
-    Border, Color, Element,
+    Background, Color, Element,
     Length::Fill,
     Task, Theme,
 };
@@ -96,11 +95,9 @@ impl State {
             .width(Fill)
             .padding(1)
             .style(|theme| container::Style {
-                border: Border {
-                    color: theme.palette().primary,
-                    width: 0.5,
-                    radius: Radius::new(0.0),
-                },
+                background: Some(Background::Color(
+                    theme.extended_palette().background.weak.color,
+                )),
                 ..Default::default()
             });
 

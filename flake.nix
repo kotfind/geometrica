@@ -37,12 +37,12 @@
         inherit (craneLib) buildDepsOnly buildPackage crateNameFromCargoToml devShell cargoDoc cargoTest;
         inherit (craneLib.fileset) commonCargoSources;
         inherit (flake-utils.lib) mkApp;
-        inherit (lib) getExe' optionalAttrs;
+        inherit (lib) getExe' getLib optionalAttrs;
         inherit (lib.attrsets) unionOfDisjoint recursiveUpdate mapAttrsToList isDerivation;
         inherit (lib.fileset) toSource unions;
         inherit (lib.lists) all foldl;
         inherit (lib.path) append;
-        inherit (lib.strings) makeLibraryPath;
+        inherit (lib.strings) makeLibraryPath concatStringsSep;
         inherit (pkgs) writeShellScriptBin;
 
         buildCrate = {
@@ -190,6 +190,16 @@
               wayland
               libxkbcommon
 
+              # RFD Dependencies
+              # Source: https://github.com/PolyMeilex/rfd/issues/124#issuecomment-1901738167
+              gtk3
+              glib
+              gdk-pixbuf
+              cairo
+              pango
+              atk
+              gsettings-desktop-schemas
+
               # Other Dependencies
               openssl
               libgcc
@@ -205,6 +215,12 @@
               libxkbcommon
               vulkan-loader
             ];
+
+            preFixup = ''
+              wrapProgram $out/server \
+                --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
+                --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+            '';
 
             testRuntimeDeps = [(buildCrate server).packages.server];
           };
@@ -263,7 +279,20 @@
                 rust-analyzer
                 cargo-tarpaulin
               ]);
+
             LD_LIBRARY_PATH = makeLibraryPath concatedInputs;
+
+            shellHook = ''
+              # RFD Dependencies
+              # Source: https://github.com/PolyMeilex/rfd/issues/124#issuecomment-1901738167
+              export XDG_DATA_DIRS="${
+                lib.debug.traceVal (concatStringsSep ":" [
+                  "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}"
+                  "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+                  "$XDG_DATA_DIRS"
+                ])
+              }"
+            '';
           };
       in
         {

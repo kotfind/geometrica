@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use client::Client;
 use iced::{
     font::Weight,
-    widget::{button, container, pane_grid, text},
+    widget::{button, column, container, pane_grid, text},
     Border, Element, Font,
     Length::Fill,
     Task, Theme,
@@ -15,7 +15,7 @@ use crate::{
     helpers::perform_or_status,
     mode_selector_w::{self, Mode},
     status_bar_w::StatusMessage,
-    variable_w,
+    top_bar_w, variable_w,
 };
 
 #[derive(Debug)]
@@ -43,6 +43,7 @@ pub enum Msg {
     CommandWMsg(command_w::Msg),
     VariableWMsg(variable_w::Msg),
     ModeSelectorW(mode_selector_w::Msg),
+    TopBarWMsg(top_bar_w::Msg),
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
@@ -98,7 +99,12 @@ impl State {
     }
 
     pub fn view(&self) -> Element<Msg> {
-        self.view_master_area()
+        column![
+            top_bar_w::view().map(Msg::TopBarWMsg),
+            self.view_master_area()
+        ]
+        .width(Fill)
+        .into()
     }
 
     fn view_master_area(&self) -> Element<Msg> {
@@ -221,6 +227,13 @@ impl State {
                     self.mode = mode;
                     Task::none()
                 }
+            },
+
+            Msg::TopBarWMsg(msg) => match msg {
+                top_bar_w::Msg::SetStatusMessage(message) => {
+                    Task::done(Msg::SetStatusMessage(message))
+                }
+                _ => top_bar_w::update(msg, self.client.clone()).map(Msg::TopBarWMsg),
             },
         }
     }

@@ -4,6 +4,7 @@ mod helpers;
 mod main_w;
 mod mode_selector_w;
 mod status_bar_w;
+mod top_bar_w;
 mod variable_w;
 
 fn main() -> anyhow::Result<()> {
