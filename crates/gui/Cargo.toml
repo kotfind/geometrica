@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.95"
 client = { path = "../client" }
-types = { path = "../types" }
+types = { path = "../types", features = ["math"]}
 iced = { version = "0.13.1", features = ["canvas", "tokio"] }
 iced_aw = { version = "0.11.0", default-features = false, features = ["grid"] }
 itertools = "0.14.0"

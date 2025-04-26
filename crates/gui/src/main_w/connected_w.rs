@@ -98,7 +98,10 @@ impl State {
     fn view_master_area(&self) -> Element<Msg> {
         pane_grid::PaneGrid::new(&self.panes, |pane, state, _| {
             let (title, body) = match state {
-                Pane::CanvasW => ("", canvas_w::view(&self.vars).map(Msg::CanvasWMsg)),
+                Pane::CanvasW => (
+                    "",
+                    canvas_w::view(&self.vars, &self.mode).map(Msg::CanvasWMsg),
+                ),
                 Pane::CommandW => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
                 Pane::VariableW => (
                     "Variables",
@@ -179,7 +182,12 @@ impl State {
                 self.vars = vars;
                 Task::future(Self::fetch_vars_msg(self.client.clone()))
             }
-            Msg::CanvasWMsg(_msg) => Task::none(),
+            Msg::CanvasWMsg(msg) => match msg {
+                canvas_w::Msg::SetStatusMessage(message) => {
+                    Task::done(Msg::SetStatusMessage(message))
+                }
+                _ => canvas_w::update(msg, self.client.clone()).map(Msg::CanvasWMsg),
+            },
             Msg::CommandWMsg(msg) => self
                 .command_w
                 .update(msg, self.client.clone())

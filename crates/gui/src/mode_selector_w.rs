@@ -6,7 +6,7 @@ use iced::{
     Length::Fill,
 };
 
-#[derive(Debug, Clone, Default, Eq, PartialEq)]
+#[derive(Debug, Clone, Default)]
 pub enum Mode {
     #[default]
     CreatePoint,
@@ -17,7 +17,7 @@ pub enum Mode {
 }
 
 impl Mode {
-    /// Returns list of modes, that doesn't hold any data.
+    /// Returns list of modes, that have default values
     fn basic_modes() -> &'static [Mode] {
         static BASIC_MODES: &[Mode] = &[
             Mode::CreatePoint,
@@ -27,6 +27,17 @@ impl Mode {
         ];
 
         BASIC_MODES
+    }
+
+    pub fn holds_same_variant(&self, other: &Self) -> bool {
+        matches!(
+            (self, other),
+            (Mode::CreatePoint, Mode::CreatePoint)
+                | (Mode::Modify, Mode::Modify)
+                | (Mode::Transform, Mode::Transform)
+                | (Mode::Delete, Mode::Delete)
+                | (Mode::Function, Mode::Function)
+        )
     }
 }
 
@@ -51,14 +62,13 @@ pub fn view(current_mode: &Mode) -> Element<Msg> {
     let mut column = Column::new().padding(5).spacing(5);
 
     for mode in Mode::basic_modes() {
-        let btn =
-            button(text(mode.to_string()))
-                .width(Fill)
-                .on_press_maybe(if mode != current_mode {
-                    Some(Msg::ModeSelected(mode.clone()))
-                } else {
-                    None
-                });
+        let btn = button(text(mode.to_string())).width(Fill).on_press_maybe(
+            if !mode.holds_same_variant(current_mode) {
+                Some(Msg::ModeSelected(mode.clone()))
+            } else {
+                None
+            },
+        );
 
         column = column.push(btn);
     }
