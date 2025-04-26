@@ -20,10 +20,14 @@ pub enum Msg {
     None,
     SetStatusMessage(StatusMessage),
 
+    // File Menu
     Save,
     Load,
     ExportAsSvg,
     Clear,
+
+    // Server Menu
+    Disconnect,
 }
 
 pub fn view<'a>() -> Element<'a, Msg> {
@@ -32,6 +36,10 @@ pub fn view<'a>() -> Element<'a, Msg> {
         (
             menu_item(text("File"), Msg::None),
             file_menu()
+        )
+        (
+            menu_item(text("Server"), Msg::None),
+            server_menu()
         )
 
     )
@@ -48,6 +56,15 @@ fn file_menu<'a>() -> Menu<'a, Msg, Theme, Renderer> {
         (menu_item(text("Load"), Msg::Load))
         (menu_item(text("Export as SVG"), Msg::ExportAsSvg))
         (menu_item(text("Clear"), Msg::Clear))
+    );
+
+    ans.width(Shrink)
+}
+
+fn server_menu<'a>() -> Menu<'a, Msg, Theme, Renderer> {
+    #[rustfmt::skip]
+    let ans = menu!(
+        (menu_item(text("Disconnect"), Msg::Disconnect))
     );
 
     ans.width(Shrink)
@@ -118,5 +135,7 @@ pub fn update(msg: Msg, client: Client) -> Task<Msg> {
             Ok(())
         }),
         Msg::Clear => perform_or_status!(async move { client.clear().await }),
+
+        Msg::Disconnect => unreachable!("should have been processed in parent widget"),
     }
 }

@@ -38,6 +38,7 @@ pub enum Msg {
 
     SetStatusMessage(StatusMessage),
     GotVars(HashMap<Ident, Value>),
+    Disconnected,
 
     CanvasWMsg(canvas_w::Msg),
     CommandWMsg(command_w::Msg),
@@ -228,13 +229,14 @@ impl State {
                     Task::none()
                 }
             },
-
             Msg::TopBarWMsg(msg) => match msg {
                 top_bar_w::Msg::SetStatusMessage(message) => {
                     Task::done(Msg::SetStatusMessage(message))
                 }
+                top_bar_w::Msg::Disconnect => Task::done(Msg::Disconnected),
                 _ => top_bar_w::update(msg, self.client.clone()).map(Msg::TopBarWMsg),
             },
+            Msg::Disconnected => unreachable!("should have been processed in parent widget"),
         }
     }
 }

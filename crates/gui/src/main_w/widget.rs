@@ -50,6 +50,10 @@ impl State {
         match (&mut self.kind, msg) {
             (StateKind::Connected(state), Msg::ConnectedMsg(msg)) => match msg {
                 connected_w::Msg::SetStatusMessage(message) => self.set_status_message(message),
+                connected_w::Msg::Disconnected => {
+                    self.kind = StateKind::Disconnected(Default::default());
+                    Task::none()
+                }
                 _ => state.update(msg).map(Msg::ConnectedMsg),
             },
             (StateKind::Disconnected(state), Msg::DisconnectedMsg(msg)) => match msg {
