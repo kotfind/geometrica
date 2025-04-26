@@ -4,9 +4,9 @@ use anyhow::Context;
 use parser::ParseInto;
 use reqwest::Url;
 use types::{
-    api,
+    api::{self, FunctionList},
     core::{Ident, Value},
-    lang::{Definition, Expr, FunctionSignature, Statement},
+    lang::{Definition, Expr, Statement},
 };
 
 use crate::ScriptResult;
@@ -124,17 +124,12 @@ impl Client {
         }
     }
 
-    /// Returns a result of a pair of two `Vec<FunctionSignature>`.
-    /// The first one contains built-in functions,
-    /// the second one contains user-defined functions.
-    pub async fn list_funcs(
-        &self,
-    ) -> anyhow::Result<(Vec<FunctionSignature>, Vec<FunctionSignature>)> {
+    pub async fn list_funcs(&self) -> anyhow::Result<FunctionList> {
         let resp = self
             .req(api::func::list::Request {})
             .await
             .context("failed to get functions")?;
-        Ok((resp.builtins, resp.user_defined))
+        Ok(resp.list)
     }
 
     pub async fn get_all_items(&self) -> anyhow::Result<HashMap<Ident, Value>> {

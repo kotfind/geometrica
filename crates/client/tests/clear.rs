@@ -22,6 +22,6 @@ async fn clear() {
     let items = client.get_all_items().await.unwrap();
     assert!(items.is_empty());
 
-    let user_defined_funcs = client.list_funcs().await.unwrap().1;
+    let user_defined_funcs = client.list_funcs().await.unwrap().user_defined;
     assert!(user_defined_funcs.is_empty());
 }

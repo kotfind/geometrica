@@ -6,6 +6,7 @@ use enum_iterator::Sequence;
 use itertools::Itertools;
 use parser::ParseInto;
 use types::{
+    api::FunctionList,
     core::Value,
     lang::{Command, CommandArg, Expr},
 };
@@ -232,22 +233,45 @@ impl CommandType {
         let mut args = args.into_iter();
         unwrap_cmd_arg!(END FROM args);
 
-        let (builtins, user_defined) = match client.list_funcs().await {
+        let FunctionList {
+            operators,
+            normal_builtins,
+            user_defined,
+        } = match client.list_funcs().await {
             Ok(funcs) => funcs,
             Err(err) => return ScriptResult::error(err.context("list_funcs failed")),
         };
 
-        let builtins = builtins
-            .into_iter()
-            .map(|sign| [sign.to_string(), "builtin".to_string()]);
+        let funcs = [
+            (operators, "operator"),
+            (normal_builtins, "builtin"),
+            (user_defined, "user-defined"),
+        ]
+        .into_iter()
+        .flat_map(|(list, type_name)| {
+            list.into_iter()
+                .map(|sign| sign.to_string())
+                .sorted()
+                .map(|sign| [sign, type_name.to_string()])
+        });
 
-        let user_defined = user_defined
-            .into_iter()
-            .map(|sign| [sign.to_string(), "user-defined".to_string()]);
-
-        let funcs = builtins
-            .chain(user_defined)
-            .sorted_by(|lhs, rhs| (&lhs[1], &lhs[0]).cmp(&(&rhs[1], &rhs[0])));
+        // let operators = operators
+        //     .into_iter()
+        //     .map(|sign| [sign.to_string(), "operator".to_string()]);
+        //
+        // let normal_builtins = normal_builtins
+        //     .into_iter()
+        //     .map(|sign| [sign.to_string(), "builtin".to_string()]);
+        //
+        // let user_defined = user_defined
+        //     .into_iter()
+        //     .map(|sign| [sign.to_string(), "user-defined".to_string()]);
+        //
+        // let funcs = iter::empty()
+        //     .chain(operators)
+        //     .chain(normal_builtins)
+        //     .chain(user_defined)
+        //     .sorted_by(|lhs, rhs| (&lhs[1], &lhs[0]).cmp(&(&rhs[1], &rhs[0])));
 
         ScriptResult::ok_one(Table::new_with_rows(["Signature", "Type"], funcs))
     }

@@ -96,8 +96,7 @@ pub mod func {
             ROUTE "/func/list"
             REQUEST {}
             RESPONSE {
-                builtins: Vec<FunctionSignature>,
-                user_defined: Vec<FunctionSignature>,
+                list: FunctionList,
             }
         }
     }
@@ -192,12 +191,12 @@ macro_rules! route {
             $(,)?
         }
     ) => {
-        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
         pub struct Request {
             $(pub $req_field_name: $req_field_type),*
         }
 
-        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+        #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
         pub struct Response {
             $(pub $resp_field_name: $resp_field_type),*
         }
@@ -216,3 +215,18 @@ macro_rules! route {
     };
 }
 use route;
+
+/// This type is not actuall
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FunctionList {
+    /// Operators
+    ///
+    /// Functions, that represent operators, whose names start with `#`.
+    pub operators: Vec<FunctionSignature>,
+
+    /// Builtins, that are not operators.
+    pub normal_builtins: Vec<FunctionSignature>,
+
+    /// User-defined functions
+    pub user_defined: Vec<FunctionSignature>,
+}

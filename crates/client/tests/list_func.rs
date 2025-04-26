@@ -20,7 +20,7 @@ async fn user_defined() {
         .await
         .unwrap();
 
-    let user_defined_funcs = client.list_funcs().await.unwrap().1;
+    let user_defined_funcs = client.list_funcs().await.unwrap().user_defined;
 
     assert!(user_defined_funcs.len() == 2);
 
@@ -39,7 +39,7 @@ async fn user_defined() {
 #[tokio::test]
 async fn builtins() {
     let client = TestClient::new().await;
-    let builtins = client.list_funcs().await.unwrap().0;
+    let builtins = client.list_funcs().await.unwrap().normal_builtins;
 
     assert!(builtins.contains(&FunctionSignature {
         name: Ident::from("line"),
@@ -56,7 +56,7 @@ async fn builtins() {
 #[tokio::test]
 async fn operators() {
     let client = TestClient::new().await;
-    let builtins = client.list_funcs().await.unwrap().0;
+    let builtins = client.list_funcs().await.unwrap().operators;
 
     assert!(builtins.contains(&FunctionSignature {
         name: Ident::from("#add"),

@@ -38,8 +38,7 @@ pub fn router() -> Router<App> {
         }
 
         ROUTE (func::list)() SCOPE scope {
-            let (builtins, user_defined) = scope.list_funcs();
-            api_ok(R { builtins, user_defined, })
+            api_ok(R { list: scope.list_funcs() })
         }
 
         ROUTE (items::get_all)() SCOPE scope {

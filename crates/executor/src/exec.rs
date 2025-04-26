@@ -2,6 +2,7 @@ use std::collections::{hash_map, HashMap};
 
 use thiserror::Error;
 use types::{
+    api::FunctionList,
     core::{Ident, Value, ValueType},
     lang::{Definition, Expr, FunctionDefinition, FunctionSignature, ValueDefinition},
 };
@@ -150,14 +151,25 @@ impl ExecScope {
         self.funcs.get(sign).cloned()
     }
 
-    /// Returns a pair of two `Vec<FunctionSignature>`.
-    /// The first one contains built-in functions,
-    /// the second one contains user-defined functions.
-    pub fn list_funcs(&self) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
-        (
-            Function::list_builtins(),
-            self.funcs.keys().cloned().collect(),
-        )
+    pub fn list_funcs(&self) -> FunctionList {
+        let mut operators = Vec::new();
+        let mut normal_builtins = Vec::new();
+
+        for builtin in Function::list_builtins() {
+            if builtin.name.0.starts_with('#') {
+                operators.push(builtin);
+            } else {
+                normal_builtins.push(builtin);
+            }
+        }
+
+        let user_defined = self.funcs.keys().cloned().collect();
+
+        FunctionList {
+            operators,
+            normal_builtins,
+            user_defined,
+        }
     }
 
     pub(crate) fn insert_func(&mut self, func: Function) -> ExecResult {
