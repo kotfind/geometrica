@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use iced::{
-    widget::{container, mouse_area, text, tooltip},
+    widget::{container, mouse_area, text},
     Color, Element,
     Length::Fill,
     Task, Theme,
 };
 
-use crate::my_colors;
+use crate::{helpers::my_tooltip, my_colors};
 
 #[derive(Debug, Clone)]
 pub struct StatusMessage {
@@ -87,13 +87,7 @@ impl State {
 
         let ans = mouse_area(ans).on_press(Msg::ClearMessage);
 
-        let ans = tooltip(
-            ans,
-            text("press to hide this message"),
-            tooltip::Position::FollowCursor,
-        );
-
-        ans.into()
+        my_tooltip(ans, "press to hide status message")
     }
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {

@@ -4,7 +4,11 @@ use client::{Client, ScriptResult, Table};
 use iced::{
     alignment::Vertical,
     font::Weight,
-    widget::{button, column, row, scrollable, text, text_input, Column, Text},
+    keyboard::{key, Key, Modifiers},
+    widget::{
+        button, column, row, scrollable, text, text_editor, text_editor::Binding, Column,
+        Scrollable, Text,
+    },
     Alignment::Center,
     Element, Font,
     Length::{Fill, Shrink},
@@ -13,15 +17,17 @@ use iced::{
 use iced_aw::{grid_row, Grid, GridRow};
 use itertools::Itertools;
 
+use crate::helpers::my_tooltip;
+
 #[derive(Debug)]
 pub struct State {
     scripts_and_results: Vec<ScriptOrResult>,
-    script_input: String,
+    script_editor_content: text_editor::Content,
 }
 
 #[derive(Debug, Clone)]
 pub enum Msg {
-    ScriptInputChanged(String),
+    ScriptEditorAction(text_editor::Action),
     SendScript,
     // Arc-ing ScriptResult to make in Clonable
     GotScriptResult(Arc<ScriptResult>),
@@ -31,7 +37,7 @@ impl State {
     pub fn new() -> Self {
         Self {
             scripts_and_results: Default::default(),
-            script_input: Default::default(),
+            script_editor_content: Default::default(),
         }
     }
 
@@ -49,38 +55,62 @@ impl State {
                 .column_spacing(5)
                 .row_spacing(10);
 
-            scrollable(grd).width(Fill).height(Fill)
+            Scrollable::with_direction(
+                grd,
+                scrollable::Direction::Both {
+                    vertical: Default::default(),
+                    horizontal: Default::default(),
+                },
+            )
+            .width(Fill)
+            .height(Fill)
         };
 
-        let script_input = text_input("Script", &self.script_input)
-            .on_input(Msg::ScriptInputChanged)
-            .on_submit(Msg::SendScript)
-            .width(Fill);
+        let script_editor = text_editor(&self.script_editor_content)
+            .placeholder("list_cmd!")
+            .on_action(Msg::ScriptEditorAction)
+            .key_binding(|key| match key.key {
+                Key::Named(key::Named::Enter) => {
+                    if key.modifiers.contains(Modifiers::CTRL)
+                        || self.script_editor_content.line_count() > 1
+                    {
+                        Some(Binding::Insert('\n'))
+                    } else {
+                        Some(Binding::Custom(Msg::SendScript))
+                    }
+                }
+                Key::Named(key::Named::Tab) => {
+                    let s = " ".repeat(4);
+                    let ans = s.chars().map(Binding::Insert);
+                    Some(Binding::Sequence(ans.collect_vec()))
+                }
+                _ => Binding::from_key_press(key),
+            });
 
-        let submit_button = button(">").on_press(Msg::SendScript);
+        let submit_button = {
+            let ans = button(">").on_press(Msg::SendScript);
+            my_tooltip(ans, "Enter: send\nCtrl + Enter: new line\nTab: indent")
+        };
 
-        column![
-            scripts_and_results,
-            row![script_input, submit_button].padding(5).spacing(5)
-        ]
-        .padding(5)
-        .spacing(5)
-        .width(Fill)
-        .height(Fill)
-        .align_x(Center)
-        .into()
+        let editor_row = row![script_editor, submit_button].spacing(5);
+
+        column![scripts_and_results, editor_row]
+            .padding(5)
+            .spacing(5)
+            .width(Fill)
+            .height(Fill)
+            .align_x(Center)
+            .into()
     }
 
     pub fn update(&mut self, msg: Msg, client: Client) -> Task<Msg> {
         match msg {
-            Msg::ScriptInputChanged(script) => self.script_input = script,
-
             Msg::SendScript => {
-                let script = self.script_input.clone();
+                let script = self.script_editor_content.text();
                 if script.is_empty() {
                     return Task::none();
                 }
-                self.script_input.clear();
+                self.script_editor_content = text_editor::Content::new();
                 self.scripts_and_results
                     .push(ScriptOrResult::Script(script.clone()));
                 return Task::perform(
@@ -91,11 +121,11 @@ impl State {
                     |res| Msg::GotScriptResult(Arc::new(res)),
                 );
             }
-
             Msg::GotScriptResult(script_result) => {
                 self.scripts_and_results
                     .push(ScriptOrResult::Result(script_result));
             }
+            Msg::ScriptEditorAction(action) => self.script_editor_content.perform(action),
         }
 
         Task::none()

@@ -1,6 +1,10 @@
-use std::{collections::HashSet, future::Future};
+use std::{collections::HashSet, fmt::Display, future::Future};
 
-use iced::{advanced::graphics::futures::MaybeSend, Task};
+use iced::{
+    advanced::graphics::futures::MaybeSend,
+    widget::{container, text, tooltip},
+    Background, Element, Task, Theme,
+};
 use types::core::{Ident, ValueType};
 
 use crate::status_bar_w::StatusMessage;
@@ -88,4 +92,29 @@ pub fn new_object_name<'a>(
         .find(|name| !existant_names.contains(name))
         .expect("none of the names is free")
         .clone()
+}
+
+pub fn my_tooltip<'a, MSG>(
+    content: impl Into<iced::Element<'a, MSG>>,
+    tip: impl Display,
+) -> Element<'a, MSG>
+where
+    MSG: Clone + 'static,
+{
+    let message = {
+        let ans = text!("{tip}");
+
+        let ans = container(ans)
+            .style(|theme: &Theme| container::Style {
+                background: Some(Background::Color(
+                    theme.extended_palette().background.weak.color,
+                )),
+                ..Default::default()
+            })
+            .padding(5);
+
+        ans
+    };
+
+    tooltip(content, message, tooltip::Position::FollowCursor).into()
 }
