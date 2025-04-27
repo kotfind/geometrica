@@ -106,7 +106,17 @@ impl FunctionMode {
         client: Client,
         vars: &HashMap<Ident, Value>,
     ) -> anyhow::Result<()> {
-        let name = new_object_name_with_prefix(&self.sign.name.0, vars.keys());
+        let name = new_object_name_with_prefix(
+            &self
+                .sign
+                .name
+                .0
+                .chars()
+                // Remove `#`
+                .filter(|c| c.is_ascii_alphanumeric())
+                .collect::<String>(),
+            vars.keys(),
+        );
 
         client
             .define_one(Definition::ValueDefinition(ValueDefinition {

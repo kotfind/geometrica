@@ -246,9 +246,13 @@ impl State {
                 variable_w::Msg::SetStatusMessage(message) => {
                     Task::done(Msg::SetStatusMessage(message))
                 }
+                variable_w::Msg::SetMode(mode) => {
+                    self.mode = mode;
+                    Task::none()
+                }
                 _ => self
                     .variable_w
-                    .update(msg, self.client.clone())
+                    .update(msg, self.client.clone(), &self.mode, &self.vars)
                     .map(Msg::VariableWMsg),
             },
             Msg::ModeSelectorW(msg) => match msg {
