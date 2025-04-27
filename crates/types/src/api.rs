@@ -96,7 +96,7 @@ pub mod func {
             ROUTE "/func/list"
             REQUEST {}
             RESPONSE {
-                list: FunctionList,
+                func_list: FunctionList,
             }
         }
     }

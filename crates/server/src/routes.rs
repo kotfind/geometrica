@@ -38,7 +38,7 @@ pub fn router() -> Router<App> {
         }
 
         ROUTE (func::list)() SCOPE scope {
-            api_ok(R { list: scope.list_funcs() })
+            api_ok(R { func_list: scope.list_funcs() })
         }
 
         ROUTE (items::get_all)() SCOPE scope {

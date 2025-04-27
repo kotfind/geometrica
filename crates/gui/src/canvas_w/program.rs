@@ -155,7 +155,7 @@ impl Program<'_> {
             }
 
             Mode::Transform => todo!(),
-            Mode::Function => todo!(),
+            Mode::Function { .. } => todo!(),
         }
     }
 

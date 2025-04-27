@@ -24,10 +24,11 @@ pub struct State {
     vars: HashMap<Ident, Value>,
     panes: pane_grid::State<Pane>,
 
+    mode: Mode,
+
     command_w: command_w::State,
     variable_w: variable_w::State,
-
-    mode: Mode,
+    mode_selector_w: mode_selector_w::State,
 }
 
 #[derive(Debug, Clone)]
@@ -80,22 +81,31 @@ impl State {
             }),
         });
 
+        let (mode_selector_w, mode_selector_w_task) =
+            mode_selector_w::State::run_with(client.clone());
+        let mode_selector_w_task = mode_selector_w_task.map(Msg::ModeSelectorW);
+
+        let fetch_vars_task = perform_or_status!(
+            {
+                let client = client.clone();
+                async move { client.get_all_items().await }
+            },
+            Msg::GotVars
+        );
+
         (
             Self {
                 client: client.clone(),
                 vars: Default::default(),
                 panes,
+
+                mode: Default::default(),
+
                 command_w: command_w::State::new(),
                 variable_w: variable_w::State::new(),
-                mode: Default::default(),
+                mode_selector_w,
             },
-            perform_or_status!(
-                {
-                    let client = client.clone();
-                    async move { client.get_all_items().await }
-                },
-                Msg::GotVars
-            ),
+            Task::batch([mode_selector_w_task, fetch_vars_task]),
         )
     }
 
@@ -124,7 +134,9 @@ impl State {
                 ),
                 Pane::ModeSelectorW => (
                     "Mode Selector",
-                    mode_selector_w::view(&self.mode).map(Msg::ModeSelectorW),
+                    self.mode_selector_w
+                        .view(&self.mode)
+                        .map(Msg::ModeSelectorW),
                 ),
             };
 
@@ -178,6 +190,10 @@ impl State {
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
         match msg {
+            Msg::SetStatusMessage(_) | Msg::Disconnected => {
+                unreachable!("should have been processed in parent widget")
+            }
+
             Msg::PaneDrag(pane_grid::DragEvent::Dropped { pane, target }) => {
                 self.panes.drop(pane, target);
                 Task::none()
@@ -192,7 +208,10 @@ impl State {
                 Task::none()
             }
             Msg::GotVars(vars) => {
+                // TODO?: sleep before next request?
+
                 self.vars = vars;
+
                 perform_or_status!(
                     {
                         let client = self.client.clone();
@@ -211,9 +230,6 @@ impl State {
                 .command_w
                 .update(msg, self.client.clone())
                 .map(Msg::CommandWMsg),
-            Msg::SetStatusMessage(_) => {
-                unreachable!("should have been processed in parent widget")
-            }
             Msg::VariableWMsg(msg) => match msg {
                 variable_w::Msg::SetStatusMessage(message) => {
                     Task::done(Msg::SetStatusMessage(message))
@@ -228,6 +244,13 @@ impl State {
                     self.mode = mode;
                     Task::none()
                 }
+                mode_selector_w::Msg::SetStatusMessage(message) => {
+                    Task::done(Msg::SetStatusMessage(message))
+                }
+                _ => self
+                    .mode_selector_w
+                    .update(msg, self.client.clone())
+                    .map(Msg::ModeSelectorW),
             },
             Msg::TopBarWMsg(msg) => match msg {
                 top_bar_w::Msg::SetStatusMessage(message) => {
@@ -236,7 +259,6 @@ impl State {
                 top_bar_w::Msg::Disconnect => Task::done(Msg::Disconnected),
                 _ => top_bar_w::update(msg, self.client.clone()).map(Msg::TopBarWMsg),
             },
-            Msg::Disconnected => unreachable!("should have been processed in parent widget"),
         }
     }
 }

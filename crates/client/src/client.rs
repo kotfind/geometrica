@@ -129,7 +129,7 @@ impl Client {
             .req(api::func::list::Request {})
             .await
             .context("failed to get functions")?;
-        Ok(resp.list)
+        Ok(resp.func_list)
     }
 
     pub async fn get_all_items(&self) -> anyhow::Result<HashMap<Ident, Value>> {
