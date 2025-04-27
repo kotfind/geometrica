@@ -11,7 +11,7 @@ use iced::{
 use types::core::{Ident, Value};
 
 use crate::{
-    canvas_w, command_w,
+    args_w, canvas_w, command_w,
     helpers::perform_or_status,
     mode::Mode,
     mode_selector_w::{self},
@@ -48,6 +48,7 @@ pub enum Msg {
     VariableWMsg(variable_w::Msg),
     ModeSelectorW(mode_selector_w::Msg),
     TopBarWMsg(top_bar_w::Msg),
+    ArgsWMsg(args_w::Msg),
 }
 
 // The numbers are explicitly specified, so that they persist across refactoring.
@@ -57,6 +58,7 @@ enum Pane {
     CommandW = 1,
     VariableW = 2,
     ModeSelectorW = 3,
+    ArgsW = 4,
 }
 
 static LEFT_PANE_RATIO: f32 = 0.2;
@@ -69,7 +71,12 @@ impl State {
         let panes = pane_grid::State::with_configuration(Cfg::Split {
             axis: Vertical,
             ratio: LEFT_PANE_RATIO,
-            a: Box::new(Cfg::Pane(Pane::VariableW)),
+            a: Box::new(Cfg::Split {
+                axis: Horizontal,
+                ratio: 0.5,
+                a: Box::new(Cfg::Pane(Pane::VariableW)),
+                b: Box::new(Cfg::Pane(Pane::CommandW)),
+            }),
             b: Box::new(Cfg::Split {
                 axis: Vertical,
                 ratio: RIGHT_PANE_RATIO,
@@ -78,7 +85,7 @@ impl State {
                     axis: Horizontal,
                     ratio: 0.5,
                     a: Box::new(Cfg::Pane(Pane::ModeSelectorW)),
-                    b: Box::new(Cfg::Pane(Pane::CommandW)),
+                    b: Box::new(Cfg::Pane(Pane::ArgsW)),
                 }),
             }),
         });
@@ -143,6 +150,7 @@ impl State {
                         .view(&self.mode)
                         .map(Msg::ModeSelectorW),
                 ),
+                Pane::ArgsW => ("Arguments", args_w::view(&self.mode).map(Msg::ArgsWMsg)),
             };
 
             let mut content = pane_grid::Content::new(body);
@@ -283,6 +291,7 @@ impl State {
                 }
                 _ => top_bar_w::update(msg, self.client.clone()).map(Msg::TopBarWMsg),
             },
+            Msg::ArgsWMsg(msg) => args_w::update(msg).map(Msg::ArgsWMsg),
         }
     }
 }
