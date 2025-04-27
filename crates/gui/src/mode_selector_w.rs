@@ -80,8 +80,8 @@ impl State {
         let mut column = Column::new().spacing(5);
 
         let basic_modes = [
-            Mode::Modify,
             Mode::Transform,
+            Mode::Modify,
             Mode::CreatePoint,
             Mode::Delete,
         ];

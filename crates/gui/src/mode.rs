@@ -15,8 +15,8 @@ use crate::helpers::new_object_name_with_prefix;
 #[derive(Debug, Clone, Default)]
 pub enum Mode {
     #[default]
-    Modify,
     Transform,
+    Modify,
     CreatePoint,
     Delete,
     Function(FunctionMode),

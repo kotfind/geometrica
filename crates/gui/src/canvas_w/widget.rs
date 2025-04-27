@@ -47,16 +47,15 @@ impl State {
 
     pub fn view<'a>(&'a self, vars: &'a HashMap<Ident, Value>, mode: &'a Mode) -> Element<'a, Msg> {
         responsive(|size| {
+            let w = size.width as f64;
+            let h = size.height as f64;
+            let unify_transformation =
+                Transformation::from_bounds(Pt { x: 0.0, y: 0.0 }, Pt { x: w, y: h }, true);
+
             canvas::Canvas::new(Program {
                 vars,
                 mode,
-                unify_transformation: Transformation::from_bounds(
-                    Pt { x: 0.0, y: 0.0 },
-                    Pt {
-                        x: size.width as f64,
-                        y: size.height as f64,
-                    },
-                ),
+                unify_transformation,
                 custom_transformation: self.custom_transformation,
             })
             .width(Fill)
@@ -127,7 +126,7 @@ impl State {
         self.custom_transformation = Transformation::identity();
     }
 
-    /// Resets custom transformation, so that all objects will fit.
+    /// Resets custom transformation, so that all objects fit.
     ///
     /// Notes:
     ///
@@ -161,8 +160,16 @@ impl State {
             return;
         };
 
-        self.custom_transformation =
-            Transformation::from_bounds(Pt { x: min_x, y: min_y }, Pt { x: max_x, y: max_y })
-                .inverse();
+        let mut t = Transformation::from_bounds(
+            Pt { x: min_x, y: min_y },
+            Pt { x: max_x, y: max_y },
+            false,
+        )
+        .inverse();
+
+        // Some padding
+        t.zoom /= 1.1;
+
+        self.custom_transformation = t;
     }
 }
