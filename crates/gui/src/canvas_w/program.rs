@@ -3,13 +3,13 @@ use std::collections::HashMap;
 
 use crate::helpers::new_object_name_with_type;
 use crate::mode::Mode;
+use crate::my_colors;
 
 use super::draw::draw_value;
 use super::helpers::point_to_pt;
 use super::transform::Transformation;
 use super::widget::Msg;
 use iced::mouse::ScrollDelta;
-use iced::Color;
 use iced::{
     mouse::{self, Cursor},
     widget::canvas,
@@ -45,7 +45,7 @@ pub(super) struct Program<'a> {
 
 #[derive(Debug, Default)]
 pub(super) struct ProgramState {
-    highlighted_item: Option<Ident>,
+    hovered_item: Option<Ident>,
 
     /// For [Mode::Modify] only
     picked_pt: Option<Ident>,
@@ -75,18 +75,19 @@ impl canvas::Program<Msg> for Program<'_> {
                 continue;
             };
 
+            let is_hovered = state
+                .hovered_item
+                .as_ref()
+                .is_some_and(|hovered| hovered == var_name);
+
             let color = match &self.mode {
-                _ if state
-                    .highlighted_item
-                    .as_ref()
-                    .is_some_and(|highlighted| highlighted == var_name) =>
+                Mode::Modify
+                    if state
+                        .picked_pt
+                        .as_ref()
+                        .is_some_and(|picked| picked == var_name) =>
                 {
-                    Color {
-                        r: 1.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 1.0,
-                    }
+                    my_colors::ITEM_MODIFY_PICKED
                 }
 
                 Mode::Function(func_mode)
@@ -95,15 +96,16 @@ impl canvas::Program<Msg> for Program<'_> {
                         .iter()
                         .any(|name| name == var_name) =>
                 {
-                    Color {
-                        r: 0.0,
-                        g: 1.0,
-                        b: 1.0,
-                        a: 1.0,
-                    }
+                    my_colors::ITEM_FUNCTION_PICKED
                 }
-
-                _ => Color::BLACK,
+                Mode::Function(func_mode)
+                    if is_hovered && func_mode.next_arg_type() == var_value_real.value_type() =>
+                {
+                    my_colors::ITEM_FUNCTION_HOVERED
+                }
+                Mode::Modify if is_hovered => my_colors::ITEM_MODIFY_HOVERED,
+                Mode::Delete if is_hovered => my_colors::ITEM_DELETE_HOVERED,
+                _ => my_colors::ITEM_NORMAL,
             };
 
             draw_value(&var_value_screen, &mut frame, color);
@@ -159,7 +161,7 @@ impl Program<'_> {
 
         match &self.mode {
             Mode::CreatePoint => {
-                state.highlighted_item = None;
+                state.hovered_item = None;
 
                 if let ButtonPressed(Left) = mouse_event {
                     (
@@ -178,7 +180,11 @@ impl Program<'_> {
                 let cursor_item =
                     self.get_cursor_item(cursor_pos_screen, |v| v.value_type() == ValueType::Pt);
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
-                state.highlighted_item = state.picked_pt.clone().or(cursor_item_name.clone());
+                state.hovered_item = state
+                    .picked_pt
+                    .is_none()
+                    .then(|| cursor_item_name.clone())
+                    .flatten();
 
                 if let (ButtonPressed(Left), Some(cursor_item_name)) =
                     (mouse_event, cursor_item_name)
@@ -199,7 +205,7 @@ impl Program<'_> {
             Mode::Delete => {
                 let cursor_item = self.get_cursor_item(cursor_pos_screen, |_| true);
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
-                state.highlighted_item = cursor_item_name.clone();
+                state.hovered_item = cursor_item_name.clone();
 
                 if let (ButtonPressed(Left), Some(cursor_item_name)) =
                     (mouse_event, cursor_item_name)
@@ -215,7 +221,7 @@ impl Program<'_> {
                     v.value_type() == func_mode.next_arg_type()
                 });
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
-                state.highlighted_item = cursor_item_name.clone();
+                state.hovered_item = cursor_item_name.clone();
 
                 if let (ButtonPressed(Left), Some(cursor_item_name)) =
                     (mouse_event, cursor_item_name)

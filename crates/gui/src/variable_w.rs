@@ -3,7 +3,7 @@ use client::Client;
 use iced::widget::text;
 use iced::{
     widget::{column, container, mouse_area, scrollable, text_input},
-    Background, Color, Element,
+    Background, Element,
     Length::{Fill, Fixed},
     Task,
 };
@@ -12,6 +12,7 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use types::core::{Ident, Value};
 
+use crate::my_colors;
 use crate::{helpers::perform_or_status, mode::Mode, status_bar_w::StatusMessage};
 
 #[derive(Debug)]
@@ -118,39 +119,20 @@ impl State {
                     .as_ref()
                     .is_some_and(|item| item == var_name);
 
-                let color = match (is_hovered, mode) {
-                    (true, Mode::Modify) => Color {
-                        r: 1.0,
-                        g: 1.0,
-                        b: 0.0,
-                        a: 1.0,
-                    },
-                    (true, Mode::Delete) => Color {
-                        r: 1.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 1.0,
-                    },
-                    (_, Mode::Function(func_mode))
+                let color = match mode {
+                    Mode::Function(func_mode)
                         if func_mode.selected_args().iter().any(|arg| arg == var_name) =>
                     {
-                        Color {
-                            r: 0.0,
-                            g: 1.0,
-                            b: 1.0,
-                            a: 1.0,
-                        }
+                        my_colors::ITEM_MODIFY_PICKED
                     }
-                    (true, Mode::Function(func_mode))
-                        if func_mode.next_arg_type() == var_value.value_type() =>
+                    Mode::Function(func_mode)
+                        if is_hovered && func_mode.next_arg_type() == var_value.value_type() =>
                     {
-                        Color {
-                            r: 0.0,
-                            g: 1.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }
+                        my_colors::ITEM_FUNCTION_HOVERED
                     }
+
+                    Mode::Modify if is_hovered => my_colors::ITEM_MODIFY_HOVERED,
+                    Mode::Delete if is_hovered => my_colors::ITEM_DELETE_HOVERED,
                     _ => Default::default(),
                 };
 

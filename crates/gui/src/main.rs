@@ -4,6 +4,7 @@ mod helpers;
 mod main_w;
 mod mode;
 mod mode_selector_w;
+mod my_colors;
 mod status_bar_w;
 mod top_bar_w;
 mod variable_w;

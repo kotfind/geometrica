@@ -1,9 +1,9 @@
-use crate::status_bar_w::StatusMessage;
+use crate::{my_colors, status_bar_w::StatusMessage};
 use anyhow::anyhow;
 use client::Client;
 use iced::{
     widget::{container, mouse_area, text},
-    Background, Color, Element,
+    Element,
     Length::{self, Fill, Shrink},
     Renderer, Theme,
 };
@@ -119,8 +119,8 @@ fn menu_item_base<'a>(
 
 fn menu_bar_style(theme: &Theme, _status: iced_aw::style::Status) -> menu_bar::Style {
     menu::Style {
-        bar_background: Background::Color(theme.extended_palette().background.weak.color),
-        menu_background: Background::Color(Color::WHITE),
+        bar_background: my_colors::BAR_BG_NO_OPT(theme),
+        menu_background: my_colors::MENU_BG_NO_OPT(theme),
 
         menu_border: Default::default(),
         bar_border: Default::default(),

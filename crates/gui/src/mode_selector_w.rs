@@ -6,7 +6,7 @@ use std::{
 use client::Client;
 use iced::{
     widget::{column, container, mouse_area, pick_list, scrollable, text, text_input, Column},
-    Background, Element,
+    Element,
     Length::Fill,
     Task, Theme,
 };
@@ -16,6 +16,7 @@ use types::{api::FunctionList, lang::FunctionSignature};
 use crate::{
     helpers::perform_or_status,
     mode::{FunctionMode, Mode},
+    my_colors,
     status_bar_w::StatusMessage,
 };
 
@@ -98,18 +99,15 @@ impl State {
         let mode_cloned = mode.clone();
         let ans = container(ans)
             .style(move |theme: &Theme| {
-                let bg = theme.extended_palette().background;
-
                 let col = match (&mode, &self.hovered_mode) {
-                    (mode, _) if mode.holds_same_variant(current_mode) => Some(bg.strong.color),
-
-                    (_, Some(hovered_mode)) if hovered_mode.holds_same_variant(&mode) => {
-                        Some(bg.weak.color)
+                    (mode, _) if mode.holds_same_variant(current_mode) => {
+                        my_colors::ITEM_BG_SELECTED(theme)
                     }
-
-                    _ => None,
-                }
-                .map(Background::Color);
+                    (_, Some(hovered_mode)) if hovered_mode.holds_same_variant(&mode) => {
+                        my_colors::ITEM_BG_HOVERED(theme)
+                    }
+                    _ => my_colors::ITEM_BG_NORMAL(theme),
+                };
 
                 container::Style {
                     background: col,
@@ -166,26 +164,23 @@ impl State {
 
         let ans = container(ans)
             .style(move |theme: &Theme| {
-                let bg = theme.extended_palette().background;
-
                 let col = match (mode, &self.hovered_mode) {
                     (
                         Mode::Function(FunctionMode {
                             sign: mode_sign, ..
                         }),
                         _,
-                    ) if mode_sign == sign => Some(bg.strong.color),
+                    ) if mode_sign == sign => my_colors::ITEM_BG_SELECTED(theme),
 
                     (
                         _,
                         Some(Mode::Function(FunctionMode {
                             sign: hovered_sign, ..
                         })),
-                    ) if hovered_sign == sign => Some(bg.weak.color),
+                    ) if hovered_sign == sign => my_colors::ITEM_BG_HOVERED(theme),
 
-                    _ => None,
-                }
-                .map(Background::Color);
+                    _ => my_colors::ITEM_BG_NORMAL(theme),
+                };
 
                 container::Style {
                     background: col,

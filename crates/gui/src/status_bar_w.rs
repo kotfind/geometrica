@@ -2,10 +2,12 @@ use std::time::Duration;
 
 use iced::{
     widget::{container, mouse_area, text, tooltip},
-    Background, Color, Element,
+    Color, Element,
     Length::Fill,
     Task, Theme,
 };
+
+use crate::my_colors;
 
 #[derive(Debug, Clone)]
 pub struct StatusMessage {
@@ -46,25 +48,9 @@ pub enum StatusMessageKind {
 impl StatusMessageKind {
     fn to_color(&self) -> Color {
         match self {
-            StatusMessageKind::Error => Color {
-                r: 1.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
-
-            StatusMessageKind::Warn => Color {
-                r: 1.0,
-                g: 1.0,
-                b: 0.0,
-                a: 1.0,
-            },
-            StatusMessageKind::Info => Color {
-                r: 0.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
+            StatusMessageKind::Error => my_colors::STATUS_ERROR,
+            StatusMessageKind::Warn => my_colors::STATUS_WARN,
+            StatusMessageKind::Info => my_colors::STATUS_INFO,
         }
     }
 }
@@ -95,9 +81,7 @@ impl State {
             .width(Fill)
             .padding(1)
             .style(|theme| container::Style {
-                background: Some(Background::Color(
-                    theme.extended_palette().background.weak.color,
-                )),
+                background: my_colors::BAR_BG(theme),
                 ..Default::default()
             });
 
