@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
+use crate::helpers::new_object_name_with_type;
 use crate::mode::Mode;
 
 use super::draw::draw_value;
@@ -14,8 +15,6 @@ use iced::{
 };
 use itertools::Itertools;
 use types::core::{Ident, Pt, Value, ValueType};
-
-use super::helpers::new_point_name;
 
 #[derive(Debug)]
 pub(super) struct Program<'a> {
@@ -43,20 +42,35 @@ impl canvas::Program<Msg> for Program<'_> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
 
         for (var_name, var_value) in self.vars {
-            let is_highlighted = state
-                .highlighted_item
-                .as_ref()
-                .is_some_and(|highlighted| highlighted == var_name);
-
-            let color = if is_highlighted {
-                Color {
-                    r: 1.0,
-                    g: 0.0,
-                    b: 0.0,
-                    a: 1.0,
+            let color = match &self.mode {
+                _ if state
+                    .highlighted_item
+                    .as_ref()
+                    .is_some_and(|highlighted| highlighted == var_name) =>
+                {
+                    Color {
+                        r: 1.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 1.0,
+                    }
                 }
-            } else {
-                Color::BLACK
+
+                Mode::Function(func_mode)
+                    if func_mode
+                        .selected_args()
+                        .iter()
+                        .any(|name| name == var_name) =>
+                {
+                    Color {
+                        r: 0.0,
+                        g: 1.0,
+                        b: 1.0,
+                        a: 1.0,
+                    }
+                }
+
+                _ => Color::BLACK,
             };
 
             draw_value(var_value, &mut frame, color);
@@ -113,7 +127,7 @@ impl Program<'_> {
                     (
                         Captured,
                         Some(Msg::CreatePoint(
-                            new_point_name(self.vars.keys()),
+                            new_object_name_with_type(Some(ValueType::Pt), self.vars.keys()),
                             cursor_pt,
                         )),
                     )
@@ -155,8 +169,22 @@ impl Program<'_> {
                 }
             }
 
+            Mode::Function(func_mode) => {
+                let cursor_item = self
+                    .get_cursor_item(cursor_pt, |v| v.value_type() == func_mode.next_arg_type());
+                let cursor_item_name = cursor_item.map(|(name, _value)| name);
+                state.highlighted_item = cursor_item_name.clone();
+
+                if let (ButtonPressed(Left), Some(cursor_item_name)) =
+                    (mouse_event, cursor_item_name)
+                {
+                    (Captured, Some(Msg::PickFunctionArg(cursor_item_name)))
+                } else {
+                    (Ignored, None)
+                }
+            }
+
             Mode::Transform => todo!(),
-            Mode::Function { .. } => todo!(),
         }
     }
 

@@ -225,7 +225,12 @@ impl State {
                 canvas_w::Msg::SetStatusMessage(message) => {
                     Task::done(Msg::SetStatusMessage(message))
                 }
-                _ => canvas_w::update(msg, self.client.clone()).map(Msg::CanvasWMsg),
+                canvas_w::Msg::SetMode(mode) => {
+                    self.mode = mode;
+                    Task::none()
+                }
+                _ => canvas_w::update(msg, self.client.clone(), &self.mode, &self.vars)
+                    .map(Msg::CanvasWMsg),
             },
             Msg::CommandWMsg(msg) => self
                 .command_w

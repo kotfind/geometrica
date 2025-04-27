@@ -1,6 +1,16 @@
-use std::fmt::{self, Display};
+use std::{
+    collections::HashMap,
+    fmt::{self, Display},
+};
 
-use types::lang::FunctionSignature;
+use client::Client;
+use itertools::Itertools;
+use types::{
+    core::{Ident, Value, ValueType},
+    lang::{Definition, Expr, FuncCallExpr, FunctionSignature, ValueDefinition},
+};
+
+use crate::helpers::new_object_name_with_prefix;
 
 #[derive(Debug, Clone, Default)]
 pub enum Mode {
@@ -10,11 +20,6 @@ pub enum Mode {
     CreatePoint,
     Delete,
     Function(FunctionMode),
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionMode {
-    pub sign: FunctionSignature,
 }
 
 impl Mode {
@@ -39,5 +44,83 @@ impl Display for Mode {
             Mode::Delete => write!(f, "Delete"),
             Mode::Function { .. } => write!(f, "Function"),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionMode {
+    pub sign: FunctionSignature,
+    selected_args: Vec<Ident>,
+}
+
+impl FunctionMode {
+    pub fn new(sign: FunctionSignature) -> Self {
+        Self {
+            sign,
+            selected_args: Vec::new(),
+        }
+    }
+
+    pub fn next_arg_type(&self) -> ValueType {
+        self.sign.arg_types[self.selected_args.len()].clone()
+    }
+
+    pub fn selected_args(&self) -> &Vec<Ident> {
+        &self.selected_args
+    }
+
+    /// Adds argument to [Self::selected_args] list. If all args
+    /// are selected, function is executed and new object is created.
+    pub async fn add_arg(
+        &mut self,
+        arg: Ident,
+        client: Client,
+        vars: &HashMap<Ident, Value>,
+    ) -> anyhow::Result<()> {
+        assert!(self.next_arg_type() == vars[&arg].value_type());
+
+        self.selected_args.push(arg);
+
+        let selected_num = self.selected_args.len();
+        let args_num = self.sign.arg_types.len();
+
+        match () {
+            _ if selected_num > args_num => {
+                panic!("selected more args, than possibly could")
+            }
+            _ if selected_num < args_num => {
+                // NONE
+            }
+            _ if selected_num == args_num => {
+                self.create_new_object(client, vars).await?;
+                self.selected_args.clear();
+            }
+            _ => unreachable!(),
+        }
+
+        Ok(())
+    }
+
+    async fn create_new_object(
+        &self,
+        client: Client,
+        vars: &HashMap<Ident, Value>,
+    ) -> anyhow::Result<()> {
+        let name = new_object_name_with_prefix(&self.sign.name.0, vars.keys());
+
+        client
+            .define_one(Definition::ValueDefinition(ValueDefinition {
+                name,
+                value_type: None, /* FIXME */
+                body: Expr::FuncCall(FuncCallExpr {
+                    name: self.sign.name.clone(),
+                    args: self
+                        .selected_args
+                        .iter()
+                        .map(|a| Box::new(Expr::Variable(a.clone())))
+                        .collect_vec(),
+                }),
+            }))
+            .await
     }
 }

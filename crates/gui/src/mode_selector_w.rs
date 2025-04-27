@@ -51,7 +51,7 @@ impl State {
                     normal_builtins: Vec::new(),
                     user_defined: Vec::new(),
                 },
-                func_type_filter: FunctionTypeFilter::All,
+                func_type_filter: FunctionTypeFilter::Builtins,
                 func_name_filter: "".to_string(),
                 hovered_mode: None,
             },
@@ -196,12 +196,12 @@ impl State {
             .width(Fill);
 
         let ans = mouse_area(ans)
-            .on_enter(Msg::ModeHovered(Some(Mode::Function(FunctionMode {
-                sign: sign.clone(),
-            }))))
-            .on_press(Msg::ModeSelected(Mode::Function(FunctionMode {
-                sign: sign.clone(),
-            })));
+            .on_enter(Msg::ModeHovered(Some(Mode::Function(FunctionMode::new(
+                sign.clone(),
+            )))))
+            .on_press(Msg::ModeSelected(Mode::Function(FunctionMode::new(
+                sign.clone(),
+            ))));
 
         ans.into()
     }
