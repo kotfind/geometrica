@@ -4,7 +4,7 @@ use client::Client;
 use iced::{
     widget::{container, mouse_area, text},
     Background, Color, Element,
-    Length::{Fill, Shrink},
+    Length::{self, Fill, Shrink},
     Renderer, Theme,
 };
 use iced::{Padding, Task};
@@ -14,6 +14,8 @@ use iced_aw::{menu::Item, style::menu_bar};
 use rfd::AsyncFileDialog;
 
 use crate::helpers::perform_or_status;
+
+static MENU_ITEM_WIDTH: f32 = 150.0;
 
 #[derive(Debug, Clone)]
 pub enum Msg {
@@ -26,6 +28,10 @@ pub enum Msg {
     ExportAsSvg,
     Clear,
 
+    // Transformation Menu
+    SetIdentityTransformation,
+    SetFitAllTransformation,
+
     // Server Menu
     Disconnect,
 }
@@ -34,11 +40,15 @@ pub fn view<'a>() -> Element<'a, Msg> {
     #[rustfmt::skip]
     let ans = menu_bar!(
         (
-            menu_item(text("File"), Msg::None),
+            bar_item(text("File")),
             file_menu()
         )
         (
-            menu_item(text("Server"), Msg::None),
+            bar_item(text("Transformation")),
+            transformation_menu()
+        )
+        (
+            bar_item(text("Server")),
             server_menu()
         )
 
@@ -70,14 +80,39 @@ fn server_menu<'a>() -> Menu<'a, Msg, Theme, Renderer> {
     ans.width(Shrink)
 }
 
-fn menu_item<'a>(content: impl Into<Element<'a, Msg>>, on_press: Msg) -> Element<'a, Msg> {
-    static MENU_ITEM_WIDTH: f32 = 150.0;
+fn transformation_menu<'a>() -> Menu<'a, Msg, Theme, Renderer> {
+    #[rustfmt::skip]
+    let ans = menu!(
+        (menu_item(text("Identity"), Msg::SetIdentityTransformation))
+        (menu_item(text("Fit All"), Msg::SetFitAllTransformation))
+    );
 
+    ans.width(Shrink)
+}
+
+fn menu_item<'a>(content: impl Into<Element<'a, Msg>>, on_press: Msg) -> Element<'a, Msg> {
+    menu_item_base(content, Some(on_press), MENU_ITEM_WIDTH)
+}
+
+fn bar_item<'a>(content: impl Into<Element<'a, Msg>>) -> Element<'a, Msg> {
+    menu_item_base(content, None, Shrink)
+}
+
+fn menu_item_base<'a>(
+    content: impl Into<Element<'a, Msg>>,
+    on_press: Option<Msg>,
+    width: impl Into<Length>,
+) -> Element<'a, Msg> {
     let ans = content.into();
     let ans = container(ans)
         .padding(Padding::new(2.0).left(10.0))
-        .width(MENU_ITEM_WIDTH);
-    let ans = mouse_area(ans).on_press(on_press);
+        .width(width);
+
+    let mut ans = mouse_area(ans);
+
+    if let Some(on_press) = on_press {
+        ans = ans.on_press(on_press);
+    }
 
     ans.into()
 }
@@ -97,7 +132,12 @@ fn menu_bar_style(theme: &Theme, _status: iced_aw::style::Status) -> menu_bar::S
 pub fn update(msg: Msg, client: Client) -> Task<Msg> {
     match msg {
         Msg::None => Task::none(),
-        Msg::SetStatusMessage(_) => unreachable!("should have been processed in parent widget"),
+
+        Msg::SetStatusMessage(_)
+        | Msg::SetIdentityTransformation
+        | Msg::SetFitAllTransformation => {
+            unreachable!("should have been processed in parent widget")
+        }
 
         Msg::Save => perform_or_status!(async move {
             let file = AsyncFileDialog::new()

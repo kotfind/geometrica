@@ -269,6 +269,14 @@ impl State {
                     Task::done(Msg::SetStatusMessage(message))
                 }
                 top_bar_w::Msg::Disconnect => Task::done(Msg::Disconnected),
+                top_bar_w::Msg::SetFitAllTransformation => {
+                    self.canvas_w.set_fit_all_transformation(&self.vars);
+                    Task::none()
+                }
+                top_bar_w::Msg::SetIdentityTransformation => {
+                    self.canvas_w.set_identity_transformation();
+                    Task::none()
+                }
                 _ => top_bar_w::update(msg, self.client.clone()).map(Msg::TopBarWMsg),
             },
         }

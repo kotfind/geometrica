@@ -13,7 +13,7 @@ use iced::{
     Task,
 };
 use types::{
-    core::{Ident, Pt, Value, ValueType},
+    core::{Circ, Ident, Line, Pt, Value, ValueType},
     lang::{Definition, Expr, ValueDefinition},
 };
 
@@ -120,5 +120,49 @@ impl State {
                 Task::none()
             }
         }
+    }
+
+    /// Sets [Self::custom_transformation] to [Transformation::identity()]
+    pub fn set_identity_transformation(&mut self) {
+        self.custom_transformation = Transformation::identity();
+    }
+
+    /// Resets custom transformation, so that all objects will fit.
+    ///
+    /// Notes:
+    ///
+    /// * Does nothing if there are no drawable objects.
+    /// * Fixes offset and sets zoom to 1 if only available object is a single point.
+    pub fn set_fit_all_transformation(&mut self, vars: &HashMap<Ident, Value>) {
+        // The bounds are: (min_x, min_y, max_x, max_y)
+        let bounds = vars
+            .values()
+            .filter_map(|value| match value {
+                Value::Pt(Some(Pt { x, y })) => Some((*x, *y, *x, *y)),
+                Value::Line(Some(Line {
+                    p1: Pt { x: x1, y: y1 },
+                    p2: Pt { x: x2, y: y2 },
+                })) => Some((x1.min(*x2), y1.min(*y2), x1.max(*x2), y1.max(*y2))),
+                Value::Circ(Some(Circ { o: Pt { x, y }, r })) => Some((x - r, y - r, x + r, x + r)),
+                _ => None,
+            })
+            .reduce(
+                |(min_x_1, min_y_1, max_x_1, max_y_1), (min_x_2, min_y_2, max_x_2, max_y_2)| {
+                    (
+                        min_x_1.min(min_x_2),
+                        min_y_1.min(min_y_2),
+                        max_x_1.max(max_x_2),
+                        max_y_1.max(max_y_2),
+                    )
+                },
+            );
+
+        let Some((min_x, min_y, max_x, max_y)) = bounds else {
+            return;
+        };
+
+        self.custom_transformation =
+            Transformation::from_bounds(Pt { x: min_x, y: min_y }, Pt { x: max_x, y: max_y })
+                .inverse();
     }
 }

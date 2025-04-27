@@ -25,19 +25,30 @@ impl Transformation {
     ///     ( 1,  1),
     ///     (-1,  1)
     /// into rectangle that exactly fits into this rectangle
-    ///     (origin.x,          origin.y),
-    ///     (origin.x + size.x, origin.y),
-    ///     (origin.x,          origin.y + size.y),
-    ///     (origin.x + size.x, origin.y + size.y)
+    ///     (min_x, min_y),
+    ///     (max_x, min_y),
+    ///     (max_x, max_y),
+    ///     (min_x, max_y),
     /// so that their centers are the same
-    pub(super) fn from_bounds(origin: Pt, size: Pt) -> Self {
-        Self {
-            offset: Pt {
-                x: origin.x + size.x / 2.0,
-                y: origin.y + size.y / 2.0,
-            },
-            zoom: size.y.min(size.x) / 2.0,
-        }
+    ///
+    /// Note:
+    /// `min_x == max_x || min_y == max_y` is handled as special case.
+    pub(super) fn from_bounds(min: Pt, max: Pt) -> Self {
+        let offset = (min + max) / 2.0;
+
+        let mut size = max - min;
+
+        size = match size {
+            Pt { x: 0.0, y: 0.0 } => Pt { x: 1.0, y: 1.0 },
+            Pt { x, y: 0.0 } => Pt { x, y: x },
+            Pt { x: 0.0, y } => Pt { x: y, y },
+            _ => size,
+        };
+
+        let zoom = size.y.min(size.x) / 2.0;
+        assert!(zoom > 0.0);
+
+        Self { offset, zoom }
     }
 
     pub(super) fn identity() -> Self {
@@ -156,8 +167,23 @@ mod test {
     }
 
     #[test]
+    fn from_bounds_square_fit() {
+        let t = Transformation::from_bounds(Pt { x: 150.0, y: 300.0 }, Pt { x: 250.0, y: 400.0 });
+
+        assert_eq!(
+            t.transform_pt(Pt { x: -1.0, y: -1.0 }),
+            Pt { x: 150.0, y: 300.0 }
+        );
+
+        assert_eq!(
+            t.transform_pt(Pt { x: 1.0, y: 1.0 }),
+            Pt { x: 250.0, y: 400.0 }
+        );
+    }
+
+    #[test]
     fn from_bounds_horizontal_fit() {
-        let t = Transformation::from_bounds(Pt { x: 100.0, y: 200.0 }, Pt { x: 100.0, y: 500.0 });
+        let t = Transformation::from_bounds(Pt { x: 100.0, y: 200.0 }, Pt { x: 200.0, y: 700.0 });
 
         assert_eq!(
             t,
@@ -170,7 +196,7 @@ mod test {
 
     #[test]
     fn from_bounds_vertical_fit() {
-        let t = Transformation::from_bounds(Pt { x: 200.0, y: 100.0 }, Pt { x: 500.0, y: 100.0 });
+        let t = Transformation::from_bounds(Pt { x: 200.0, y: 100.0 }, Pt { x: 700.0, y: 200.0 });
 
         assert_eq!(
             t,
