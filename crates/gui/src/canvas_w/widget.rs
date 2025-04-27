@@ -1,9 +1,17 @@
 use anyhow::Context;
 use std::collections::HashMap;
 
-use super::program::Program;
+use super::{program::Program, transform::Transformation};
 use client::Client;
-use iced::{widget::canvas, Element, Length::Fill, Task};
+use iced::{
+    widget::{
+        canvas::{self},
+        responsive,
+    },
+    Element,
+    Length::Fill,
+    Task,
+};
 use types::{
     core::{Ident, Pt, Value, ValueType},
     lang::{Definition, Expr, ValueDefinition},
@@ -24,61 +32,89 @@ pub enum Msg {
     PickFunctionArg(Ident),
 }
 
-pub fn view<'a>(vars: &'a HashMap<Ident, Value>, mode: &'a Mode) -> Element<'a, Msg> {
-    canvas::Canvas::new(Program { vars, mode })
-        .width(Fill)
-        .height(Fill)
-        .into()
+#[derive(Debug)]
+pub struct State {
+    custom_transformation: Transformation,
 }
 
-pub fn update<'a>(
-    msg: Msg,
-    client: Client,
-    mode: &'a Mode,
-    vars: &'a HashMap<Ident, Value>,
-) -> Task<Msg> {
-    match msg {
-        Msg::SetStatusMessage(_) | Msg::SetMode(_) => {
-            unreachable!("should have been processed in parent widget")
+impl State {
+    pub fn new() -> Self {
+        Self {
+            custom_transformation: Transformation::identity(),
         }
-        Msg::None => Task::none(),
+    }
 
-        Msg::CreatePoint(name, pt) => {
-            perform_or_status!(async move {
-                client
-                    .define_one(Definition::ValueDefinition(ValueDefinition {
-                        name,
-                        value_type: Some(ValueType::Pt),
-                        body: Expr::Value(pt.into()),
-                    }))
-                    .await
+    pub fn view<'a>(&'a self, vars: &'a HashMap<Ident, Value>, mode: &'a Mode) -> Element<'a, Msg> {
+        responsive(|size| {
+            canvas::Canvas::new(Program {
+                vars,
+                mode,
+                unify_transformation: Transformation::from_bounds(
+                    Pt { x: 0.0, y: 0.0 },
+                    Pt {
+                        x: size.width as f64,
+                        y: size.height as f64,
+                    },
+                ),
+                custom_transformation: self.custom_transformation,
             })
-        }
-        Msg::MovePoint(name, pt) => {
-            perform_or_status!(async move { client.set(name, Expr::Value(pt.into())).await })
-        }
-        Msg::Delete(name) => perform_or_status!({
-            let client = client.clone();
-            async move { client.rm(name).await }
-        }),
-        Msg::PickFunctionArg(arg) => {
-            let Mode::Function(func_mode) = mode else {
-                println!("WARN: expected function mode");
-                return Task::none();
-            };
-            let mut func_mode = func_mode.clone();
-            let vars = vars.clone();
+            .width(Fill)
+            .height(Fill)
+            .into()
+        })
+        .into()
+    }
 
-            perform_or_status!(
-                async move {
-                    func_mode
-                        .add_arg(arg, client, &vars)
+    pub fn update<'a>(
+        &self,
+        msg: Msg,
+        client: Client,
+        mode: &'a Mode,
+        vars: &'a HashMap<Ident, Value>,
+    ) -> Task<Msg> {
+        match msg {
+            Msg::SetStatusMessage(_) | Msg::SetMode(_) => {
+                unreachable!("should have been processed in parent widget")
+            }
+            Msg::None => Task::none(),
+
+            Msg::CreatePoint(name, pt) => {
+                perform_or_status!(async move {
+                    client
+                        .define_one(Definition::ValueDefinition(ValueDefinition {
+                            name,
+                            value_type: Some(ValueType::Pt),
+                            body: Expr::Value(pt.into()),
+                        }))
                         .await
-                        .context("add_arg failed")?;
-                    Ok(Mode::Function(func_mode))
-                },
-                Msg::SetMode
-            )
+                })
+            }
+            Msg::MovePoint(name, pt) => {
+                perform_or_status!(async move { client.set(name, Expr::Value(pt.into())).await })
+            }
+            Msg::Delete(name) => perform_or_status!({
+                let client = client.clone();
+                async move { client.rm(name).await }
+            }),
+            Msg::PickFunctionArg(arg) => {
+                let Mode::Function(func_mode) = mode else {
+                    println!("WARN: expected function mode");
+                    return Task::none();
+                };
+                let mut func_mode = func_mode.clone();
+                let vars = vars.clone();
+
+                perform_or_status!(
+                    async move {
+                        func_mode
+                            .add_arg(arg, client, &vars)
+                            .await
+                            .context("add_arg failed")?;
+                        Ok(Mode::Function(func_mode))
+                    },
+                    Msg::SetMode
+                )
+            }
         }
     }
 }

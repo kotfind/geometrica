@@ -76,8 +76,8 @@ pub fn new_object_name_with_prefix<'a>(
     new_object_name((1..).map(|n| Ident(format!("{prefix}{n}"))), existant_names)
 }
 
-/// Selects first name from [names_to_try], that is not in the [existant_names].
-/// [existant_names] should be finite, [names_to_try] may be (and usualy is) infinite.
+/// Selects first name from `names_to_try`, that is not in the `existant_names`.
+/// `existant_names` should be finite, `names_to_try` may be (and usualy is) infinite.
 /// Panics if nothing found.
 pub fn new_object_name<'a>(
     mut names_to_try: impl Iterator<Item = Ident>,

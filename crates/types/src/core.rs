@@ -149,13 +149,6 @@ impl Circ {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Transformation {
-    pub offset: Pt,
-    pub zoom: f64,
-}
-
 #[cfg(test)]
 mod text {
     use super::*;

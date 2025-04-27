@@ -30,6 +30,7 @@ pub struct State {
     command_w: command_w::State,
     variable_w: variable_w::State,
     mode_selector_w: mode_selector_w::State,
+    canvas_w: canvas_w::State,
 }
 
 #[derive(Debug, Clone)]
@@ -105,6 +106,7 @@ impl State {
                 command_w: command_w::State::new(),
                 variable_w: variable_w::State::new(),
                 mode_selector_w,
+                canvas_w: canvas_w::State::new(),
             },
             Task::batch([mode_selector_w_task, fetch_vars_task]),
         )
@@ -124,7 +126,9 @@ impl State {
             let (title, body) = match state {
                 Pane::CanvasW => (
                     "",
-                    canvas_w::view(&self.vars, &self.mode).map(Msg::CanvasWMsg),
+                    self.canvas_w
+                        .view(&self.vars, &self.mode)
+                        .map(Msg::CanvasWMsg),
                 ),
                 Pane::CommandW => ("Command Line", self.command_w.view().map(Msg::CommandWMsg)),
                 Pane::VariableW => (
@@ -229,7 +233,9 @@ impl State {
                     self.mode = mode;
                     Task::none()
                 }
-                _ => canvas_w::update(msg, self.client.clone(), &self.mode, &self.vars)
+                _ => self
+                    .canvas_w
+                    .update(msg, self.client.clone(), &self.mode, &self.vars)
                     .map(Msg::CanvasWMsg),
             },
             Msg::CommandWMsg(msg) => self

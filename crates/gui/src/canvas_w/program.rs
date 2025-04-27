@@ -6,6 +6,7 @@ use crate::mode::Mode;
 
 use super::draw::draw_value;
 use super::helpers::point_to_pt;
+use super::transform::Transformation;
 use super::widget::Msg;
 use iced::Color;
 use iced::{
@@ -20,6 +21,23 @@ use types::core::{Ident, Pt, Value, ValueType};
 pub(super) struct Program<'a> {
     pub(super) vars: &'a HashMap<Ident, Value>,
     pub(super) mode: &'a Mode,
+
+    /// A transformation to abstract from screen size.
+    ///
+    /// Maps square
+    ///     (-1, -1),
+    ///     ( 1, -1),
+    ///     ( 1,  1),
+    ///     (-1,  1)
+    /// to canvas screen.
+    ///
+    /// Is applied AFTER [Self::custom_transformation].
+    pub(super) unify_transformation: Transformation,
+
+    /// A transformation, defined by user.
+    ///
+    /// It is applied BEFORE [Self::unify_transformation].
+    pub(super) custom_transformation: Transformation,
 }
 
 #[derive(Debug, Default)]
@@ -40,8 +58,13 @@ impl canvas::Program<Msg> for Program<'_> {
         _cursor: Cursor,
     ) -> Vec<canvas::Geometry<Renderer>> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let t = self.complete_transformation();
 
-        for (var_name, var_value) in self.vars {
+        for (var_name, var_value_real) in self.vars {
+            let Some(var_value_screen) = t.transform_value(var_value_real) else {
+                continue;
+            };
+
             let color = match &self.mode {
                 _ if state
                     .highlighted_item
@@ -73,7 +96,7 @@ impl canvas::Program<Msg> for Program<'_> {
                 _ => Color::BLACK,
             };
 
-            draw_value(var_value, &mut frame, color);
+            draw_value(&var_value_screen, &mut frame, color);
         }
 
         vec![frame.into_geometry()]
@@ -113,7 +136,12 @@ impl Program<'_> {
             return (Ignored, None);
         };
 
-        let cursor_pt = point_to_pt(&cursor_pt);
+        let cursor_pt_screen = point_to_pt(&cursor_pt);
+
+        let cursor_pt_real = self
+            .complete_transformation()
+            .inverse()
+            .transform_pt(cursor_pt_screen);
 
         if let ButtonReleased(_) = &mouse_event {
             state.picked_pt = None;
@@ -128,7 +156,7 @@ impl Program<'_> {
                         Captured,
                         Some(Msg::CreatePoint(
                             new_object_name_with_type(Some(ValueType::Pt), self.vars.keys()),
-                            cursor_pt,
+                            cursor_pt_real,
                         )),
                     )
                 } else {
@@ -138,7 +166,7 @@ impl Program<'_> {
 
             Mode::Modify => {
                 let cursor_item =
-                    self.get_cursor_item(cursor_pt, |v| v.value_type() == ValueType::Pt);
+                    self.get_cursor_item(cursor_pt_screen, |v| v.value_type() == ValueType::Pt);
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
                 state.highlighted_item = state.picked_pt.clone().or(cursor_item_name.clone());
 
@@ -149,14 +177,17 @@ impl Program<'_> {
                 }
 
                 if let Some(picked_pt) = &state.picked_pt {
-                    return (Captured, Some(Msg::MovePoint(picked_pt.clone(), cursor_pt)));
+                    return (
+                        Captured,
+                        Some(Msg::MovePoint(picked_pt.clone(), cursor_pt_real)),
+                    );
                 }
 
                 (Ignored, None)
             }
 
             Mode::Delete => {
-                let cursor_item = self.get_cursor_item(cursor_pt, |_| true);
+                let cursor_item = self.get_cursor_item(cursor_pt_screen, |_| true);
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
                 state.highlighted_item = cursor_item_name.clone();
 
@@ -170,8 +201,9 @@ impl Program<'_> {
             }
 
             Mode::Function(func_mode) => {
-                let cursor_item = self
-                    .get_cursor_item(cursor_pt, |v| v.value_type() == func_mode.next_arg_type());
+                let cursor_item = self.get_cursor_item(cursor_pt_screen, |v| {
+                    v.value_type() == func_mode.next_arg_type()
+                });
                 let cursor_item_name = cursor_item.map(|(name, _value)| name);
                 state.highlighted_item = cursor_item_name.clone();
 
@@ -190,26 +222,29 @@ impl Program<'_> {
 
     fn get_cursor_item(
         &self,
-        cursor_pos: Pt,
+        cursor_pt_screen: Pt,
         cond: impl Fn(&Value) -> bool,
     ) -> Option<(Ident, Value)> {
         static CLICK_DIST: f64 = 10.0;
 
+        let t = self.complete_transformation();
+
         struct WithDist<'a> {
             dist: f64,
             name: &'a Ident,
-            value: &'a Value,
+            value: Value,
         }
 
         self.vars
             .iter()
+            .filter_map(|(name, value_real)| Some((name, t.transform_value(value_real)?)))
             .filter(|(_, value)| cond(value))
             .filter_map(|(name, value)| {
                 Some(WithDist {
                     dist: match value {
-                        Value::Pt(Some(pt)) => pt.dist(cursor_pos),
-                        Value::Line(Some(line)) => line.dist(cursor_pos),
-                        Value::Circ(Some(circ)) => circ.dist(cursor_pos),
+                        Value::Pt(Some(pt)) => pt.dist(cursor_pt_screen),
+                        Value::Line(Some(line)) => line.dist(cursor_pt_screen),
+                        Value::Circ(Some(circ)) => circ.dist(cursor_pt_screen),
                         _ => return None,
                     },
                     name,
@@ -217,12 +252,16 @@ impl Program<'_> {
                 })
             })
             .filter(|item| item.dist < CLICK_DIST)
-            .sorted_by(|lhs, rhs| match (lhs.value, rhs.value) {
+            .sorted_by(|lhs, rhs| match (&lhs.value, &rhs.value) {
                 (Value::Pt(_), Value::Line(_)) | (Value::Pt(_), Value::Circ(_)) => Ordering::Less,
 
                 _ => lhs.dist.total_cmp(&rhs.dist),
             })
             .next()
             .map(|item| (item.name.clone(), item.value.clone()))
+    }
+
+    fn complete_transformation(&self) -> Transformation {
+        self.custom_transformation.chain(&self.unify_transformation)
     }
 }

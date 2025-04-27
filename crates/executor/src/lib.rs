@@ -4,6 +4,5 @@ mod function;
 mod node;
 mod store;
 mod svg;
-mod transform;
 
 pub use cexpr::{compile, eval};
