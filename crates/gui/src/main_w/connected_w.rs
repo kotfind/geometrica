@@ -13,7 +13,8 @@ use types::core::{Ident, Value};
 use crate::{
     canvas_w, command_w,
     helpers::perform_or_status,
-    mode_selector_w::{self, Mode},
+    mode::Mode,
+    mode_selector_w::{self},
     status_bar_w::StatusMessage,
     top_bar_w, variable_w,
 };

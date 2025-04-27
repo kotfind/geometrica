@@ -8,7 +8,7 @@ use types::{
     lang::{Definition, Expr, ValueDefinition},
 };
 
-use crate::{helpers::perform_or_status, mode_selector_w::Mode, status_bar_w::StatusMessage};
+use crate::{helpers::perform_or_status, mode::Mode, status_bar_w::StatusMessage};
 
 #[derive(Debug, Clone)]
 pub enum Msg {

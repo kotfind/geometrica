@@ -5,9 +5,7 @@ use std::{
 
 use client::Client;
 use iced::{
-    widget::{
-        button, column, container, mouse_area, pick_list, scrollable, text, text_input, Column,
-    },
+    widget::{column, container, mouse_area, pick_list, scrollable, text, text_input, Column},
     Background, Element,
     Length::Fill,
     Task, Theme,
@@ -15,68 +13,22 @@ use iced::{
 use itertools::Itertools;
 use types::{api::FunctionList, lang::FunctionSignature};
 
-use crate::{helpers::perform_or_status, status_bar_w::StatusMessage};
+use crate::{
+    helpers::perform_or_status,
+    mode::{FunctionMode, Mode},
+    status_bar_w::StatusMessage,
+};
 
 static FUNCTION_FETCH_SLEEP_TIME: Duration = Duration::from_millis(50);
-
-#[derive(Debug, Clone, Default)]
-pub enum Mode {
-    #[default]
-    CreatePoint,
-    Modify,
-    Transform,
-    Delete,
-    Function(FunctionMode),
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionMode {
-    sign: FunctionSignature,
-}
-
-impl Mode {
-    /// Returns list of modes, that have default values
-    fn basic_modes() -> &'static [Mode] {
-        static BASIC_MODES: &[Mode] = &[
-            Mode::CreatePoint,
-            Mode::Modify,
-            Mode::Transform,
-            Mode::Delete,
-        ];
-
-        BASIC_MODES
-    }
-
-    pub fn holds_same_variant(&self, other: &Self) -> bool {
-        matches!(
-            (self, other),
-            (Mode::CreatePoint, Mode::CreatePoint)
-                | (Mode::Modify, Mode::Modify)
-                | (Mode::Transform, Mode::Transform)
-                | (Mode::Delete, Mode::Delete)
-                | (Mode::Function { .. }, Mode::Function { .. })
-        )
-    }
-}
-
-impl Display for Mode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Mode::CreatePoint => write!(f, "Create Point"),
-            Mode::Modify => write!(f, "Modify"),
-            Mode::Transform => write!(f, "Transform"),
-            Mode::Delete => write!(f, "Delete"),
-            Mode::Function { .. } => write!(f, "Function"),
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct State {
     func_list: FunctionList,
+
     func_type_filter: FunctionTypeFilter,
     func_name_filter: String,
-    hovered_func_sign: Option<FunctionSignature>,
+
+    hovered_mode: Option<Mode>,
 }
 
 #[derive(Debug, Clone)]
@@ -87,7 +39,7 @@ pub enum Msg {
     FunctionTypeFilterPicked(FunctionTypeFilter),
     FunctionNameFilterChanged(String),
     GotFunctionList(FunctionList),
-    FunctionHovered(Option<FunctionSignature>),
+    ModeHovered(Option<Mode>),
 }
 
 impl State {
@@ -101,7 +53,7 @@ impl State {
                 },
                 func_type_filter: FunctionTypeFilter::All,
                 func_name_filter: "".to_string(),
-                hovered_func_sign: None,
+                hovered_mode: None,
             },
             perform_or_status!(
                 async move { client.list_funcs().await },
@@ -111,31 +63,67 @@ impl State {
     }
 
     pub fn view<'a>(&'a self, mode: &'a Mode) -> Element<'a, Msg> {
-        column![
+        let ans = column![
             self.view_basic_mode_selector(mode),
             self.view_function_mode_selector(mode)
         ]
         .padding(5)
-        .spacing(5)
-        .into()
+        .spacing(5);
+
+        let ans = mouse_area(ans).on_exit(Msg::ModeHovered(None));
+
+        ans.into()
     }
 
-    fn view_basic_mode_selector(&self, current_mode: &Mode) -> Element<Msg> {
+    fn view_basic_mode_selector<'a>(&'a self, current_mode: &'a Mode) -> Element<'a, Msg> {
         let mut column = Column::new().spacing(5);
 
-        for mode in Mode::basic_modes() {
-            let btn = button(text(mode.to_string())).width(Fill).on_press_maybe(
-                if !mode.holds_same_variant(current_mode) {
-                    Some(Msg::ModeSelected(mode.clone()))
-                } else {
-                    None
-                },
-            );
+        let basic_modes = [
+            Mode::Modify,
+            Mode::Transform,
+            Mode::CreatePoint,
+            Mode::Delete,
+        ];
 
-            column = column.push(btn);
+        for mode in basic_modes {
+            column = column.push(self.view_basic_mode_item(mode, current_mode));
         }
 
         column.into()
+    }
+
+    fn view_basic_mode_item<'a>(&'a self, mode: Mode, current_mode: &'a Mode) -> Element<'a, Msg> {
+        let ans = text!("{mode}");
+
+        let mode_cloned = mode.clone();
+        let ans = container(ans)
+            .style(move |theme: &Theme| {
+                let bg = theme.extended_palette().background;
+
+                let col = match (&mode, &self.hovered_mode) {
+                    (mode, _) if mode.holds_same_variant(current_mode) => Some(bg.strong.color),
+
+                    (_, Some(hovered_mode)) if hovered_mode.holds_same_variant(&mode) => {
+                        Some(bg.weak.color)
+                    }
+
+                    _ => None,
+                }
+                .map(Background::Color);
+
+                container::Style {
+                    background: col,
+                    ..Default::default()
+                }
+            })
+            .width(Fill)
+            .padding(2);
+
+        let ans = mouse_area(ans)
+            .on_enter(Msg::ModeHovered(Some(mode_cloned.clone())))
+            .on_press(Msg::ModeSelected(mode_cloned.clone()));
+
+        ans.into()
     }
 
     fn view_function_mode_selector<'a>(&'a self, mode: &'a Mode) -> Element<'a, Msg> {
@@ -165,8 +153,6 @@ impl State {
 
         let ans = scrollable(ans).width(Fill);
 
-        let ans = mouse_area(ans).on_exit(Msg::FunctionHovered(None));
-
         ans.into()
     }
 
@@ -182,7 +168,7 @@ impl State {
             .style(move |theme: &Theme| {
                 let bg = theme.extended_palette().background;
 
-                let col = match (mode, &self.hovered_func_sign) {
+                let col = match (mode, &self.hovered_mode) {
                     (
                         Mode::Function(FunctionMode {
                             sign: mode_sign, ..
@@ -190,7 +176,12 @@ impl State {
                         _,
                     ) if mode_sign == sign => Some(bg.strong.color),
 
-                    (_, Some(hovered_sign)) if hovered_sign == sign => Some(bg.weak.color),
+                    (
+                        _,
+                        Some(Mode::Function(FunctionMode {
+                            sign: hovered_sign, ..
+                        })),
+                    ) if hovered_sign == sign => Some(bg.weak.color),
 
                     _ => None,
                 }
@@ -205,7 +196,9 @@ impl State {
             .width(Fill);
 
         let ans = mouse_area(ans)
-            .on_enter(Msg::FunctionHovered(Some(sign.clone())))
+            .on_enter(Msg::ModeHovered(Some(Mode::Function(FunctionMode {
+                sign: sign.clone(),
+            }))))
             .on_press(Msg::ModeSelected(Mode::Function(FunctionMode {
                 sign: sign.clone(),
             })));
@@ -277,8 +270,8 @@ impl State {
                     Msg::GotFunctionList
                 )
             }
-            Msg::FunctionHovered(sign) => {
-                self.hovered_func_sign = sign;
+            Msg::ModeHovered(hovered_mode) => {
+                self.hovered_mode = hovered_mode;
                 Task::none()
             }
         }

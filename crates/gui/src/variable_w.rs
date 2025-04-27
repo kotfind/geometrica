@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use client::Client;
 use iced::{
     font::Weight,
@@ -10,9 +8,10 @@ use iced::{
 };
 use iced_aw::{grid, grid_row, GridRow};
 use itertools::Itertools;
+use std::collections::HashMap;
 use types::core::{Ident, Value};
 
-use crate::{helpers::perform_or_status, mode_selector_w::Mode, status_bar_w::StatusMessage};
+use crate::{helpers::perform_or_status, mode::Mode, status_bar_w::StatusMessage};
 
 #[derive(Debug)]
 pub struct State {

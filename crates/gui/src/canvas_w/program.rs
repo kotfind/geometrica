@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
+use crate::mode::Mode;
+
 use super::draw::draw_value;
 use super::helpers::point_to_pt;
 use super::widget::Msg;
@@ -14,7 +16,6 @@ use itertools::Itertools;
 use types::core::{Ident, Pt, Value, ValueType};
 
 use super::helpers::new_point_name;
-use crate::mode_selector_w::Mode;
 
 #[derive(Debug)]
 pub(super) struct Program<'a> {
