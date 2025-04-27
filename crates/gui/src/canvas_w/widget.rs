@@ -25,6 +25,7 @@ pub enum Msg {
     None,
 
     SetMode(Mode),
+    SetCustomTransformation(Transformation),
 
     CreatePoint(Ident, Pt),
     MovePoint(Ident, Pt),
@@ -66,7 +67,7 @@ impl State {
     }
 
     pub fn update<'a>(
-        &self,
+        &mut self,
         msg: Msg,
         client: Client,
         mode: &'a Mode,
@@ -77,7 +78,6 @@ impl State {
                 unreachable!("should have been processed in parent widget")
             }
             Msg::None => Task::none(),
-
             Msg::CreatePoint(name, pt) => {
                 perform_or_status!(async move {
                     client
@@ -114,6 +114,10 @@ impl State {
                     },
                     Msg::SetMode
                 )
+            }
+            Msg::SetCustomTransformation(custom_transformation) => {
+                self.custom_transformation = custom_transformation;
+                Task::none()
             }
         }
     }

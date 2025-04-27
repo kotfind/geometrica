@@ -9,8 +9,11 @@ use types::core::{Circ, Line, Pt, Value};
 ///
 /// Transformation is applied to convert **real** coordinates
 /// into **screen** coordinates.
+///
+/// Suffixes `_real` and `_screen` in the rest of the code means real coordinates
+/// and screen coordinates, respectively.
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub(super) struct Transformation {
+pub struct Transformation {
     pub(super) offset: Pt,
     pub(super) zoom: f64,
 }
