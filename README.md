@@ -97,7 +97,7 @@ export PATH="$(nix eval .#server --raw --apply toString)/bin:$PATH"
 nix run ".#$crateName"
 ```
 
-### Запуск всех тестов тестов
+### Запуск всех тестов
 
 #### Через cargo
 
@@ -152,3 +152,18 @@ cargo doc --no-deps --package "$crateName" --open
 ```bash
 nix run ".#$crateName-doc"
 ```
+
+## REST Api
+
+- Все запросы используют `HTTP` метод `POST`
+
+- Тела запросов и ответов передаются в формате `JSON`
+
+- Содержимое тел запросов и ответов описано в файле `crates/types/src/api.rs`
+
+- Ответ на успешно выполненный запрос будет иметь `HTTP` код `200 OK`
+
+- Ответ на запрос с ошибкой будет иметь `HTTP` код `500 INTERNAL_SERVER_ERROR`.
+
+    Тело такого ответа будет содержать `JSON` объект с единственным текстовым
+    полем `msg`, сообщением об ошибке.
