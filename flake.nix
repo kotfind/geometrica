@@ -199,6 +199,7 @@
               pango
               atk
               gsettings-desktop-schemas
+              makeWrapper
 
               # Other Dependencies
               openssl
@@ -216,10 +217,15 @@
               vulkan-loader
             ];
 
+            # RFD Dependencies
+            # Source: https://github.com/PolyMeilex/rfd/issues/124#issuecomment-1901738167
             preFixup = ''
-              wrapProgram $out/server \
-                --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
-                --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+              # Run for final package only, don't run for gui-deps
+              if [ -f "$out/bin/server" ]; then
+                wrapProgram "$out/bin/server" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+              fi
             '';
 
             testRuntimeDeps = [(buildCrate server).packages.server];
