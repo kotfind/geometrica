@@ -164,7 +164,8 @@ impl CommandType {
             ["Name", "Value"],
             items
                 .into_iter()
-                .map(|(name, value)| [name.to_string(), value.to_string()]),
+                .map(|(name, value)| [name.to_string(), value.to_string()])
+                .sorted(),
         ))
     }
 
