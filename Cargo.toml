@@ -2,8 +2,4 @@
 resolver = "2"
 members = [
     "crates/*",
-    "examples/*"
-]
-exclude = [
-    "examples/geom"
 ]
