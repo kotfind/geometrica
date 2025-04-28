@@ -1,5 +1,6 @@
 use anyhow::Context;
 use client::Client;
+use iced::mouse;
 use iced::widget::text;
 use iced::{
     widget::{column, container, mouse_area, scrollable, text_input},
@@ -12,7 +13,6 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use types::core::{Ident, Value};
 
-use crate::my_colors;
 use crate::{helpers::perform_or_status, mode::Mode, status_bar_w::StatusMessage};
 
 #[derive(Debug)]
@@ -114,27 +114,15 @@ impl State {
             .width(Fill)
             .padding(2.5)
             .style(move |_theme| {
-                let is_hovered = self
-                    .hovered_item
-                    .as_ref()
-                    .is_some_and(|item| item == var_name);
-
-                let color = match mode {
-                    Mode::Function(func_mode)
-                        if func_mode.selected_args().iter().any(|arg| arg == var_name) =>
-                    {
-                        my_colors::ITEM_MODIFY_PICKED
-                    }
-                    Mode::Function(func_mode)
-                        if is_hovered && func_mode.next_arg_type() == var_value.value_type() =>
-                    {
-                        my_colors::ITEM_FUNCTION_HOVERED
-                    }
-
-                    Mode::Modify if is_hovered => my_colors::ITEM_MODIFY_HOVERED,
-                    Mode::Delete if is_hovered => my_colors::ITEM_DELETE_HOVERED,
-                    _ => Default::default(),
-                };
+                let color = mode
+                    .to_item_color_and_interaction(
+                        var_name,
+                        &var_value.value_type(),
+                        &None,
+                        &self.hovered_item,
+                        Default::default(),
+                    )
+                    .0;
 
                 container::Style {
                     background: Some(Background::Color(color)),
@@ -142,18 +130,36 @@ impl State {
                 }
             });
 
-        let mut ans = mouse_area(ans).on_press(match mode {
-            _ if self.currently_editing.is_some() => Msg::ApplyCurrentlyEditing,
+        let mut ans = mouse_area(ans)
+            .on_press(match mode {
+                _ if self.currently_editing.is_some() => Msg::ApplyCurrentlyEditing,
 
-            Mode::Modify => {
-                Msg::CurrentlyEditingChanged(Some((var_name.clone(), var_value.to_string())))
-            }
-            Mode::Delete => Msg::Remove(var_name.clone()),
-            Mode::Function(func_mode) if func_mode.next_arg_type() == var_value.value_type() => {
-                Msg::PickFunctionArg(var_name.clone())
-            }
-            _ => Msg::None,
-        });
+                Mode::Modify => {
+                    Msg::CurrentlyEditingChanged(Some((var_name.clone(), var_value.to_string())))
+                }
+                Mode::Delete => Msg::Remove(var_name.clone()),
+                Mode::Function(func_mode)
+                    if func_mode.next_arg_type() == var_value.value_type() =>
+                {
+                    Msg::PickFunctionArg(var_name.clone())
+                }
+                _ => Msg::None,
+            })
+            .interaction({
+                match mode {
+                    Mode::Modify => mouse::Interaction::Text,
+                    _ => {
+                        mode.to_item_color_and_interaction(
+                            var_name,
+                            &var_value.value_type(),
+                            &None,
+                            &self.hovered_item,
+                            Default::default(),
+                        )
+                        .1
+                    }
+                }
+            });
 
         if !self
             .hovered_item

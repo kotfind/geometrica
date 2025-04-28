@@ -75,38 +75,16 @@ impl canvas::Program<Msg> for Program<'_> {
                 continue;
             };
 
-            let is_hovered = state
-                .hovered_item
-                .as_ref()
-                .is_some_and(|hovered| hovered == var_name);
-
-            let color = match &self.mode {
-                Mode::Modify
-                    if state
-                        .picked_pt
-                        .as_ref()
-                        .is_some_and(|picked| picked == var_name) =>
-                {
-                    my_colors::ITEM_MODIFY_PICKED
-                }
-
-                Mode::Function(func_mode)
-                    if func_mode
-                        .selected_args()
-                        .iter()
-                        .any(|name| name == var_name) =>
-                {
-                    my_colors::ITEM_FUNCTION_PICKED
-                }
-                Mode::Function(func_mode)
-                    if is_hovered && func_mode.next_arg_type() == var_value_real.value_type() =>
-                {
-                    my_colors::ITEM_FUNCTION_HOVERED
-                }
-                Mode::Modify if is_hovered => my_colors::ITEM_MODIFY_HOVERED,
-                Mode::Delete if is_hovered => my_colors::ITEM_DELETE_HOVERED,
-                _ => my_colors::ITEM_NORMAL,
-            };
+            let color = self
+                .mode
+                .to_item_color_and_interaction(
+                    var_name,
+                    &var_value_real.value_type(),
+                    &state.picked_pt,
+                    &state.hovered_item,
+                    my_colors::ITEM_NORMAL,
+                )
+                .0;
 
             draw_value(&var_value_screen, &mut frame, color);
         }
@@ -126,6 +104,42 @@ impl canvas::Program<Msg> for Program<'_> {
                 Self::handle_mouse_event(self, state, mouse_event, bounds, cursor)
             }
             _ => (canvas::event::Status::Ignored, None),
+        }
+    }
+
+    fn mouse_interaction(
+        &self,
+        state: &Self::State,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> mouse::Interaction {
+        let Some(cursor_pos) = cursor.position_in(bounds) else {
+            return mouse::Interaction::None;
+        };
+
+        let cursor_pos_screen = point_to_pt(&cursor_pos);
+
+        let item_inter = self.get_cursor_item(cursor_pos_screen, |_| true).map(
+            |(cursor_item_name, cursor_item_value)| {
+                self.mode
+                    .to_item_color_and_interaction(
+                        &cursor_item_name,
+                        &cursor_item_value.value_type(),
+                        &state.picked_pt,
+                        &state.hovered_item,
+                        my_colors::ITEM_NORMAL,
+                    )
+                    .1
+            },
+        );
+
+        match self.mode {
+            Mode::Transform => mouse::Interaction::Grab,
+            Mode::Modify if state.picked_pt.is_some() => mouse::Interaction::Pointer,
+            Mode::Modify => item_inter.unwrap_or(mouse::Interaction::None),
+            Mode::CreatePoint => mouse::Interaction::Crosshair,
+            Mode::Delete => item_inter.unwrap_or(mouse::Interaction::None),
+            Mode::Function(_) => item_inter.unwrap_or(mouse::Interaction::None),
         }
     }
 }

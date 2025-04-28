@@ -4,13 +4,14 @@ use std::{
 };
 
 use client::Client;
+use iced::{mouse, Color};
 use itertools::Itertools;
 use types::{
     core::{Ident, Value, ValueType},
     lang::{Definition, Expr, FuncCallExpr, FunctionSignature, ValueDefinition},
 };
 
-use crate::helpers::new_object_name_with_prefix;
+use crate::{helpers::new_object_name_with_prefix, my_colors};
 
 #[derive(Debug, Clone, Default)]
 pub enum Mode {
@@ -32,6 +33,51 @@ impl Mode {
                 | (Mode::Delete, Mode::Delete)
                 | (Mode::Function { .. }, Mode::Function { .. })
         )
+    }
+
+    pub fn to_item_color_and_interaction(
+        &self,
+        item_name: &Ident,
+        item_value_type: &ValueType,
+        picked: &Option<Ident>,
+        hovered: &Option<Ident>,
+        default_color: Color,
+    ) -> (Color, mouse::Interaction) {
+        let is_hovered = hovered.as_ref().is_some_and(|hovered| hovered == item_name);
+
+        match &self {
+            Mode::Modify if picked.as_ref().is_some_and(|picked| picked == item_name) => {
+                (my_colors::ITEM_MODIFY_PICKED, mouse::Interaction::Move)
+            }
+
+            Mode::Function(func_mode)
+                if func_mode
+                    .selected_args()
+                    .iter()
+                    .any(|name| name == item_name) =>
+            {
+                (my_colors::ITEM_FUNCTION_PICKED, mouse::Interaction::None)
+            }
+
+            Mode::Function(func_mode)
+                if is_hovered && &func_mode.next_arg_type() == item_value_type =>
+            {
+                (
+                    my_colors::ITEM_FUNCTION_HOVERED,
+                    mouse::Interaction::Pointer,
+                )
+            }
+
+            Mode::Modify if is_hovered && item_value_type == &ValueType::Pt => {
+                (my_colors::ITEM_MODIFY_HOVERED, mouse::Interaction::Pointer)
+            }
+            Mode::Delete if is_hovered => (
+                my_colors::ITEM_DELETE_HOVERED,
+                mouse::Interaction::NotAllowed,
+            ),
+
+            _ => (default_color, mouse::Interaction::None),
+        }
     }
 }
 
