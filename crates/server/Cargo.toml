@@ -1,0 +1,23 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.92"
+tokio = { version = "1.41.0", features = ["full"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+executor = { path = "../executor" }
+types = { path = "../types", features = ["serde"] }
+axum = { version = "0.7.7", features = ["macros"] }
+clap = { version = "4.5.20", features = ["derive"] }
+tempfile = "3.13.0"
+serde = "1.0.214"
+paste = "1.0.15"
+
+[dev-dependencies]
+reqwest = { version = "0.12.9", features = ["json"] }
+serde = { version = "1.0.214", features = ["derive"] }
+serde_json = "1.0.132"
+test_bin = "0.4.0"

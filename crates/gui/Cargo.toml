@@ -1,0 +1,14 @@
+[package]
+name = "gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+client = { path = "../client" }
+types = { path = "../types", features = ["math"]}
+iced = { version = "0.13.1", features = ["canvas", "tokio", "lazy"] }
+iced_aw = { version = "0.11.0", default-features = false, features = ["grid", "menu"] }
+itertools = "0.14.0"
+tokio = { version = "1.44.2", features = ["full", "time"] }
+rfd = { version = "0.15.3", features = ["gtk3", "tokio"], default-features = false }
