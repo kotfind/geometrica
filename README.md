@@ -32,6 +32,19 @@ export PATH="$(nix eval .#server --raw --apply toString)/bin:$PATH"
 Далее будем считать, что в переменной `$crateName` лежит имя крейта, который
 вас интересует. Все пути указаны относительно корня репозитория.
 
+### Установка
+
+#### Через nix
+
+```bash
+nix profile install ".#$crateName"
+```
+
+В частности, установка всех бинарных крейтов:
+```bash
+nix profile install .#server .#gui .#cli
+```
+
 ### Сборка (без запуска)
 
 #### Через cargo
