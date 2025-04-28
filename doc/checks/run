@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+output_file="Программа_и_методика_испытаний.pdf"
+
+typst compile main.typ "$output_file"
+zathura "$output_file" & disown

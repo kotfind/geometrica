@@ -1,3 +1,9 @@
+/*
+    This file only contains some ideas on the language design and don't
+    represent the actual syntax. Check the `language` directory for actual
+    language documentations.
+*/
+
 // constant defenition
 PI:real const = 3.1415926
 

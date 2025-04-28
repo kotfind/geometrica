@@ -1,0 +1,48 @@
+<svg viewBox="-330 -80 1660 1160" xmlns="http://www.w3.org/2000/svg">
+<style>
+.line {
+    fill: black;
+    stroke: black;
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.pt {
+    fill: black;
+    stroke: black;
+    stroke-width: 40;
+    stroke-linecap: round;
+}
+
+.circ {
+    fill: none;
+    stroke: black;
+    stroke-width: 10;
+}
+
+</style>
+<circle class="circ" cx="700" cy="500" r="50"/>
+<line class="line" x1="875" x2="500" y1="750" y2="1000"/>
+<line class="line" x1="350" x2="500" y1="275" y2="275"/>
+<line class="line" x1="500" x2="-250" y1="712.5" y2="675"/>
+<line class="line" x1="650" x2="500" y1="275" y2="275"/>
+<line class="line" x1="0" x2="350" y1="0" y2="275"/>
+<line class="line" x1="462.5" x2="500" y1="650" y2="700"/>
+<line class="line" x1="1000" x2="650" y1="0" y2="275"/>
+<line class="line" x1="350" x2="57.5" y1="275" y2="350"/>
+<line class="line" x1="500" x2="-200" y1="712.5" y2="750"/>
+<line class="line" x1="125" x2="500" y1="750" y2="1000"/>
+<line class="pt" x1="700" x2="700" y1="500" y2="500"/>
+<line class="line" x1="500" x2="1150" y1="712.5" y2="825"/>
+<line class="line" x1="500" x2="-150" y1="712.5" y2="825"/>
+<line class="line" x1="500" x2="1200" y1="712.5" y2="750"/>
+<line class="line" x1="462.5" x2="500" y1="650" y2="650"/>
+<line class="pt" x1="300" x2="300" y1="500" y2="500"/>
+<line class="line" x1="537.5" x2="500" y1="650" y2="700"/>
+<circle class="circ" cx="300" cy="500" r="50"/>
+<line class="line" x1="537.5" x2="500" y1="650" y2="650"/>
+<line class="line" x1="0" x2="125" y1="0" y2="750"/>
+<line class="line" x1="500" x2="1250" y1="712.5" y2="675"/>
+<line class="line" x1="1000" x2="875" y1="0" y2="750"/>
+<line class="line" x1="650" x2="942.5" y1="275" y2="350"/>
+</svg>
