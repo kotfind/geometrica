@@ -1,0 +1,9 @@
+[package]
+name = "circles"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+client = { version = "0.1.0", path = "../../crates/client" }
+tokio = { version = "1.44.2", features = ["full"] }
