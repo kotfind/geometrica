@@ -199,7 +199,6 @@
               pango
               atk
               gsettings-desktop-schemas
-              makeWrapper
 
               # Other Dependencies
               openssl
@@ -209,6 +208,7 @@
             nativeBuildInputs = with pkgs; [
               pkg-config
               autoPatchelfHook
+              wrapGAppsHook3
             ];
 
             # For `autoPatchelfHook`
@@ -220,12 +220,10 @@
             # RFD Dependencies
             # Source: https://github.com/PolyMeilex/rfd/issues/124#issuecomment-1901738167
             preFixup = ''
-              # Run for final package only, don't run for gui-deps
-              if [ -f "$out/bin/server" ]; then
-                wrapProgram "$out/bin/server" \
-                  --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
-                  --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
-              fi
+              gappsWrapperArgs+=(
+                --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
+                --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+              )
             '';
 
             testRuntimeDeps = [(buildCrate server).packages.server];
