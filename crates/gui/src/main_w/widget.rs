@@ -67,13 +67,15 @@ impl State {
             },
             (_, Msg::StatusBarWMsg(msg)) => self.status_bar_w.update(msg).map(Msg::StatusBarWMsg),
             _ => {
-                println!("WARN: Unexpected message type for current state");
+                eprintln!("WARN: Unexpected message type for current state");
                 Task::none()
             }
         }
     }
 
     fn set_status_message(&mut self, message: StatusMessage) -> Task<Msg> {
+        eprintln!("{message}");
+
         self.status_bar_w
             .update(status_bar_w::Msg::SetMessage(message))
             .map(Msg::StatusBarWMsg)

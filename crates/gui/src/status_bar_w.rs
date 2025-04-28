@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    fmt::{self, Display},
+    time::Duration,
+};
 
 use iced::{
     widget::{container, mouse_area, text},
@@ -38,6 +41,12 @@ impl StatusMessage {
     }
 }
 
+impl Display for StatusMessage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}: {}", self.kind, self.text)
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum StatusMessageKind {
     Error = 0,
@@ -52,6 +61,17 @@ impl StatusMessageKind {
             StatusMessageKind::Warn => my_colors::STATUS_WARN,
             StatusMessageKind::Info => my_colors::STATUS_INFO,
         }
+    }
+}
+
+impl Display for StatusMessageKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            StatusMessageKind::Error => "ERR",
+            StatusMessageKind::Warn => "WARN",
+            StatusMessageKind::Info => "INFO",
+        };
+        write!(f, "{s}")
     }
 }
 

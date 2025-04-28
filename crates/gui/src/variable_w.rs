@@ -225,7 +225,7 @@ impl State {
             },
             Msg::PickFunctionArg(arg) => {
                 let Mode::Function(func_mode) = mode else {
-                    println!("WARN: expected function mode");
+                    eprintln!("WARN: expected function mode");
                     return Task::none();
                 };
                 let mut func_mode = func_mode.clone();
